@@ -82,19 +82,35 @@ export default function ProductGallery({
     );
   }
 
-  const current = images[active];
+  const current = images[active] ?? images[0];
+
+  if (!current) {
+    return (
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal">
+        <CinematicPlaceholder
+          variant="product"
+          className="h-full w-full"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-w-0">
       <div
         className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal"
         onTouchStart={(event) => {
-          touchStartX.current = event.touches[0]?.clientX ?? null;
+          const firstTouch = event.touches.item(0);
+          touchStartX.current = firstTouch?.clientX ?? null;
         }}
         onTouchEnd={(event) => {
           if (touchStartX.current === null) return;
 
-          const endX = event.changedTouches[0]?.clientX ?? touchStartX.current;
+          const changedTouch = event.changedTouches.item(0);
+
+          const endX =
+            changedTouch?.clientX ?? touchStartX.current;
+
           const difference = touchStartX.current - endX;
 
           if (difference > 50) {
@@ -108,18 +124,29 @@ export default function ProductGallery({
       >
         <button
           type="button"
-          onClick={() => setZoomed((currentZoom) => !currentZoom)}
-          aria-label={zoomed ? 'Zoom out' : 'Zoom in on product image'}
+          onClick={() =>
+            setZoomed((currentZoom) => !currentZoom)
+          }
+          aria-label={
+            zoomed
+              ? 'Zoom out'
+              : 'Zoom in on product image'
+          }
           className="absolute inset-0 z-10 cursor-zoom-in overflow-hidden"
         >
           <Image
             src={current.url}
-            alt={current.altText ?? `${title} — image ${active + 1}`}
+            alt={
+              current.altText ??
+              `${title} — image ${active + 1}`
+            }
             fill
             priority
             sizes="(min-width: 1024px) 50vw, 100vw"
             className={`object-cover transition-transform duration-500 ease-lunar ${
-              zoomed ? 'scale-150 cursor-zoom-out' : 'scale-100'
+              zoomed
+                ? 'scale-150 cursor-zoom-out'
+                : 'scale-100'
             }`}
           />
         </button>
@@ -160,8 +187,12 @@ export default function ProductGallery({
               key={`${image.url}-${index}`}
               type="button"
               onClick={() => selectImage(index)}
-              aria-label={`Show product image ${index + 1} of ${imageCount}`}
-              aria-current={isActive ? 'true' : undefined}
+              aria-label={`Show product image ${
+                index + 1
+              } of ${imageCount}`}
+              aria-current={
+                isActive ? 'true' : undefined
+              }
               className={`relative aspect-[4/5] w-20 flex-none overflow-hidden bg-charcoal transition-all duration-300 ${
                 isActive
                   ? 'ring-1 ring-lunar opacity-100'

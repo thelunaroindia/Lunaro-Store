@@ -42,7 +42,11 @@ export default function LookbookPage() {
     };
   }, []);
 
-  const look = looks[index];
+  const look = looks[index] ?? looks[0];
+
+  if (!look) {
+    return null;
+  }
 
   const imageFailed = failedImages.has(look.desktopPath);
 
@@ -71,16 +75,24 @@ export default function LookbookPage() {
       <div
         className="absolute inset-0"
         onTouchStart={(event) => {
+          const firstTouch = event.touches.item(0);
+
+          if (!firstTouch) return;
+
           event.currentTarget.dataset.startX = String(
-            event.touches[0].clientX
+            firstTouch.clientX
           );
         }}
         onTouchEnd={(event) => {
+          const changedTouch = event.changedTouches.item(0);
+
+          if (!changedTouch) return;
+
           const startX = Number(
             event.currentTarget.dataset.startX ?? 0
           );
 
-          const endX = event.changedTouches[0].clientX;
+          const endX = changedTouch.clientX;
 
           if (startX - endX > 50) {
             goToNextLook();
