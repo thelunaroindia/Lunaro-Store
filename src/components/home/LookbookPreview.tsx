@@ -13,29 +13,11 @@ const liveCaptions = [
   'LOOK 03 — QUIET WEIGHT',
 ];
 
-const prelaunchLooks = [
-  {
-    number: '01',
-    title: 'ORBIT',
-    status: 'Transmission Pending',
-  },
-  {
-    number: '02',
-    title: 'ECLIPSE',
-    status: 'Transmission Pending',
-  },
-  {
-    number: '03',
-    title: 'VOID',
-    status: 'Future Transmission',
-  },
-];
-
 export default function LookbookPreview() {
   return (
-    <section className="border-t border-graphite py-24 md:py-32">
+    <section className="border-t border-graphite py-16 md:py-28">
       <div className="container-lunaro">
-        <Reveal className="flex flex-wrap items-end justify-between gap-6">
+        <Reveal className="flex flex-wrap items-end justify-between gap-5 md:gap-6">
           <SectionHeading eyebrow="Editorial">
             THE LOOKBOOK
           </SectionHeading>
@@ -46,88 +28,41 @@ export default function LookbookPreview() {
         </Reveal>
 
         {PRELAUNCH_MODE ? (
-          <>
-            <Reveal
-              scale={1.03}
-              className="relative mt-10 h-[55vh] min-h-[420px] overflow-hidden bg-charcoal md:h-[70vh]"
-            >
-              <CinematicPlaceholder
-                variant="lookbook"
-                className="h-full w-full"
-              />
+          <Reveal
+            scale={1.03}
+            className="relative mt-10 aspect-[4/5] max-h-[560px] overflow-hidden bg-charcoal md:mt-14 md:aspect-[16/9] md:max-h-none"
+          >
+            <CinematicPlaceholder
+              variant="lookbook"
+              className="h-full w-full"
+            />
 
-              <div className="absolute inset-0 bg-obsidian/45" />
+            <div className="absolute inset-0 bg-obsidian/50" />
 
-              <div className="absolute inset-0 flex items-center justify-center px-6">
-                <div className="border border-lunar/20 bg-obsidian/65 px-8 py-6 text-center backdrop-blur-sm md:px-12 md:py-8">
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-mist">
-                    Editorial Transmission
-                  </p>
+            <div className="absolute inset-0 flex items-center justify-center p-5 md:p-10">
+              <div className="w-full max-w-xl border border-lunar/20 bg-obsidian/70 px-6 py-8 text-center backdrop-blur-sm md:px-12 md:py-10">
+                <p className="text-[10px] uppercase tracking-[0.35em] text-mist">
+                  Editorial Transmission
+                </p>
 
-                  <h3 className="mt-3 font-display text-4xl text-lunar md:text-6xl">
-                    THE LOOKS REMAIN CONCEALED
-                  </h3>
+                <h3 className="mx-auto mt-4 max-w-lg font-display text-[2.25rem] leading-[0.95] text-lunar sm:text-5xl md:text-6xl">
+                  THE LOOKS REMAIN CONCEALED
+                </h3>
 
-                  <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-mist">
-                    The first visual chapter will be revealed when the signal
-                    is complete.
-                  </p>
+                <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-mist">
+                  The first visual chapter is taking shape in darkness.
+                </p>
 
-                  <LinkButton
-                    href="/lookbook"
-                    variant="ghost"
-                    className="mt-7"
-                  >
-                    Enter Lookbook
-                  </LinkButton>
-                </div>
-              </div>
-            </Reveal>
-
-            <div className="mt-14 grid gap-px border border-graphite bg-graphite sm:grid-cols-3">
-              {prelaunchLooks.map((look, index) => (
-                <Reveal
-                  key={look.number}
-                  delay={index * 0.1}
-                  className="h-full"
+                <LinkButton
+                  href="/lookbook"
+                  variant="ghost"
+                  className="mt-7"
                 >
-                  <article
-                    className={`relative flex aspect-[3/4] h-full flex-col justify-between overflow-hidden bg-obsidian p-6 ${
-                      index === 1 ? 'sm:translate-y-10' : ''
-                    }`}
-                  >
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.045),transparent_60%)]" />
-
-                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-charcoal/80 to-transparent" />
-
-                    <div className="relative z-10">
-                      <p className="eyebrow text-silver">
-                        {look.number}
-                      </p>
-
-                      <p className="mt-3 text-[10px] uppercase tracking-[0.35em] text-mist">
-                        {look.status}
-                      </p>
-                    </div>
-
-                    <div className="relative z-10">
-                      <p className="text-xs uppercase tracking-wider2 text-silver">
-                        LOOK {look.number}
-                      </p>
-
-                      <h3 className="mt-3 font-display text-4xl text-lunar">
-                        {look.title}
-                      </h3>
-
-                      <p className="mt-4 text-xs uppercase tracking-wider2 text-mist">
-                        Reveal Pending
-                      </p>
-                    </div>
-                  </article>
-                </Reveal>
-              ))}
+                  Enter Lookbook
+                </LinkButton>
+              </div>
             </div>
-          </>
+          </Reveal>
         ) : (
           <>
             <div className="relative mt-10 h-[55vh] min-h-[420px] overflow-hidden bg-black md:h-[70vh]">
