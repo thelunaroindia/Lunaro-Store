@@ -15,7 +15,7 @@ export default function GarmentDetails() {
       <div className="container-lunaro grid gap-8 md:gap-12 lg:grid-cols-2 lg:items-center">
         <Reveal
           scale={1.04}
-          className="relative aspect-square w-full overflow-hidden bg-charcoal lg:order-2"
+          className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal sm:aspect-square lg:order-2 lg:aspect-square"
         >
           {ready ? (
             <Image
@@ -23,7 +23,7 @@ export default function GarmentDetails() {
               alt="LUNARO fabric construction detail"
               fill
               sizes="(min-width: 1024px) 45vw, 100vw"
-              className="object-cover object-[48%_center] brightness-105"
+              className="object-cover object-center brightness-105"
             />
           ) : (
             <CinematicPlaceholder
