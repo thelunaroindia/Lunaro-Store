@@ -28,9 +28,11 @@ export default function FeaturedProducts({
       <section className="border-t border-graphite py-16 md:py-28">
         <div className="container-lunaro">
           <Reveal>
-            <SectionHeading eyebrow="The Collection">
-              GARMENTS IN ORBIT
-            </SectionHeading>
+            <div className="max-w-[320px] md:max-w-none">
+  <SectionHeading eyebrow="The Collection">
+    GARMENTS IN ORBIT
+  </SectionHeading>
+</div>
           </Reveal>
 
           <div className="mt-10 grid gap-px border border-graphite bg-graphite md:mt-14 md:grid-cols-2">
@@ -40,7 +42,7 @@ export default function FeaturedProducts({
                 delay={0.05 + index * 0.08}
                 className="h-full"
               >
-                <article className="group relative flex h-full min-h-[360px] flex-col justify-between overflow-hidden bg-obsidian p-6 sm:min-h-[400px] sm:p-8 md:min-h-[520px] md:p-10">
+                <article className="group relative flex h-full min-h-[320px] flex-col justify-between overflow-hidden bg-obsidian p-6 sm:min-h-[360px] sm:p-8 md:min-h-[520px] md:p-10">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.045),transparent_58%)]" />
 
                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-charcoal/80 to-transparent" />
