@@ -40,7 +40,7 @@ export default function GarmentDetails() {
             </SectionHeading>
           </div>
 
-          <ul className="mt-7 space-y-0 md:mt-8">
+          <ul className="mt-6 space-y-0 md:mt-8">
             {fabricDetails.map((detail) => (
               <li
                 key={detail}

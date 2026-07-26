@@ -97,7 +97,7 @@ export default function FirstTransmission({
           </p>
 
           {PRELAUNCH_MODE ? (
-            <LinkButton href="/new-drop" variant="ghost" className="mt-8">
+            <LinkButton href="/new-drop" variant="ghost" className="mt-6">
               View the Transmission
             </LinkButton>
           ) : (
