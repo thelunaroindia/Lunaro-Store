@@ -8,18 +8,13 @@ import type { ProductCardData } from '@/lib/types';
 const concealedGarments = [
   {
     number: '01',
-    title: 'CONCEALED',
-    line: 'The first silhouette remains beyond the visible.',
+    title: 'ORBIT',
+    line: 'Engineered forms shaped by motion, distance and human ambition.',
   },
   {
     number: '02',
-    title: 'CONCEALED',
-    line: 'A second form is taking shape in darkness.',
-  },
-  {
-    number: '03',
-    title: 'CONCEALED',
-    line: 'The signal will reveal only what is ready.',
+    title: 'ECLIPSE',
+    line: 'A study in shadow, obscured light and celestial darkness.',
   },
 ];
 
@@ -30,7 +25,7 @@ export default function FeaturedProducts({
 }) {
   if (PRELAUNCH_MODE) {
     return (
-      <section className="border-t border-graphite py-24 md:py-32">
+      <section className="border-t border-graphite py-16 md:py-28">
         <div className="container-lunaro">
           <Reveal>
             <SectionHeading eyebrow="The Collection">
@@ -38,14 +33,14 @@ export default function FeaturedProducts({
             </SectionHeading>
           </Reveal>
 
-          <div className="mt-14 grid gap-px border border-graphite bg-graphite md:grid-cols-3">
+          <div className="mt-10 grid gap-px border border-graphite bg-graphite md:mt-14 md:grid-cols-2">
             {concealedGarments.map((garment, index) => (
               <Reveal
                 key={garment.number}
                 delay={0.05 + index * 0.08}
                 className="h-full"
               >
-                <article className="group relative flex min-h-[460px] h-full flex-col justify-between overflow-hidden bg-obsidian p-8 md:min-h-[560px] md:p-10">
+                <article className="group relative flex h-full min-h-[360px] flex-col justify-between overflow-hidden bg-obsidian p-6 sm:min-h-[400px] sm:p-8 md:min-h-[520px] md:p-10">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.045),transparent_58%)]" />
 
                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-charcoal/80 to-transparent" />
@@ -61,11 +56,15 @@ export default function FeaturedProducts({
                   </div>
 
                   <div className="relative z-10">
+                    <p className="mb-3 text-[10px] uppercase tracking-[0.28em] text-mist">
+                      Look {garment.number}
+                    </p>
+
                     <h3 className="font-display text-4xl text-lunar md:text-5xl">
                       {garment.title}
                     </h3>
 
-                    <p className="mt-5 max-w-xs text-sm leading-7 text-mist">
+                    <p className="mt-4 max-w-sm text-sm leading-6 text-mist md:mt-5 md:leading-7">
                       {garment.line}
                     </p>
                   </div>
@@ -73,16 +72,6 @@ export default function FeaturedProducts({
               </Reveal>
             ))}
           </div>
-
-          <Reveal delay={0.32} className="mt-12 text-center">
-            <p className="eyebrow text-silver">
-              THE FIRST GARMENTS REMAIN OUT OF SIGHT
-            </p>
-
-            <p className="mt-4 font-display text-3xl text-lunar md:text-5xl">
-              REVEAL PENDING
-            </p>
-          </Reveal>
         </div>
       </section>
     );
