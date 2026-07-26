@@ -122,12 +122,13 @@ export default function Hero() {
           initial={prefersReducedMotion ? undefined : { opacity: 0, y: 16 }}
           animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: EASE, delay: 0.7 }}
-        ><LinkButton href="/about" variant="ghost">
-  Enter the World
-</LinkButton>
-          <LinkButton href="/about" variant="ghost">
-            Enter the World
-          </LinkButton>
+        >
+  <LinkButton
+    href={PRELAUNCH_MODE ? '/about' : '/collections/drop-001'}
+    variant="ghost"
+  >
+    {PRELAUNCH_MODE ? 'Enter the World' : 'Explore the Drop'}
+  </LinkButton>
         </motion.div>
       </div>
     </section>
