@@ -31,11 +31,11 @@ export default function FirstTransmission({
   const campaignStillReady = hasPublicAsset(asset.desktopPath);
 
   return (
-    <section className="border-t border-graphite py-24 md:py-32">
-      <div className="container-lunaro grid gap-12 lg:grid-cols-2 lg:items-center">
+    <section className="border-t border-graphite py-16 md:py-28">
+      <div className="container-lunaro grid gap-8 md:gap-12 lg:grid-cols-2 lg:items-center">
         <Reveal
           scale={1.04}
-          className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal"
+          className="relative aspect-[5/6] w-full overflow-hidden bg-charcoal md:aspect-[4/5]"
         >
           {PRELAUNCH_MODE ? (
             <>
@@ -46,10 +46,10 @@ export default function FirstTransmission({
 
               <div className="absolute inset-0 bg-obsidian/35" />
 
-              <div className="absolute inset-0 flex items-center justify-center px-6">
-                <div className="border border-lunar/20 bg-obsidian/65 px-7 py-6 text-center backdrop-blur-sm">
+              <div className="absolute inset-0 flex items-center justify-center px-5 md:px-6">
+                <div className="border border-lunar/20 bg-obsidian/65 px-6 py-5 text-center backdrop-blur-sm md:px-7 md:py-6">
                   <p className="text-[10px] uppercase tracking-[0.35em] text-mist">
-                    Garments Concealed
+                    Transmission Pending
                   </p>
 
                   <p className="mt-3 font-display text-3xl text-lunar md:text-5xl">
@@ -90,33 +90,16 @@ export default function FirstTransmission({
             THE FIRST TRANSMISSION
           </h2>
 
-          <p className="mt-5 max-w-md text-mist">
+          <p className="mt-5 max-w-md leading-7 text-mist">
             {PRELAUNCH_MODE
-              ? 'Born from silence. Built in darkness. Revealed only when the signal is complete.'
+              ? 'Born from silence. Built in darkness. The signal is nearing completion.'
               : 'Born from silence. Built for movement.'}
           </p>
 
           {PRELAUNCH_MODE ? (
-            <>
-              <div className="mt-10 max-w-sm border-t border-graphite pt-6">
-                <p className="text-eyebrow uppercase tracking-wider2 text-silver">
-                  GARMENTS CONCEALED
-                </p>
-
-                <p className="mt-3 font-display text-3xl text-lunar">
-                  REVEAL PENDING
-                </p>
-
-                <p className="mt-4 text-sm leading-7 text-mist">
-                  The first silhouettes remain out of sight while the
-                  transmission is being completed.
-                </p>
-              </div>
-
-              <LinkButton href="/new-drop" variant="ghost" className="mt-8">
-                Enter the Transmission
-              </LinkButton>
-            </>
+            <LinkButton href="/new-drop" variant="ghost" className="mt-8">
+              View the Transmission
+            </LinkButton>
           ) : (
             <>
               <div className="mt-10 flex max-w-sm items-center justify-between border-t border-graphite pt-6">
