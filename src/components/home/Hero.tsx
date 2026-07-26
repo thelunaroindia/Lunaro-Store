@@ -74,7 +74,7 @@ export default function Hero() {
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 md:hidden ${
           mobileVideoReady ? 'opacity-100' : 'opacity-0'
         }`}
-        poster="/images/hero-poster-mobile.jpg"
+        poster={`/${asset.posterPath}`}
         autoPlay
         muted
         loop
