@@ -6,15 +6,21 @@ import { nav, site, PRELAUNCH_MODE } from '@/lib/config';
 import { useCartUI } from '@/context/CartUIContext';
 import MobileMenu from './MobileMenu';
 
-export default function Header({ customerAccountsEnabled }: { customerAccountsEnabled: boolean }) {
+export default function Header({
+  customerAccountsEnabled,
+}: {
+  customerAccountsEnabled: boolean;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { cart, toggle: toggleCart } = useCartUI();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
+
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
+
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
@@ -23,73 +29,93 @@ export default function Header({ customerAccountsEnabled }: { customerAccountsEn
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 transition-colors duration-500 ${
-          scrolled ? 'bg-obsidian/90 backdrop-blur border-b border-graphite' : 'bg-transparent'
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+          scrolled
+            ? 'border-b border-graphite bg-obsidian/95 shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl'
+            : 'border-b border-transparent bg-obsidian/20 backdrop-blur-[2px] md:bg-transparent md:backdrop-blur-none'
         }`}
       >
-        <div className="container-lunaro flex h-20 items-center justify-between">
-          <Link href="/" className="font-display text-xl tracking-wider2 text-lunar">
+        <div className="container-lunaro flex h-[72px] items-center justify-between md:h-20">
+          <Link
+            href="/"
+            className="flex min-h-11 items-center font-display text-xl tracking-wider2 text-lunar"
+            aria-label={`${site.name} home`}
+          >
             {site.name}
           </Link>
 
-          <nav className="hidden items-center gap-10 md:flex" aria-label="Primary">
+          <nav
+            className="hidden items-center gap-10 md:flex"
+            aria-label="Primary navigation"
+          >
             {nav.main.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-eyebrow uppercase tracking-wider2 text-lunar link-underline"
+                className="link-underline text-eyebrow uppercase tracking-wider2 text-lunar"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-         <div className="flex items-center gap-6">
-  {!PRELAUNCH_MODE && (
-    <>
-      <Link
-        href="/search"
-        className="hidden text-eyebrow uppercase tracking-wider2 text-lunar link-underline md:inline"
-      >
-        Search
-      </Link>
+          <div className="flex items-center gap-6">
+            {!PRELAUNCH_MODE && (
+              <>
+                <Link
+                  href="/search"
+                  className="link-underline hidden text-eyebrow uppercase tracking-wider2 text-lunar md:inline"
+                >
+                  Search
+                </Link>
 
-      {customerAccountsEnabled && (
-        <Link
-          href="/account"
-          className="hidden text-eyebrow uppercase tracking-wider2 text-lunar link-underline md:inline"
-        >
-          Account
-        </Link>
-      )}
+                {customerAccountsEnabled && (
+                  <Link
+                    href="/account"
+                    className="link-underline hidden text-eyebrow uppercase tracking-wider2 text-lunar md:inline"
+                  >
+                    Account
+                  </Link>
+                )}
 
-      <button
-        onClick={toggleCart}
-        className="relative text-eyebrow uppercase tracking-wider2 text-lunar"
-        aria-label={`Open cart, ${itemCount} item${itemCount === 1 ? '' : 's'}`}
-      >
-        Cart
-        {itemCount > 0 && (
-          <span className="ml-1 text-silver" aria-hidden>
-            ({itemCount})
-          </span>
-        )}
-      </button>
-    </>
-  )}
+                <button
+                  type="button"
+                  onClick={toggleCart}
+                  className="relative min-h-11 items-center text-eyebrow uppercase tracking-wider2 text-lunar md:flex"
+                  aria-label={`Open cart, ${itemCount} item${
+                    itemCount === 1 ? '' : 's'
+                  }`}
+                >
+                  Cart
 
-  <button
-    onClick={() => setMobileOpen(true)}
-    className="text-eyebrow uppercase tracking-wider2 text-lunar md:hidden"
-    aria-label="Open menu"
-    aria-expanded={mobileOpen}
-  >
-    Menu
-  </button>
-</div>        </div>
+                  {itemCount > 0 && (
+                    <span className="ml-1 text-silver" aria-hidden>
+                      ({itemCount})
+                    </span>
+                  )}
+                </button>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              className="flex min-h-11 min-w-11 items-center justify-end text-eyebrow uppercase tracking-wider2 text-lunar md:hidden"
+              aria-label="Open menu"
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-navigation"
+            >
+              Menu
+            </button>
+          </div>
+        </div>
       </header>
 
-      <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} customerAccountsEnabled={customerAccountsEnabled} />
+      <MobileMenu
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        customerAccountsEnabled={customerAccountsEnabled}
+      />
     </>
   );
 }
