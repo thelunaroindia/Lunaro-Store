@@ -3,7 +3,7 @@
 // SEO defaults — lives here so it is never scattered across components.
 // Replace TODO-marked values with real data when it is available;
 // nothing here is wired to fake functionality.
-export const PRELAUNCH_MODE = false;
+export const PRELAUNCH_MODE = true;
 export const site = {
   name: 'LUNARO',
   domain: 'lunaro.in',
