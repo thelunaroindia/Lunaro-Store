@@ -17,12 +17,16 @@ export default function LookbookPreview() {
   return (
     <section className="border-t border-graphite py-16 md:py-28">
       <div className="container-lunaro">
-        <Reveal className="flex flex-wrap items-end justify-between gap-5 md:gap-6">
+        <Reveal className="flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between md:gap-6">
           <SectionHeading eyebrow="Editorial">
             THE LOOKBOOK
           </SectionHeading>
 
-          <LinkButton href="/lookbook" variant="underline">
+          <LinkButton
+  href="/lookbook"
+  variant="underline"
+  className="self-start"
+>
             {PRELAUNCH_MODE ? 'Enter Lookbook' : 'View Lookbook'}
           </LinkButton>
         </Reveal>
