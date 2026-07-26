@@ -35,7 +35,7 @@ export default function FirstTransmission({
       <div className="container-lunaro grid gap-8 md:gap-12 lg:grid-cols-2 lg:items-center">
         <Reveal
           scale={1.04}
-          className="relative aspect-[5/6] w-full overflow-hidden bg-charcoal md:aspect-[4/5]"
+         className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal"
         >
           {PRELAUNCH_MODE ? (
             <>
@@ -86,9 +86,9 @@ export default function FirstTransmission({
         <Reveal delay={0.1}>
           <Eyebrow>Drop 001</Eyebrow>
 
-          <h2 className="mt-4 font-display text-display-md text-lunar">
-            THE FIRST TRANSMISSION
-          </h2>
+          <h2 className="mt-4 max-w-[360px] font-display text-[2.35rem] leading-[0.95] text-lunar sm:text-display-md">
+  THE FIRST TRANSMISSION
+</h2>
 
           <p className="mt-5 max-w-md leading-7 text-mist">
             {PRELAUNCH_MODE
