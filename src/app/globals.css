@@ -9,6 +9,7 @@
 
   html {
     @apply scroll-smooth;
+    scroll-padding-top: 88px;
   }
 
   body {
@@ -29,6 +30,10 @@
   h2,
   h3 {
     @apply font-display;
+  }
+
+  section[id] {
+    scroll-margin-top: 88px;
   }
 }
 
@@ -52,10 +57,22 @@
     background-position: 0 100%;
     background-repeat: no-repeat;
     background-size: 0% 1px;
-    transition: background-size 0.5s theme('transitionTimingFunction.lunar');
+    transition: background-size 0.5s
+      theme('transitionTimingFunction.lunar');
   }
+
   .link-underline:hover {
     background-size: 100% 1px;
+  }
+}
+
+@media (min-width: 768px) {
+  html {
+    scroll-padding-top: 96px;
+  }
+
+  section[id] {
+    scroll-margin-top: 96px;
   }
 }
 
