@@ -9,15 +9,28 @@ import { PRELAUNCH_MODE } from '@/lib/config';
 
 const looks = assetManifest.lookbookFull;
 
-const prelaunchCaptions = [
-  'LOOK 01 — ORBIT',
-  'LOOK 02 — ECLIPSE',
-  'LOOK 03 — VOID',
-  'LOOK 04 — ARCHIVE',
+const lookDetails = [
+  {
+    caption: 'LOOK 01 — ORBIT',
+    collectionHandle: 'orbit',
+  },
+  {
+    caption: 'LOOK 02 — ECLIPSE',
+    collectionHandle: 'eclipse',
+  },
+  {
+    caption: 'LOOK 03 — VOID',
+    collectionHandle: 'void',
+  },
+  {
+    caption: 'LOOK 04 — ACTIVEWEAR',
+    collectionHandle: 'activewear',
+  },
 ];
 
 export default function LookbookPage() {
   const [index, setIndex] = useState(0);
+
   const [failedImages, setFailedImages] = useState<Set<string>>(
     new Set()
   );
@@ -43,19 +56,17 @@ export default function LookbookPage() {
   }, []);
 
   const look = looks[index] ?? looks[0];
+  const currentLookDetails = lookDetails[index] ?? lookDetails[0];
 
-  if (!look) {
+  if (!look || !currentLookDetails) {
     return null;
   }
 
   const imageFailed = failedImages.has(look.desktopPath);
 
-  const isAvailable =
-    !PRELAUNCH_MODE && look.status === 'available';
+  const isAvailable = !PRELAUNCH_MODE;
 
-  const displayCaption = PRELAUNCH_MODE
-    ? prelaunchCaptions[index] ?? look.caption
-    : look.caption;
+  const displayCaption = currentLookDetails.caption;
 
   const transmissionStatus =
     index < 2 ? 'Transmission Pending' : 'Future Transmission';
@@ -111,15 +122,11 @@ export default function LookbookPage() {
         ) : (
           <Image
             src={`/${look.desktopPath}`}
-            alt={look.caption}
+            alt={displayCaption}
             fill
             priority
             sizes="100vw"
-            className={`object-cover transition duration-700 ${
-              isAvailable
-                ? ''
-                : 'scale-[1.02] opacity-40 grayscale'
-            }`}
+            className="object-cover transition duration-700"
             onError={() =>
               setFailedImages((previous) => {
                 const next = new Set(previous);
@@ -149,20 +156,6 @@ export default function LookbookPage() {
             </div>
           </div>
         )}
-
-        {!PRELAUNCH_MODE && !isAvailable && (
-          <div className="absolute inset-0 flex items-center justify-center px-6">
-            <div className="border border-lunar/20 bg-obsidian/65 px-8 py-5 text-center backdrop-blur-sm">
-              <p className="text-eyebrow uppercase tracking-[0.35em] text-mist">
-                Transmission Pending
-              </p>
-
-              <p className="mt-3 font-display text-3xl text-lunar md:text-5xl">
-                Coming Soon
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="container-lunaro relative z-10 flex h-full flex-col justify-end pb-16 pt-32">
@@ -175,18 +168,16 @@ export default function LookbookPage() {
           {displayCaption}
         </h1>
 
-        {isAvailable && look.shopHandle ? (
+        {isAvailable ? (
           <Link
-            href={`/products/${look.shopHandle}`}
+            href={`/collections/${currentLookDetails.collectionHandle}`}
             className="mt-4 w-fit text-eyebrow uppercase tracking-wider2 text-lunar link-underline"
           >
             Shop This Look
           </Link>
         ) : (
           <p className="mt-4 w-fit text-eyebrow uppercase tracking-wider2 text-mist">
-            {PRELAUNCH_MODE
-              ? transmissionStatus
-              : 'Coming Soon'}
+            {transmissionStatus}
           </p>
         )}
       </div>
@@ -218,9 +209,7 @@ export default function LookbookPage() {
             type="button"
             onClick={() => setIndex(itemIndex)}
             aria-label={`Open ${
-              PRELAUNCH_MODE
-                ? prelaunchCaptions[itemIndex] ?? item.caption
-                : item.caption
+              lookDetails[itemIndex]?.caption ?? item.caption
             }`}
             className={`h-px transition-all duration-300 ${
               itemIndex === index
