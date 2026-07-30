@@ -9,20 +9,12 @@ export const metadata: Metadata = {
   title: 'Collections',
 };
 
-const futureCollections = [
-  {
-    id: 'trackpants-coming-soon',
-    title: 'Trackpants',
-    status: 'Future Transmission',
-    image: '/images/collections/trackpants-coming-soon.jpg',
-  },
-  {
-    id: 'hoodies-coming-soon',
-    title: 'Hoodies',
-    status: 'Future Transmission',
-    image: '/images/collections/hoodies-coming-soon.jpg',
-  },
-];
+const hoodiesCollection = {
+  id: 'hoodies-coming-soon',
+  title: 'Hoodies',
+  status: 'Future Transmission',
+  image: '/images/collections/hoodies-coming-soon.jpg',
+};
 
 export default async function CollectionsPage() {
   const collections = isShopifyConfigured()
@@ -33,6 +25,12 @@ export default async function CollectionsPage() {
     (collection) =>
       collection.handle === 'oversized-tees' ||
       collection.title.toLowerCase() === 'oversized tees'
+  );
+
+  const trackpantsCollection = collections.find(
+    (collection) =>
+      collection.handle === 'trackpants' ||
+      collection.title.toLowerCase() === 'trackpants'
   );
 
   const oversizedCard = (
@@ -86,6 +84,32 @@ export default async function CollectionsPage() {
     </div>
   );
 
+  const trackpantsCard = (
+    <div className="relative aspect-[4/5] overflow-hidden bg-charcoal">
+      <Image
+        src="/images/collections/trackpants-coming-soon.jpg"
+        alt="LUNARO Trackpants Collection"
+        fill
+        sizes="(min-width: 1024px) 33vw, 50vw"
+        className="object-cover transition duration-700 group-hover:scale-[1.03]"
+      />
+
+      <div className="absolute inset-0 bg-gradient-to-t from-obsidian/75 via-transparent to-transparent" />
+
+      <div className="absolute bottom-5 left-5">
+        <p className="eyebrow text-silver">02</p>
+
+        <p className="mt-2 font-display text-3xl text-lunar">
+          Trackpants
+        </p>
+
+        <p className="mt-2 text-xs uppercase tracking-wider2 text-mist">
+          Available
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <main className="container-lunaro pb-24 pt-32 md:pt-40">
       <SectionHeading
@@ -96,11 +120,8 @@ export default async function CollectionsPage() {
       </SectionHeading>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {PRELAUNCH_MODE ? (
-          <div className="group block cursor-default">
-            {oversizedCard}
-          </div>
-        ) : oversizedCollection ? (
+        {/* Oversized Tees */}
+        {!PRELAUNCH_MODE && oversizedCollection ? (
           <Link
             href={`/collections/${oversizedCollection.handle}`}
             className="group block"
@@ -113,50 +134,58 @@ export default async function CollectionsPage() {
           </div>
         )}
 
-        {futureCollections.map((collection, index) => (
-          <div
-            key={collection.id}
-            className="group relative block cursor-default"
+        {/* Trackpants */}
+        {trackpantsCollection ? (
+          <Link
+            href={`/collections/${trackpantsCollection.handle}`}
+            className="group block"
           >
-            <div className="relative aspect-[4/5] overflow-hidden bg-charcoal">
-              <Image
-                src={collection.image}
-                alt={`${collection.title} future collection`}
-                fill
-                sizes="(min-width: 1024px) 33vw, 50vw"
-                className="object-cover opacity-35 grayscale"
-              />
+            {trackpantsCard}
+          </Link>
+        ) : (
+          <div className="group block cursor-default">
+            {trackpantsCard}
+          </div>
+        )}
 
-              <div className="absolute inset-0 bg-obsidian/45" />
+        {/* Hoodies Coming Soon */}
+        <div className="group relative block cursor-default">
+          <div className="relative aspect-[4/5] overflow-hidden bg-charcoal">
+            <Image
+              src={hoodiesCollection.image}
+              alt="LUNARO Hoodies future collection"
+              fill
+              sizes="(min-width: 1024px) 33vw, 50vw"
+              className="object-cover opacity-35 grayscale"
+            />
 
-              <div className="absolute inset-0 flex items-center justify-center px-6">
-                <div className="border border-lunar/20 bg-obsidian/65 px-6 py-5 text-center backdrop-blur-sm">
-                  <p className="text-[10px] uppercase tracking-[0.35em] text-mist">
-                    Transmission Pending
-                  </p>
+            <div className="absolute inset-0 bg-obsidian/45" />
 
-                  <p className="mt-2 font-display text-3xl text-lunar">
-                    Coming Soon
-                  </p>
-                </div>
-              </div>
-
-              <div className="absolute bottom-5 left-5">
-                <p className="eyebrow text-silver">
-                  0{index + 2}
+            <div className="absolute inset-0 flex items-center justify-center px-6">
+              <div className="border border-lunar/20 bg-obsidian/65 px-6 py-5 text-center backdrop-blur-sm">
+                <p className="text-[10px] uppercase tracking-[0.35em] text-mist">
+                  Transmission Pending
                 </p>
 
                 <p className="mt-2 font-display text-3xl text-lunar">
-                  {collection.title}
-                </p>
-
-                <p className="mt-2 text-xs uppercase tracking-wider2 text-mist">
-                  {collection.status}
+                  Coming Soon
                 </p>
               </div>
             </div>
+
+            <div className="absolute bottom-5 left-5">
+              <p className="eyebrow text-silver">03</p>
+
+              <p className="mt-2 font-display text-3xl text-lunar">
+                Hoodies
+              </p>
+
+              <p className="mt-2 text-xs uppercase tracking-wider2 text-mist">
+                {hoodiesCollection.status}
+              </p>
+            </div>
           </div>
-        ))}
+        </div>
       </div>
     </main>
   );
