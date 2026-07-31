@@ -20,8 +20,19 @@ export default function FirstTransmission({
 
   const title = featured?.title ?? fallback.title;
 
-  const price = featured
-    ? formatMoney(featured.priceRange.minVariantPrice)
+  const sellingPrice = featured
+    ? featured.priceRange.minVariantPrice
+    : null;
+
+  const compareAtPrice = featured?.compareAtPriceRange?.minVariantPrice;
+
+  const isOnSale =
+    sellingPrice &&
+    compareAtPrice &&
+    Number(compareAtPrice.amount) > Number(sellingPrice.amount);
+
+  const price = sellingPrice
+    ? formatMoney(sellingPrice)
     : `₹${fallback.price}`;
 
   const href = featured
@@ -35,7 +46,7 @@ export default function FirstTransmission({
       <div className="container-lunaro grid gap-8 md:gap-12 lg:grid-cols-2 lg:items-center">
         <Reveal
           scale={1.04}
-         className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal"
+          className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal"
         >
           {PRELAUNCH_MODE ? (
             <>
@@ -87,8 +98,8 @@ export default function FirstTransmission({
           <Eyebrow>Drop 001</Eyebrow>
 
           <h2 className="mt-4 max-w-[360px] font-display text-[2.35rem] leading-[0.95] text-lunar sm:text-display-md">
-  THE FIRST TRANSMISSION
-</h2>
+            THE FIRST TRANSMISSION
+          </h2>
 
           <p className="mt-5 max-w-md leading-7 text-mist">
             {PRELAUNCH_MODE
@@ -97,23 +108,47 @@ export default function FirstTransmission({
           </p>
 
           {PRELAUNCH_MODE ? (
-            <LinkButton href="/new-drop" variant="ghost" className="mt-6">
+            <LinkButton
+              href="/new-drop"
+              variant="ghost"
+              className="mt-6"
+            >
               View the Transmission
             </LinkButton>
           ) : (
             <>
               <div className="mt-10 flex max-w-sm items-center justify-between border-t border-graphite pt-6">
                 <div>
-                  <p className="text-sm text-lunar">{title}</p>
-                  <p className="mt-1 text-sm text-mist">{price}</p>
+                  <p className="text-sm text-lunar">
+                    {title}
+                  </p>
+
+                  <div className="mt-1 flex items-center gap-2">
+                    <p className="text-sm text-lunar">
+                      {price}
+                    </p>
+
+                    {isOnSale && compareAtPrice && (
+                      <p className="text-xs text-mist line-through">
+                        {formatMoney(compareAtPrice)}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                <LinkButton href={href} variant="underline">
+                <LinkButton
+                  href={href}
+                  variant="underline"
+                >
                   View
                 </LinkButton>
               </div>
 
-              <LinkButton href="/new-drop" variant="ghost" className="mt-8">
+              <LinkButton
+                href="/new-drop"
+                variant="ghost"
+                className="mt-8"
+              >
                 Discover Collection
               </LinkButton>
             </>
