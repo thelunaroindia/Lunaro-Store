@@ -32,30 +32,36 @@ export default function ProductOptions({
   const productSoldOut =
     !product.availableForSale ||
     product.variants.length === 0 ||
-    product.variants.every((variant) => !variant.availableForSale);
+    product.variants.every(
+      (variant) => !variant.availableForSale
+    );
 
-  const [selected, setSelected] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {};
+  const [selected, setSelected] = useState<Record<string, string>>(
+    () => {
+      const initial: Record<string, string> = {};
 
-    for (const option of product.options) {
-      const firstAvailableVariant = product.variants.find(
-        (variant) =>
-          variant.availableForSale &&
-          variant.selectedOptions.some(
-            (selectedOption) => selectedOption.name === option.name
-          )
-      );
+      for (const option of product.options) {
+        const firstAvailableVariant = product.variants.find(
+          (variant) =>
+            variant.availableForSale &&
+            variant.selectedOptions.some(
+              (selectedOption) =>
+                selectedOption.name === option.name
+            )
+        );
 
-      initial[option.name] =
-        firstAvailableVariant?.selectedOptions.find(
-          (selectedOption) => selectedOption.name === option.name
-        )?.value ??
-        option.values[0] ??
-        '';
+        initial[option.name] =
+          firstAvailableVariant?.selectedOptions.find(
+            (selectedOption) =>
+              selectedOption.name === option.name
+          )?.value ??
+          option.values[0] ??
+          '';
+      }
+
+      return initial;
     }
-
-    return initial;
-  });
+  );
 
   const activeVariant = useMemo(
     () => findVariant(product.variants, selected),
@@ -73,6 +79,20 @@ export default function ProductOptions({
     typeof activeVariant.quantityAvailable === 'number' &&
     activeVariant.quantityAvailable > 0 &&
     activeVariant.quantityAvailable <= 5;
+
+  const sellingPrice =
+    activeVariant?.price ??
+    product.priceRange.minVariantPrice;
+
+  const compareAtPrice =
+    activeVariant?.compareAtPrice ?? null;
+
+  const isOnSale =
+    compareAtPrice !== null &&
+    Number(compareAtPrice.amount) >
+      Number(sellingPrice.amount);
+
+  const priceLabel = formatMoney(sellingPrice);
 
   function handleAddToCart() {
     if (!activeVariant || isSoldOut || isPending) return;
@@ -101,22 +121,27 @@ export default function ProductOptions({
 
       if (result.ok) {
         setCart(result.cart);
-        window.location.href = result.cart.checkoutUrl;
+        window.location.href =
+          result.cart.checkoutUrl;
       } else {
         setError(result.error);
       }
     });
   }
 
-  const priceLabel = activeVariant
-    ? formatMoney(activeVariant.price)
-    : formatMoney(product.priceRange.minVariantPrice);
-
   return (
     <div>
-      <p className="font-display text-2xl text-lunar">
-        {priceLabel}
-      </p>
+      <div className="flex items-center gap-3">
+        <p className="font-display text-2xl text-lunar">
+          {formatMoney(sellingPrice)}
+        </p>
+
+        {isOnSale && compareAtPrice && (
+          <p className="text-sm text-mist line-through">
+            {formatMoney(compareAtPrice)}
+          </p>
+        )}
+      </div>
 
       <p className="mt-1 text-xs text-mist">
         Inclusive of taxes. Shipping calculated at checkout.
@@ -130,12 +155,16 @@ export default function ProductOptions({
 
           <div className="mt-3 flex flex-wrap gap-2">
             {option.values.map((value) => {
-              const isSelected = selected[option.name] === value;
+              const isSelected =
+                selected[option.name] === value;
 
-              const variantForValue = findVariant(product.variants, {
-                ...selected,
-                [option.name]: value,
-              });
+              const variantForValue = findVariant(
+                product.variants,
+                {
+                  ...selected,
+                  [option.name]: value,
+                }
+              );
 
               const unavailable =
                 productSoldOut ||
@@ -211,7 +240,8 @@ export default function ProductOptions({
 
       {isLowStock && (
         <p className="mt-3 text-xs text-silver">
-          Only {activeVariant?.quantityAvailable} left in this size.
+          Only {activeVariant?.quantityAvailable} left in this
+          size.
         </p>
       )}
 
