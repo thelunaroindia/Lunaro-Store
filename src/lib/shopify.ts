@@ -144,6 +144,7 @@ function normaliseProductCard(product: any): ProductCardData {
     availableForSale: product.availableForSale,
     tags: product.tags ?? [],
     priceRange: product.priceRange,
+    compareAtPriceRange: product.compareAtPriceRange,
     images: product.images?.nodes ?? [],
     filterOptions: product.options ?? [],
     filterVariants: (product.variants?.nodes ?? []).map(

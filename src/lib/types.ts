@@ -50,11 +50,29 @@ export type ProductCardData = Pick<
   'id' | 'handle' | 'title' | 'availableForSale' | 'priceRange' | 'images'
 > & {
   tags: string[];
+
+  compareAtPriceRange?: {
+    minVariantPrice: {
+      amount: string;
+      currencyCode: string;
+    };
+    maxVariantPrice: {
+      amount: string;
+      currencyCode: string;
+    };
+  };
+
   // Present when fetched for the shop/collection grid so client-side
-  // filter controls (size, colour) can narrow results server-side before
-  // the page renders. Not used for display.
+  // filter controls can narrow results before the page renders.
   filterOptions?: ProductOption[];
-  filterVariants?: { availableForSale: boolean; selectedOptions: { name: string; value: string }[] }[];
+
+  filterVariants?: {
+    availableForSale: boolean;
+    selectedOptions: {
+      name: string;
+      value: string;
+    }[];
+  }[];
 };
 
 export type Collection = {

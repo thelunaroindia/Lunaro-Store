@@ -23,6 +23,10 @@ const PRODUCT_CARD_FIELDS = `
     minVariantPrice { ${MONEY_FIELDS} }
     maxVariantPrice { ${MONEY_FIELDS} }
   }
+    compareAtPriceRange {
+  minVariantPrice { ${MONEY_FIELDS} }
+  maxVariantPrice { ${MONEY_FIELDS} }
+}
   images(first: 2) {
     nodes { ${IMAGE_FIELDS} }
   }
