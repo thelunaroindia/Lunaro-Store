@@ -140,7 +140,7 @@ export default function ProductOptions({
   return (
     <div>
       <div className="flex items-center gap-3">
-        <p className="font-display text-2xl text-lunar">
+        <p className="text-2xl font-medium text-lunar">
           {formatMoney(sellingPrice)}
         </p>
 
