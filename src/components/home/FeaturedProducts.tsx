@@ -82,7 +82,7 @@ export default function FeaturedProducts({
   if (products.length === 0) return null;
 
   return (
-    <section className="border-t border-graphite py-24 md:py-32">
+    <section className="border-t border-graphite pt-28 pb-24 md:pt-32 md:pb-32">
       <div className="container-lunaro">
         <Reveal className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading eyebrow="The Collection">
