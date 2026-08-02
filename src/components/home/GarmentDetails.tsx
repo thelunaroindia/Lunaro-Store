@@ -1,10 +1,21 @@
 import Image from 'next/image';
-import { fabricDetails } from '@/lib/config';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import { Reveal } from '@/components/motion/Reveal';
 import { hasPublicAsset } from '@/lib/assets';
 import { assetManifest } from '@/lib/assetManifest';
+
+type ConstructionFact = {
+  value: string;
+  detail: string;
+};
+
+const constructionFacts: ConstructionFact[] = [
+  { value: '240 GSM', detail: 'Heavyweight cotton' },
+  { value: '100% COTTON', detail: 'Soft, breathable structure' },
+  { value: 'OVERSIZED FIT', detail: 'Relaxed drop-shoulder silhouette' },
+  { value: 'BUILT TO LAST', detail: 'Reinforced everyday construction' },
+];
 
 export default function GarmentDetails() {
   const asset = assetManifest.fabricMacro;
@@ -40,16 +51,21 @@ export default function GarmentDetails() {
             </SectionHeading>
           </div>
 
-          <ul className="mt-6 space-y-0 md:mt-8">
-            {fabricDetails.map((detail) => (
-              <li
-                key={detail}
-                className="border-t border-graphite py-4 text-[12px] uppercase tracking-[0.22em] text-mist md:text-sm md:tracking-wider2"
+          <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 md:mt-10 md:gap-x-8 md:gap-y-8">
+            {constructionFacts.map((fact) => (
+              <div
+                key={fact.value}
+                className="border-t border-graphite pt-4"
               >
-                {detail}
-              </li>
+                <p className="font-display text-xl text-lunar sm:text-2xl">
+                  {fact.value}
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-mist sm:text-sm">
+                  {fact.detail}
+                </p>
+              </div>
             ))}
-          </ul>
+          </div>
         </Reveal>
       </div>
     </section>
