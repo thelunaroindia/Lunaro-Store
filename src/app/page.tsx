@@ -5,6 +5,7 @@ import PageIntro from '@/components/layout/PageIntro';
 import Hero from '@/components/home/Hero';
 import FirstTransmission from '@/components/home/FirstTransmission';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
+import CollectionCarousel from '@/components/home/CollectionCarousel';
 import GarmentDetails from '@/components/home/GarmentDetails';
 import LunaroWorld from '@/components/home/LunaroWorld';
 import LookbookPreview from '@/components/home/LookbookPreview';
@@ -44,8 +45,9 @@ export default async function HomePage() {
     <>
       <PageIntro />
       <Hero />
-      <FirstTransmission featured={products[0] ?? null} />
       <FeaturedProducts products={products.slice(0, 4)} />
+      <CollectionCarousel />
+      <FirstTransmission featured={products[0] ?? null} />
       <GarmentDetails />
       <LunaroWorld />
       <LookbookPreview />
