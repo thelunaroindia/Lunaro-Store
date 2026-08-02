@@ -276,7 +276,7 @@ export default function ProductOptions({
         priceLabel={priceLabel}
         disabled={isSoldOut}
         isPending={isPending}
-        onAdd={handleAddToCart}
+        onAdd={handleBuyNow}
       />
     </div>
   );
