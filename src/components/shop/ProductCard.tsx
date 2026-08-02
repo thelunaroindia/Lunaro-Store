@@ -49,7 +49,7 @@ export default function ProductCard({
         className="block"
       >
         <div
-          className={`relative overflow-hidden bg-charcoal ${
+          className={`relative media-rounded bg-charcoal ${
             size === 'large'
               ? 'aspect-[3/4]'
               : 'aspect-[4/5]'
