@@ -73,7 +73,7 @@ export default function ProductGallery({
 
   if (imageCount === 0) {
     return (
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal">
+      <div className="relative aspect-[4/5] w-full media-rounded bg-charcoal">
         <CinematicPlaceholder
           variant="product"
           className="h-full w-full"
@@ -86,7 +86,7 @@ export default function ProductGallery({
 
   if (!current) {
     return (
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal">
+      <div className="relative aspect-[4/5] w-full media-rounded bg-charcoal">
         <CinematicPlaceholder
           variant="product"
           className="h-full w-full"
@@ -98,7 +98,7 @@ export default function ProductGallery({
   return (
     <div className="min-w-0">
       <div
-        className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal"
+        className="relative aspect-[4/5] w-full media-rounded bg-charcoal"
         onTouchStart={(event) => {
           const firstTouch = event.touches.item(0);
           touchStartX.current = firstTouch?.clientX ?? null;
@@ -193,7 +193,7 @@ export default function ProductGallery({
               aria-current={
                 isActive ? 'true' : undefined
               }
-              className={`relative aspect-[4/5] w-20 flex-none overflow-hidden bg-charcoal transition-all duration-300 ${
+              className={`relative aspect-[4/5] w-20 flex-none media-rounded-sm bg-charcoal transition-all duration-300 ${
                 isActive
                   ? 'ring-1 ring-lunar opacity-100'
                   : 'opacity-50 hover:opacity-90'
