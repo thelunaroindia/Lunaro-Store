@@ -1,24 +1,56 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import type { ShopifyImage } from '@/lib/types';
 
 type ProductGalleryProps = {
   images: ShopifyImage[];
   title: string;
+  // The currently selected variant's own image, if any. Shown as the lead
+  // image and reconciled into the gallery below — see `galleryImages`.
+  selectedImage?: ShopifyImage | null;
 };
 
 export default function ProductGallery({
   images,
   title,
+  selectedImage = null,
 }: ProductGalleryProps) {
-  const [active, setActive] = useState(0);
+  // `images` is capped upstream (Shopify `images(first: 10)`), so a variant's
+  // own image can be missing from it entirely. When that happens, prepend it
+  // as the lead image instead of dropping it; when it's already present,
+  // reuse that entry rather than inserting a duplicate.
+  const galleryImages = useMemo(() => {
+    if (!selectedImage) return images;
+
+    const alreadyIncluded = images.some(
+      (image) => image.url === selectedImage.url
+    );
+
+    return alreadyIncluded ? images : [selectedImage, ...images];
+  }, [images, selectedImage]);
+
+  const [active, setActive] = useState(() => {
+    if (!selectedImage) return 0;
+
+    const index = galleryImages.findIndex(
+      (image) => image.url === selectedImage.url
+    );
+
+    return index === -1 ? 0 : index;
+  });
   const [zoomed, setZoomed] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
-  const imageCount = images.length;
+  const imageCount = galleryImages.length;
 
   const showPrevious = useCallback(() => {
     if (imageCount <= 1) return;
@@ -71,6 +103,20 @@ export default function ProductGallery({
     }
   }, [active, imageCount]);
 
+  // Colour changes after mount: jump straight to that variant's image.
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    const index = galleryImages.findIndex(
+      (image) => image.url === selectedImage.url
+    );
+
+    if (index === -1) return;
+
+    setZoomed(false);
+    setActive(index);
+  }, [selectedImage, galleryImages]);
+
   if (imageCount === 0) {
     return (
       <div className="relative aspect-[4/5] w-full media-rounded bg-charcoal">
@@ -82,7 +128,7 @@ export default function ProductGallery({
     );
   }
 
-  const current = images[active] ?? images[0];
+  const current = galleryImages[active] ?? galleryImages[0];
 
   if (!current) {
     return (
@@ -179,7 +225,7 @@ export default function ProductGallery({
       </div>
 
       <div className="mt-4 flex max-w-full gap-3 overflow-x-auto pb-2">
-        {images.map((image, index) => {
+        {galleryImages.map((image, index) => {
           const isActive = index === active;
 
           return (

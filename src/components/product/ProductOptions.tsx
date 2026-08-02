@@ -1,6 +1,12 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import {
+  useMemo,
+  useState,
+  useTransition,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import { formatMoney } from '@/lib/utils';
 import { addToCart } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
@@ -9,7 +15,7 @@ import StickyAddToCart from './StickyAddToCart';
 import { payments } from '@/lib/config';
 import type { Product, ProductVariant } from '@/lib/types';
 
-function findVariant(
+export function findVariant(
   variants: ProductVariant[],
   selected: Record<string, string>
 ): ProductVariant | undefined {
@@ -20,10 +26,39 @@ function findVariant(
   );
 }
 
+export function getInitialSelectedOptions(
+  product: Product
+): Record<string, string> {
+  const initial: Record<string, string> = {};
+
+  for (const option of product.options) {
+    const firstAvailableVariant = product.variants.find(
+      (variant) =>
+        variant.availableForSale &&
+        variant.selectedOptions.some(
+          (selectedOption) => selectedOption.name === option.name
+        )
+    );
+
+    initial[option.name] =
+      firstAvailableVariant?.selectedOptions.find(
+        (selectedOption) => selectedOption.name === option.name
+      )?.value ??
+      option.values[0] ??
+      '';
+  }
+
+  return initial;
+}
+
 export default function ProductOptions({
   product,
+  selected,
+  setSelected,
 }: {
   product: Product;
+  selected: Record<string, string>;
+  setSelected: Dispatch<SetStateAction<Record<string, string>>>;
 }) {
   const { setCart, open } = useCartUI();
   const [isPending, startTransition] = useTransition();
@@ -35,33 +70,6 @@ export default function ProductOptions({
     product.variants.every(
       (variant) => !variant.availableForSale
     );
-
-  const [selected, setSelected] = useState<Record<string, string>>(
-    () => {
-      const initial: Record<string, string> = {};
-
-      for (const option of product.options) {
-        const firstAvailableVariant = product.variants.find(
-          (variant) =>
-            variant.availableForSale &&
-            variant.selectedOptions.some(
-              (selectedOption) =>
-                selectedOption.name === option.name
-            )
-        );
-
-        initial[option.name] =
-          firstAvailableVariant?.selectedOptions.find(
-            (selectedOption) =>
-              selectedOption.name === option.name
-          )?.value ??
-          option.values[0] ??
-          '';
-      }
-
-      return initial;
-    }
-  );
 
   const activeVariant = useMemo(
     () => findVariant(product.variants, selected),
