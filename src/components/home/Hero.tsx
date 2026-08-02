@@ -73,7 +73,7 @@ export default function Hero() {
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         onLoadedData={() => setDesktopVideoReady(true)}
       >
         <source src={`/${asset.desktopPath}`} type="video/mp4" />
