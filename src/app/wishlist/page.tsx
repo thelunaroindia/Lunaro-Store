@@ -14,7 +14,7 @@ export default function WishlistPage() {
       <UtilityPageBackdrop>
         <div className="container-lunaro flex min-h-[60vh] flex-col items-center justify-center pt-32 text-center">
           <h1 className="font-display text-display-md text-lunar">Your wishlist is empty.</h1>
-          <p className="mt-3 text-mist">Save garments you're drawn to and find them here.</p>
+          <p className="mt-3 text-mist">Save garments you&apos;re drawn to and find them here.</p>
           <LinkButton href="/shop" variant="ghost" className="mt-8">
             Shop All
           </LinkButton>

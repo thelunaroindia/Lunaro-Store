@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import type { ShopifyImage } from '@/lib/types';
 
@@ -20,23 +20,23 @@ export default function ProductGallery({
 
   const imageCount = images.length;
 
-  function showPrevious() {
+  const showPrevious = useCallback(() => {
     if (imageCount <= 1) return;
 
     setZoomed(false);
     setActive((current) =>
       current === 0 ? imageCount - 1 : current - 1
     );
-  }
+  }, [imageCount]);
 
-  function showNext() {
+  const showNext = useCallback(() => {
     if (imageCount <= 1) return;
 
     setZoomed(false);
     setActive((current) =>
       current === imageCount - 1 ? 0 : current + 1
     );
-  }
+  }, [imageCount]);
 
   function selectImage(index: number) {
     setZoomed(false);
@@ -63,7 +63,7 @@ export default function ProductGallery({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [imageCount]);
+  }, [showNext, showPrevious]);
 
   useEffect(() => {
     if (active >= imageCount && imageCount > 0) {
