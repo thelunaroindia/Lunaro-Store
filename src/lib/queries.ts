@@ -51,7 +51,7 @@ export const PRODUCT_FULL_FIELDS = `
     minVariantPrice { ${MONEY_FIELDS} }
     maxVariantPrice { ${MONEY_FIELDS} }
   }
-  images(first: 10) {
+  images(first: 30) {
     nodes { ${IMAGE_FIELDS} }
   }
   variants(first: 50) {
