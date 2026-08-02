@@ -227,20 +227,20 @@ export default function ProductOptions({
         ) : (
           <>
             <Button
-              onClick={handleAddToCart}
-              disabled={isPending}
-              className="w-full"
-            >
-              {isPending ? 'Adding…' : 'Add to Cart'}
-            </Button>
-
-            <Button
               onClick={handleBuyNow}
-              variant="ghost"
               disabled={isPending}
               className="w-full"
             >
               Buy Now
+            </Button>
+
+            <Button
+              onClick={handleAddToCart}
+              variant="ghost"
+              disabled={isPending}
+              className="w-full"
+            >
+              {isPending ? 'Adding…' : 'Add to Cart'}
             </Button>
           </>
         )}
