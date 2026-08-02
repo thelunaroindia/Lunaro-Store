@@ -34,7 +34,7 @@ export default function LookbookPreview() {
         {PRELAUNCH_MODE ? (
           <Reveal
             scale={1.03}
-            className="relative mt-10 aspect-[4/5] max-h-[560px] overflow-hidden bg-charcoal md:mt-14 md:aspect-[16/9] md:max-h-none"
+            className="relative mt-10 aspect-[4/5] max-h-[560px] media-rounded bg-charcoal md:mt-14 md:aspect-[16/9] md:max-h-none"
           >
             <CinematicPlaceholder
               variant="lookbook"
@@ -116,7 +116,7 @@ export default function LookbookPreview() {
                     key={asset.desktopPath}
                     delay={index * 0.1}
                     scale={1.05}
-                    className={`group relative aspect-[3/4] overflow-hidden bg-charcoal ${
+                    className={`group relative aspect-[3/4] media-rounded bg-charcoal ${
                       index === 1 ? 'sm:mt-10' : ''
                     }`}
                   >

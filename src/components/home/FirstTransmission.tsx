@@ -25,7 +25,7 @@ export default function FirstTransmission({
       <div className="container-lunaro grid gap-8 md:gap-12 lg:grid-cols-2 lg:items-center">
         <Reveal
           scale={1.04}
-          className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal"
+          className="relative aspect-[4/5] w-full media-rounded bg-charcoal"
         >
           {PRELAUNCH_MODE ? (
             <>
