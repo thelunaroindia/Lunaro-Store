@@ -28,7 +28,7 @@ export default function CollectionCarousel() {
           <Link
             key={collection.href}
             href={collection.href}
-            className="group relative block aspect-[4/5] w-[82vw] shrink-0 snap-start overflow-hidden bg-charcoal sm:w-[46vw] lg:w-[28vw] lg:max-w-[420px]"
+            className="group relative block aspect-[4/5] w-[82vw] shrink-0 snap-start overflow-hidden rounded-[20px] bg-charcoal sm:w-[46vw] lg:w-[28vw] lg:max-w-[420px]"
           >
             <Image
               src={collection.image}
