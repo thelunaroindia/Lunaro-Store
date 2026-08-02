@@ -7,6 +7,13 @@ import { useWishlist } from '@/context/WishlistContext';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import type { ProductCardData } from '@/lib/types';
 
+// Display-only: strips a trailing "| Lunaro" suffix some Shopify titles carry
+// (e.g. "Bearded God | LUNARO"). Anchored to the end and case-insensitive, so
+// "Lunaro" appearing earlier in an actual product name is left untouched.
+function stripLunaroSuffix(title: string): string {
+  return title.replace(/\s*\|\s*lunaro\s*$/i, '').trim();
+}
+
 export default function ProductCard({
   product,
   priority = false,
@@ -32,6 +39,8 @@ export default function ProductCard({
     compareAtPrice &&
     Number(compareAtPrice.amount) >
       Number(sellingPrice.amount);
+
+  const displayTitle = stripLunaroSuffix(product.title);
 
   function onToggleWishlist() {
     toggle({
@@ -122,21 +131,21 @@ export default function ProductCard({
         {wishlisted ? '●' : '○'}
       </button>
 
-      <div className="mt-4 flex items-start justify-between gap-3">
+      <div className="mt-3">
         <Link
           href={`/products/${product.handle}`}
-          className="text-sm leading-snug text-lunar link-underline"
+          className="line-clamp-2 text-[12px] font-normal leading-[1.25] tracking-normal text-lunar link-underline sm:text-[13px] lg:text-sm"
         >
-          {product.title}
+          {displayTitle}
         </Link>
 
-        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
-          <span className="text-sm text-lunar">
+        <div className="mt-1 flex items-center gap-2">
+          <span className="whitespace-nowrap text-[12px] font-normal leading-none text-lunar sm:text-[13px] lg:text-sm">
             {formatMoney(sellingPrice)}
           </span>
 
           {isOnSale && compareAtPrice && (
-            <span className="text-xs text-mist line-through">
+            <span className="whitespace-nowrap text-[10px] font-normal text-mist/60 line-through sm:text-xs">
               {formatMoney(compareAtPrice)}
             </span>
           )}
