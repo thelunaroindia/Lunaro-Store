@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { LinkButton } from '@/components/ui/Button';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
@@ -43,10 +43,27 @@ function RevealLine({
 
 export default function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
+  const desktopVideoRef = useRef<HTMLVideoElement>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const prefersReducedMotion = useReducedMotion();
 
   const [desktopVideoReady, setDesktopVideoReady] = useState(false);
   const [mobileVideoReady, setMobileVideoReady] = useState(false);
+
+  // If loadeddata/canplay already fired before hydration attached these
+  // handlers, readyState reflects it — check it directly on mount instead
+  // of waiting for an event that already happened.
+  useEffect(() => {
+    const desktopEl = desktopVideoRef.current;
+    if (desktopEl && desktopEl.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      setDesktopVideoReady(true);
+    }
+
+    const mobileEl = mobileVideoRef.current;
+    if (mobileEl && mobileEl.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      setMobileVideoReady(true);
+    }
+  }, []);
 
   return (
     <section
@@ -65,6 +82,7 @@ export default function Hero() {
       </ParallaxLayer>
 
       <video
+        ref={desktopVideoRef}
         className={`pointer-events-none absolute inset-0 hidden h-full w-full object-cover transition-opacity duration-1000 md:block ${
           desktopVideoReady ? 'opacity-100' : 'opacity-0'
         }`}
@@ -75,11 +93,19 @@ export default function Hero() {
         playsInline
         preload="metadata"
         onLoadedData={() => setDesktopVideoReady(true)}
+        onCanPlay={() => setDesktopVideoReady(true)}
+        onPlaying={() => setDesktopVideoReady(true)}
+        onError={() => {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('Hero desktop video failed to load; showing placeholder.');
+          }
+        }}
       >
         <source src={`/${asset.desktopPath}`} type="video/mp4" />
       </video>
 
       <video
+        ref={mobileVideoRef}
         className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 md:hidden ${
           mobileVideoReady ? 'opacity-100' : 'opacity-0'
         }`}
@@ -90,6 +116,13 @@ export default function Hero() {
         playsInline
         preload="metadata"
         onLoadedData={() => setMobileVideoReady(true)}
+        onCanPlay={() => setMobileVideoReady(true)}
+        onPlaying={() => setMobileVideoReady(true)}
+        onError={() => {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('Hero mobile video failed to load; showing placeholder.');
+          }
+        }}
       >
         <source src={`/${asset.mobilePath}`} type="video/mp4" />
       </video>
