@@ -135,6 +135,22 @@ export const fabricDetails = [
   'BUILT FOR REPEAT WEAR',
 ] as const;
 
+// Trackpant-specific facts (confirmed from live Shopify product data) —
+// kept separate from fabricDetails so tee copy never leaks onto bottoms.
+export const trackpantFabricDetails = [
+  '260 GSM Terry',
+  '90% Cotton / 10% Polyester',
+  'Two Front Pockets',
+] as const;
+
+export const trackpantFitAndCare = [
+  'Loose fit',
+  'Designed for a relaxed silhouette',
+  'Machine wash cold',
+  'Wash with similar colours',
+  'Do not bleach',
+] as const;
+
 export const sizeGuide = {
   note:
     'LUNARO garments are cut oversized by design. If you prefer a closer fit, we recommend sizing down.',

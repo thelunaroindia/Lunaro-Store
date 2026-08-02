@@ -15,6 +15,19 @@ import StickyAddToCart from './StickyAddToCart';
 import { payments } from '@/lib/config';
 import type { Product, ProductVariant } from '@/lib/types';
 
+const TRACKPANT_PRODUCT_TYPES = [
+  'trackpant',
+  'trackpants',
+  'sweatpant',
+  'sweatpants',
+];
+
+function isTrackpant(productType: string): boolean {
+  return TRACKPANT_PRODUCT_TYPES.includes(
+    productType.trim().toLowerCase()
+  );
+}
+
 export function findVariant(
   variants: ProductVariant[],
   selected: Record<string, string>
@@ -207,15 +220,16 @@ export default function ProductOptions({
             })}
           </div>
 
-          {option.name.toLowerCase() === 'size' && (
-            <LinkButton
-              href="/size-guide"
-              variant="underline"
-              className="mt-3 text-xs"
-            >
-              Size Guide
-            </LinkButton>
-          )}
+          {option.name.toLowerCase() === 'size' &&
+            !isTrackpant(product.productType) && (
+              <LinkButton
+                href="/size-guide"
+                variant="underline"
+                className="mt-3 text-xs"
+              >
+                Size Guide
+              </LinkButton>
+            )}
         </fieldset>
       ))}
 
