@@ -19,34 +19,44 @@ type ProductGalleryProps = {
   selectedImage?: ShopifyImage | null;
 };
 
+// Qikink filenames encode the garment colour as a `c_<N>` token
+// (e.g. "Front_1_c_3.jpg", "Back_2_c_3.jpg" — both colour "3"). Anchored so
+// "c_3" never matches "c_35" — a real collision in the live catalogue.
+function extractColourToken(url: string): string | null {
+  const match = url.match(/_c_(\d+)(?=[._])/);
+  return match?.[1] ?? null;
+}
+
 export default function ProductGallery({
   images,
   title,
   selectedImage = null,
 }: ProductGalleryProps) {
-  // `images` is capped upstream (Shopify `images(first: 10)`), so a variant's
-  // own image can be missing from it entirely. When that happens, prepend it
-  // as the lead image instead of dropping it; when it's already present,
-  // reuse that entry rather than inserting a duplicate.
+  // Anchor on the selected variant's own image, then keep only the other
+  // product images that share its colour token (front/back of the same
+  // colour) — excluding size charts and other-colour/orphan images. If no
+  // token can be extracted, fall back to the full image set. If a token
+  // exists but nothing else matches it, the selected image shows alone
+  // rather than mixing in another colour.
   const galleryImages = useMemo(() => {
     if (!selectedImage) return images;
 
-    const alreadyIncluded = images.some(
-      (image) => image.url === selectedImage.url
+    const token = extractColourToken(selectedImage.url);
+
+    const sameColour = token
+      ? images.filter(
+          (image) => extractColourToken(image.url) === token
+        )
+      : images;
+
+    const withoutSelected = sameColour.filter(
+      (image) => image.url !== selectedImage.url
     );
 
-    return alreadyIncluded ? images : [selectedImage, ...images];
+    return [selectedImage, ...withoutSelected];
   }, [images, selectedImage]);
 
-  const [active, setActive] = useState(() => {
-    if (!selectedImage) return 0;
-
-    const index = galleryImages.findIndex(
-      (image) => image.url === selectedImage.url
-    );
-
-    return index === -1 ? 0 : index;
-  });
+  const [active, setActive] = useState(0);
   const [zoomed, setZoomed] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
@@ -103,19 +113,13 @@ export default function ProductGallery({
     }
   }, [active, imageCount]);
 
-  // Colour changes after mount: jump straight to that variant's image.
+  // Colour changes (including on mount): `galleryImages` always puts
+  // `selectedImage` first, so jump back to index 0 rather than retaining
+  // whatever was active for the previous colour.
   useEffect(() => {
-    if (!selectedImage) return;
-
-    const index = galleryImages.findIndex(
-      (image) => image.url === selectedImage.url
-    );
-
-    if (index === -1) return;
-
     setZoomed(false);
-    setActive(index);
-  }, [selectedImage, galleryImages]);
+    setActive(0);
+  }, [selectedImage]);
 
   if (imageCount === 0) {
     return (
