@@ -5,40 +5,19 @@ import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import { Reveal } from '@/components/motion/Reveal';
 import { hasPublicAsset } from '@/lib/assets';
 import { assetManifest } from '@/lib/assetManifest';
-import { placeholderProducts, PRELAUNCH_MODE } from '@/lib/config';
-import { formatMoney } from '@/lib/utils';
+import { PRELAUNCH_MODE } from '@/lib/config';
 import type { ProductCardData } from '@/lib/types';
 
+// This section is pure editorial now — `featured` is kept only as an image
+// fallback source (see productImage below) and so callers don't break ahead
+// of the page.tsx composition pass; no commerce data is rendered from it.
 export default function FirstTransmission({
   featured,
 }: {
   featured: ProductCardData | null;
 }) {
   const asset = assetManifest.firstTransmissionStill;
-  const fallback = placeholderProducts[0];
   const productImage = featured?.images[0];
-
-  const title = featured?.title ?? fallback.title;
-
-  const sellingPrice = featured
-    ? featured.priceRange.minVariantPrice
-    : null;
-
-  const compareAtPrice = featured?.compareAtPriceRange?.minVariantPrice;
-
-  const isOnSale =
-    sellingPrice &&
-    compareAtPrice &&
-    Number(compareAtPrice.amount) > Number(sellingPrice.amount);
-
-  const price = sellingPrice
-    ? formatMoney(sellingPrice)
-    : `₹${fallback.price}`;
-
-  const href = featured
-    ? `/products/${featured.handle}`
-    : `/products/${fallback.handle}`;
-
   const campaignStillReady = hasPublicAsset(asset.desktopPath);
 
   return (
@@ -81,7 +60,11 @@ export default function FirstTransmission({
           ) : productImage ? (
             <Image
               src={productImage.url}
-              alt={productImage.altText ?? title}
+              alt={
+                productImage.altText ??
+                featured?.title ??
+                'LUNARO Drop 001 campaign still'
+              }
               fill
               sizes="(min-width: 1024px) 45vw, 100vw"
               className="object-cover transition-transform duration-[1400ms] ease-lunar hover:scale-[1.03]"
@@ -116,42 +99,13 @@ export default function FirstTransmission({
               View the Transmission
             </LinkButton>
           ) : (
-            <>
-              <div className="mt-10 flex max-w-sm items-center justify-between border-t border-graphite pt-6">
-                <div>
-                  <p className="text-sm text-lunar">
-                    {title}
-                  </p>
-
-                  <div className="mt-1 flex items-center gap-2">
-                    <p className="text-sm text-lunar">
-                      {price}
-                    </p>
-
-                    {isOnSale && compareAtPrice && (
-                      <p className="text-xs text-mist line-through">
-                        {formatMoney(compareAtPrice)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <LinkButton
-                  href={href}
-                  variant="underline"
-                >
-                  View
-                </LinkButton>
-              </div>
-
-              <LinkButton
-                href="/new-drop"
-                variant="ghost"
-                className="mt-8"
-              >
-                Discover Collection
-              </LinkButton>
-            </>
+            <LinkButton
+              href="/new-drop"
+              variant="ghost"
+              className="mt-8"
+            >
+              Discover Collection
+            </LinkButton>
           )}
         </Reveal>
       </div>
