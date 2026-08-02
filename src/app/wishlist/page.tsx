@@ -31,7 +31,7 @@ export default function WishlistPage() {
           {items.map((item) => (
             <div key={item.handle} className="group relative">
               <Link href={`/products/${item.handle}`} className="block">
-                <div className="relative aspect-[4/5] overflow-hidden bg-charcoal">
+                <div className="relative aspect-[4/5] media-rounded bg-charcoal">
                   {item.imageUrl && (
                     <Image src={item.imageUrl} alt={item.title} fill sizes="25vw" className="object-cover" />
                   )}

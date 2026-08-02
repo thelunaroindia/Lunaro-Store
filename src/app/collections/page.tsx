@@ -34,7 +34,7 @@ export default async function CollectionsPage() {
   );
 
   const oversizedCard = (
-    <div className="relative aspect-[4/5] overflow-hidden bg-charcoal">
+    <div className="relative aspect-[4/5] media-rounded bg-charcoal">
       <Image
         src="/images/collections/oversized-tees.jpg"
         alt="LUNARO Oversized Tees Collection"
@@ -85,7 +85,7 @@ export default async function CollectionsPage() {
   );
 
   const trackpantsCard = (
-    <div className="relative aspect-[4/5] overflow-hidden bg-charcoal">
+    <div className="relative aspect-[4/5] media-rounded bg-charcoal">
       <Image
         src="/images/collections/trackpants-coming-soon.jpg"
         alt="LUNARO Trackpants Collection"
@@ -150,7 +150,7 @@ export default async function CollectionsPage() {
 
         {/* Hoodies Coming Soon */}
         <div className="group relative block cursor-default">
-          <div className="relative aspect-[4/5] overflow-hidden bg-charcoal">
+          <div className="relative aspect-[4/5] media-rounded bg-charcoal">
             <Image
               src={hoodiesCollection.image}
               alt="LUNARO Hoodies future collection"

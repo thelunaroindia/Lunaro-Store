@@ -28,7 +28,7 @@ export default function CartLineItem({
 
   return (
     <div className="flex gap-4 border-b border-graphite py-5">
-      <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden bg-charcoal">
+      <div className="relative h-24 w-20 flex-shrink-0 media-rounded-sm bg-charcoal">
         {image ? (
           <Image src={image.url} alt={image.altText ?? line.merchandise.product.title} fill sizes="80px" className="object-cover" />
         ) : null}
