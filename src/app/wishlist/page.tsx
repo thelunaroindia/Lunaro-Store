@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useWishlist } from '@/context/WishlistContext';
+import { cleanProductTitle } from '@/lib/productTitle';
 import { LinkButton } from '@/components/ui/Button';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 
@@ -40,7 +41,7 @@ export default function WishlistPage() {
               <div className="mt-3 flex items-start justify-between gap-3">
                 <div>
                   <Link href={`/products/${item.handle}`} className="text-sm text-lunar link-underline">
-                    {item.title}
+                    {cleanProductTitle(item.title)}
                   </Link>
                   <p className="mt-1 text-sm text-mist">{item.price}</p>
                 </div>

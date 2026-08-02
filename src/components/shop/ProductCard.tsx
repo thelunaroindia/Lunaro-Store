@@ -3,16 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/utils';
+import { cleanProductTitle } from '@/lib/productTitle';
 import { useWishlist } from '@/context/WishlistContext';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import type { ProductCardData } from '@/lib/types';
-
-// Display-only: strips a trailing "| Lunaro" suffix some Shopify titles carry
-// (e.g. "Bearded God | LUNARO"). Anchored to the end and case-insensitive, so
-// "Lunaro" appearing earlier in an actual product name is left untouched.
-function stripLunaroSuffix(title: string): string {
-  return title.replace(/\s*\|\s*lunaro\s*$/i, '').trim();
-}
 
 export default function ProductCard({
   product,
@@ -40,7 +34,7 @@ export default function ProductCard({
     Number(compareAtPrice.amount) >
       Number(sellingPrice.amount);
 
-  const displayTitle = stripLunaroSuffix(product.title);
+  const displayTitle = cleanProductTitle(product.title);
 
   function onToggleWishlist() {
     toggle({

@@ -164,6 +164,19 @@ export const sizeGuide = {
   ],
 } as const;
 
+// Sourced from the manufacturer's own sweatpants size-chart image, uploaded
+// to both trackpant products' Shopify media (identical file on each).
+export const bottomsSizeGuide = {
+  note: 'Measurements are in inches, as provided by the manufacturer.',
+  chart: [
+    { size: 'S', waist: 30, hip: 36, outseam: 39, inseam: 27 },
+    { size: 'M', waist: 32, hip: 38, outseam: 40, inseam: 27 },
+    { size: 'L', waist: 34, hip: 40, outseam: 41, inseam: 27 },
+    { size: 'XL', waist: 36, hip: 44, outseam: 42, inseam: 27 },
+    { size: '2XL', waist: 38, hip: 46, outseam: 43, inseam: 27 },
+  ],
+} as const;
+
 export const payments = {
   // "Pay Online" is whatever methods are enabled in Shopify Admin →
   // Settings → Payments — nothing here is a promise beyond what's actually

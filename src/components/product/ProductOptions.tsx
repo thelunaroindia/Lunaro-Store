@@ -220,16 +220,19 @@ export default function ProductOptions({
             })}
           </div>
 
-          {option.name.toLowerCase() === 'size' &&
-            !isTrackpant(product.productType) && (
-              <LinkButton
-                href="/size-guide"
-                variant="underline"
-                className="mt-3 text-xs"
-              >
-                Size Guide
-              </LinkButton>
-            )}
+          {option.name.toLowerCase() === 'size' && (
+            <LinkButton
+              href={
+                isTrackpant(product.productType)
+                  ? '/size-guide?category=bottoms'
+                  : '/size-guide'
+              }
+              variant="underline"
+              className="mt-3 text-xs"
+            >
+              Size Guide
+            </LinkButton>
+          )}
         </fieldset>
       ))}
 
@@ -274,14 +277,10 @@ export default function ProductOptions({
       )}
 
       {!isSoldOut && (
-        <p className="mt-6 text-[11px] text-mist">
-          {payments.methods.join(' · ')}
-        </p>
-      )}
-
-      {!isSoldOut && (
-        <p className="mt-2 text-xs text-mist">
-          Estimated dispatch: 2–4 business days.
+        <p className="mt-6 text-[11px] leading-relaxed text-mist">
+          {[...payments.methods, 'Estimated dispatch: 2–4 business days.'].join(
+            ' · '
+          )}
         </p>
       )}
 
