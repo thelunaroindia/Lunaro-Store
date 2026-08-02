@@ -106,7 +106,7 @@ export default async function CollectionPage({
       </SectionHeading>
 
       {collection.description && (
-        <p className="mb-12 max-w-xl text-mist">
+        <p className="mb-8 max-w-xl text-mist md:mb-10">
           {collection.description}
         </p>
       )}

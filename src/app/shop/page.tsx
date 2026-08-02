@@ -85,7 +85,7 @@ export default async function ShopPage({
     <main className="container-lunaro pb-24 pt-32 md:pt-40">
       <SectionHeading
         eyebrow={`${filtered.length} Garments`}
-        className="mb-12"
+        className="mb-8 md:mb-10"
       >
         SHOP ALL
       </SectionHeading>
