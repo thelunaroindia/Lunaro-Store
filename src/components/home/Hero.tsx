@@ -88,7 +88,7 @@ export default function Hero() {
         muted
         loop
         playsInline
-        preload="none"
+        preload="metadata"
         onLoadedData={() => setMobileVideoReady(true)}
       >
         <source src={`/${asset.mobilePath}`} type="video/mp4" />
@@ -102,7 +102,7 @@ export default function Hero() {
         <div className="h-full w-full bg-gradient-to-t from-obsidian via-obsidian/25 to-transparent" />
       </ParallaxLayer>
 
-      <div className="container-lunaro relative z-20 pb-20 pt-40 md:pb-28">
+      <div className="container-lunaro relative z-20 pb-32 pt-40 md:pb-28">
         <RevealLine
           delay={0.1}
           reduced={!!prefersReducedMotion}
