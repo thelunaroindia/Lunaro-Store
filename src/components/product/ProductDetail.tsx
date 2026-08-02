@@ -10,6 +10,13 @@ import ProductOptions, {
 import ProductAccordion from './ProductAccordion';
 import type { Product } from '@/lib/types';
 
+// Display-only: strips a trailing "| LUNARO" suffix some Shopify titles
+// carry (e.g. "Messi 1.0 | LUNARO"). Same behavior as ProductCard's
+// stripLunaroSuffix — kept local here since only this file may change.
+function stripLunaroSuffix(title: string): string {
+  return title.replace(/\s*\|\s*lunaro\s*$/i, '').trim();
+}
+
 export default function ProductDetail({ product }: { product: Product }) {
   const [selected, setSelected] = useState<Record<string, string>>(() =>
     getInitialSelectedOptions(product)
@@ -32,7 +39,7 @@ export default function ProductDetail({ product }: { product: Product }) {
         <Eyebrow>{product.productType || 'LUNARO'}</Eyebrow>
 
         <h1 className="mt-3 font-display text-display-md text-lunar">
-          {product.title}
+          {stripLunaroSuffix(product.title)}
         </h1>
 
         <ProductOptions
