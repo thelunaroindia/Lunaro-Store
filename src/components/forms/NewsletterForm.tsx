@@ -41,7 +41,15 @@ export default function NewsletterForm({
       });
 
       if (!res.ok) {
-        throw new Error('Newsletter request failed');
+        const data = await res.json().catch(() => null);
+        const message =
+          typeof data?.error === 'string' && data.error.trim().length > 0
+            ? data.error
+            : 'Something went wrong. Try again in a moment.';
+
+        setError(message);
+        setState('error');
+        return;
       }
 
       setEmail('');
