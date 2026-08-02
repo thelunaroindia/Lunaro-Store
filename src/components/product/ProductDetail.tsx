@@ -38,7 +38,7 @@ export default function ProductDetail({ product }: { product: Product }) {
       <div className="lg:pl-6">
         <Eyebrow>{product.productType || 'LUNARO'}</Eyebrow>
 
-        <h1 className="mt-3 font-display text-display-md text-lunar">
+        <h1 className="mt-3 max-w-[36rem] font-display text-[2.5rem] leading-[0.96] tracking-[-0.035em] text-lunar sm:text-[3rem] lg:text-[3.35rem]">
           {stripLunaroSuffix(product.title)}
         </h1>
 
