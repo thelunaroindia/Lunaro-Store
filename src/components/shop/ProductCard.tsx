@@ -126,7 +126,7 @@ export default function ProductCard({
             ? 'Remove from wishlist'
             : 'Add to wishlist'
         }
-        className="absolute bottom-[4.5rem] right-3 text-lg text-lunar opacity-0 transition-all duration-300 hover:scale-110 group-hover:opacity-100 focus-visible:opacity-100"
+        className="absolute bottom-[4.5rem] right-3 text-lg text-lunar opacity-100 transition-all duration-300 hover:scale-110 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100"
       >
         {wishlisted ? '●' : '○'}
       </button>
