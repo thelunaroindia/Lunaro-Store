@@ -43,39 +43,27 @@ export default async function CollectionsPage() {
         COLLECTIONS
       </SectionHeading>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card, index) => (
           <Link
             key={card.handle}
             href={`/collections/${card.collection.handle}`}
-            className="group block"
+            className="group relative block aspect-[4/5] media-rounded bg-charcoal"
           >
-            <div className="relative aspect-[4/5] media-rounded bg-charcoal">
-              <Image
-                src={card.image}
-                alt={`LUNARO ${card.collection.title} Collection`}
-                fill
-                priority={index === 0}
-                sizes="(min-width: 1024px) 33vw, 50vw"
-                className="object-cover transition duration-700 group-hover:scale-[1.03]"
-              />
+            <Image
+              src={card.image}
+              alt={`${card.collection.title} collection`}
+              fill
+              priority={index === 0}
+              sizes="(min-width: 1024px) 33vw, 50vw"
+              className="object-cover transition-transform duration-[1100ms] ease-lunar group-hover:scale-[1.045]"
+            />
 
-              <div className="absolute inset-0 bg-gradient-to-t from-obsidian/75 via-transparent to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-obsidian/75 via-transparent to-transparent" />
 
-              <div className="absolute bottom-5 left-5">
-                <p className="eyebrow text-silver">
-                  {String(index + 1).padStart(2, '0')}
-                </p>
-
-                <p className="mt-2 font-display text-3xl text-lunar">
-                  {card.collection.title}
-                </p>
-
-                <p className="mt-2 line-clamp-1 text-xs uppercase tracking-wider2 text-mist">
-                  {card.collection.description?.trim() || 'Available'}
-                </p>
-              </div>
-            </div>
+            <span className="absolute bottom-4 left-4 font-display text-lg uppercase tracking-wider2 text-lunar sm:bottom-5 sm:left-5 sm:text-xl lg:bottom-6 lg:left-6">
+              {card.collection.title}
+            </span>
           </Link>
         ))}
       </div>
