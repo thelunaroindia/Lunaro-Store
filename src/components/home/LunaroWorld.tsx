@@ -1,66 +1,26 @@
-'use client';
-
-import { useRef } from 'react';
 import { LinkButton } from '@/components/ui/Button';
-import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
-import { ParallaxLayer } from '@/components/motion/ParallaxLayer';
 import { Reveal } from '@/components/motion/Reveal';
-import { assetManifest } from '@/lib/assetManifest';
-
-const asset = assetManifest.lunarLoop;
 
 export default function LunaroWorld() {
-  const sectionRef = useRef<HTMLElement>(null);
-
   return (
-    <section
-      ref={sectionRef}
-      className="relative overflow-hidden border-t border-graphite py-20 md:py-36"
-    >
-      <ParallaxLayer
-        targetRef={sectionRef}
-        range={30}
-        className="absolute inset-0"
-      >
-        <CinematicPlaceholder
-          variant={asset.fallback}
-          className="h-full w-full opacity-70"
-        />
-      </ParallaxLayer>
+    <section className="border-t border-graphite py-16 md:py-28">
+      <Reveal className="container-lunaro">
+        <div className="max-w-[360px] md:max-w-xl">
+          <p className="eyebrow text-silver">The LUNARO World</p>
 
-      <video
-        className="absolute inset-0 h-full w-full object-cover opacity-35"
-        poster={`/${asset.posterPath}`}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-      >
-        <source src={`/${asset.desktopPath}`} type="video/mp4" />
-      </video>
+          <h2 className="mt-5 font-display text-[1.75rem] italic leading-[1.15] text-editorial sm:text-3xl md:text-[2.25rem]">
+            Crafted in darkness. Designed for the unknown.
+          </h2>
 
-      <div className="absolute inset-0 bg-gradient-to-r from-obsidian/95 via-obsidian/75 to-obsidian/45" />
-      <div className="absolute inset-0 bg-gradient-to-t from-obsidian/65 via-transparent to-obsidian/35" />
-
-      <Reveal className="container-lunaro relative z-10">
-        <div className="max-w-[390px] md:max-w-2xl">
-          <p className="eyebrow text-silver">
-            The LUNARO World
-          </p>
-
-          <p className="mt-6 font-display text-[2rem] italic leading-[1.12] text-editorial sm:text-4xl md:text-[2.75rem]">
-            Darkness is not emptiness.
-          </p>
-
-          <p className="mt-4 font-display text-[2rem] italic leading-[1.12] text-editorial sm:text-4xl md:text-[2.75rem]">
-            It is where form, identity and ambition begin.
+          <p className="mt-4 max-w-md text-sm leading-7 text-mist md:text-base">
+            Built beyond trends, limited by nothing — LUNARO is worn by
+            those who move without a map.
           </p>
 
           <LinkButton
             href="/about"
-            variant="ghost"
-            className="mt-8 md:mt-10"
+            variant="underline"
+            className="mt-6"
           >
             Enter the World
           </LinkButton>
