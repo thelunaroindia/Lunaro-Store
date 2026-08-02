@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 const SORT_OPTIONS = [
@@ -13,11 +13,92 @@ const SORT_OPTIONS = [
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 const COLOURS = ['Obsidian Black', 'Deep Black', 'Charcoal'];
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export default function FilterSort() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const wasOpenRef = useRef(false);
+
+  // Move focus into the drawer when it opens; restore it to the trigger
+  // when it closes. wasOpenRef guards against restoring focus on mount,
+  // since the drawer starts closed and has never actually been open yet.
+  useEffect(() => {
+    if (mobileOpen) {
+      wasOpenRef.current = true;
+      closeButtonRef.current?.focus();
+    } else if (wasOpenRef.current) {
+      wasOpenRef.current = false;
+      triggerRef.current?.focus();
+    }
+  }, [mobileOpen]);
+
+  // Escape closes the drawer; Tab/Shift+Tab stay trapped inside it while open.
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMobileOpen(false);
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+
+      const drawer = drawerRef.current;
+      if (!drawer) return;
+
+      const focusable = Array.from(
+        drawer.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+      );
+
+      if (focusable.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+
+      if (focusable.length === 1) {
+        e.preventDefault();
+        first.focus();
+        return;
+      }
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [mobileOpen]);
+
+  // Lock body scroll while the drawer is open; restore whatever value was
+  // already set (rather than assuming it was always empty).
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen]);
 
   const activeSort = searchParams.get('sort') ?? 'featured';
   const activeSizes = searchParams.getAll('size');
@@ -110,6 +191,7 @@ export default function FilterSort() {
   return (
     <div className="mb-10 flex items-center justify-between border-b border-graphite pb-6">
       <button
+        ref={triggerRef}
         onClick={() => setMobileOpen(true)}
         className="text-eyebrow uppercase tracking-wider2 text-lunar lg:hidden"
       >
@@ -141,16 +223,22 @@ export default function FilterSort() {
 
       {/* Full-screen mobile filter interface */}
       <div
+        ref={drawerRef}
         className={`fixed inset-0 z-[80] bg-obsidian transition-opacity duration-300 lg:hidden ${
           mobileOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
         role="dialog"
         aria-modal="true"
         aria-label="Filters"
+        aria-labelledby="mobile-filter-heading"
       >
         <div className="flex items-center justify-between border-b border-graphite p-6">
-          <p className="eyebrow text-lunar">Filter</p>
-          <button onClick={() => setMobileOpen(false)} className="text-eyebrow uppercase tracking-wider2 text-lunar">
+          <p id="mobile-filter-heading" className="eyebrow text-lunar">Filter</p>
+          <button
+            ref={closeButtonRef}
+            onClick={() => setMobileOpen(false)}
+            className="text-eyebrow uppercase tracking-wider2 text-lunar"
+          >
             Close
           </button>
         </div>
