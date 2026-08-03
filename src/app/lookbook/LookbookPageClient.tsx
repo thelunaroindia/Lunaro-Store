@@ -12,19 +12,19 @@ const looks = assetManifest.lookbookFull;
 const lookDetails = [
   {
     caption: 'LOOK 01 — ORBIT',
-    collectionHandle: 'orbit',
+    shopHref: '/new-drop',
   },
   {
     caption: 'LOOK 02 — ECLIPSE',
-    collectionHandle: 'eclipse',
+    shopHref: '/collections/graphic-tees',
   },
   {
     caption: 'LOOK 03 — VOID',
-    collectionHandle: 'void',
+    shopHref: '/collections/football-edit',
   },
   {
     caption: 'LOOK 04 — ACTIVEWEAR',
-    collectionHandle: 'activewear',
+    shopHref: '/collections/trackpants',
   },
 ];
 
@@ -170,7 +170,7 @@ export default function LookbookPageClient() {
 
         {isAvailable ? (
           <Link
-            href={`/collections/${currentLookDetails.collectionHandle}`}
+            href={currentLookDetails.shopHref}
             className="mt-4 w-fit text-eyebrow uppercase tracking-wider2 text-lunar link-underline"
           >
             Shop This Look
