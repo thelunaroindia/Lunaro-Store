@@ -3,7 +3,10 @@ import { faqs } from '@/lib/config';
 import { AccordionItem } from '@/components/ui/Accordion';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 
-export const metadata: Metadata = { title: 'FAQ' };
+export const metadata: Metadata = {
+  title: 'FAQ',
+  description: 'Answers to common questions about sizing, shipping and LUNARO drops.',
+};
 
 export default function FaqPage() {
   return (

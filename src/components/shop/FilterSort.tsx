@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import type { ProductCardData } from '@/lib/types';
 
 const SORT_OPTIONS = [
   { value: 'featured', label: 'Featured' },
@@ -10,13 +11,59 @@ const SORT_OPTIONS = [
   { value: 'price-desc', label: 'Price: High to Low' },
 ];
 
-const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
-const COLOURS = ['Obsidian Black', 'Deep Black', 'Charcoal'];
+// Canonical ordering for known sizes; anything unrecognised sorts after
+// these, alphabetically among themselves.
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'];
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export default function FilterSort() {
+function sortSizes(values: string[]): string[] {
+  return [...values].sort((a, b) => {
+    const aIndex = SIZE_ORDER.indexOf(a.toUpperCase());
+    const bIndex = SIZE_ORDER.indexOf(b.toUpperCase());
+
+    if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+}
+
+// Derives the real Size/Colour values present in the currently fetched
+// product subset — never a hardcoded list — so a filter can never offer a
+// value the catalogue doesn't actually have. Option names are normalized
+// with trim().toLowerCase() only for matching; the original Shopify value
+// (e.g. "Grey Melange") is preserved verbatim for display and for the URL.
+function deriveFilterOptions(products: ProductCardData[]) {
+  const sizes = new Set<string>();
+  const colours = new Set<string>();
+
+  for (const product of products) {
+    for (const variant of product.filterVariants ?? []) {
+      for (const option of variant.selectedOptions) {
+        const normalizedName = option.name.trim().toLowerCase();
+
+        if (normalizedName === 'size') {
+          sizes.add(option.value);
+        } else if (normalizedName === 'colour' || normalizedName === 'color') {
+          colours.add(option.value);
+        }
+      }
+    }
+  }
+
+  return {
+    sizes: sortSizes([...sizes]),
+    colours: [...colours].sort((a, b) => a.localeCompare(b)),
+  };
+}
+
+export default function FilterSort({
+  products,
+}: {
+  products: ProductCardData[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -26,6 +73,11 @@ export default function FilterSort() {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const wasOpenRef = useRef(false);
+
+  const { sizes: availableSizes, colours: availableColours } = useMemo(
+    () => deriveFilterOptions(products),
+    [products]
+  );
 
   // Move focus into the drawer when it opens; restore it to the trigger
   // when it closes. wasOpenRef guards against restoring focus on mount,
@@ -141,41 +193,45 @@ export default function FilterSort() {
 
   const filterBody = (
     <div className="space-y-8">
-      <div>
-        <p className="eyebrow text-mist">Size</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {SIZES.map((size) => (
-            <button
-              key={size}
-              onClick={() => toggleListParam('size', size)}
-              aria-pressed={activeSizes.includes(size)}
-              className={`border px-3 py-1.5 text-sm ${
-                activeSizes.includes(size) ? 'border-lunar text-lunar' : 'border-graphite text-mist'
-              }`}
-            >
-              {size}
-            </button>
-          ))}
+      {availableSizes.length > 0 && (
+        <div>
+          <p className="eyebrow text-mist">Size</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {availableSizes.map((size) => (
+              <button
+                key={size}
+                onClick={() => toggleListParam('size', size)}
+                aria-pressed={activeSizes.includes(size)}
+                className={`border px-3 py-1.5 text-sm ${
+                  activeSizes.includes(size) ? 'border-lunar text-lunar' : 'border-graphite text-mist'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div>
-        <p className="eyebrow text-mist">Colour</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {COLOURS.map((colour) => (
-            <button
-              key={colour}
-              onClick={() => toggleListParam('colour', colour)}
-              aria-pressed={activeColours.includes(colour)}
-              className={`border px-3 py-1.5 text-sm ${
-                activeColours.includes(colour) ? 'border-lunar text-lunar' : 'border-graphite text-mist'
-              }`}
-            >
-              {colour}
-            </button>
-          ))}
+      {availableColours.length > 0 && (
+        <div>
+          <p className="eyebrow text-mist">Colour</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {availableColours.map((colour) => (
+              <button
+                key={colour}
+                onClick={() => toggleListParam('colour', colour)}
+                aria-pressed={activeColours.includes(colour)}
+                className={`border px-3 py-1.5 text-sm ${
+                  activeColours.includes(colour) ? 'border-lunar text-lunar' : 'border-graphite text-mist'
+                }`}
+              >
+                {colour}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <label className="flex items-center gap-3 text-sm text-mist">
         <input type="checkbox" checked={availableOnly} onChange={toggleAvailable} className="accent-lunar" />

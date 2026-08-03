@@ -120,9 +120,22 @@ export default function ProductCard({
             ? 'Remove from wishlist'
             : 'Add to wishlist'
         }
-        className="absolute bottom-[4.5rem] right-3 text-lg text-lunar opacity-100 transition-all duration-300 hover:scale-110 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100"
+        className="absolute bottom-[4.5rem] right-3 flex h-11 w-11 items-center justify-center rounded-full bg-obsidian/60 text-lunar opacity-100 backdrop-blur-sm transition-all duration-300 hover:scale-110 md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100"
       >
-        {wishlisted ? '●' : '○'}
+        <svg
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          fill={wishlisted ? 'currentColor' : 'none'}
+          stroke="currentColor"
+          strokeWidth={1.75}
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 20.25c-.318 0-.633-.09-.909-.27C7.29 17.51 3 14.24 3 9.75 3 6.99 5.239 4.75 8 4.75c1.54 0 2.97.73 3.999 1.99C13.03 5.48 14.46 4.75 16 4.75c2.761 0 5 2.24 5 5 0 4.49-4.29 7.76-8.091 10.23-.276.18-.591.27-.909.27Z"
+          />
+        </svg>
       </button>
 
       <div className="mt-3">

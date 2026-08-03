@@ -3,7 +3,10 @@ import { redirect } from 'next/navigation';
 import { LinkButton } from '@/components/ui/Button';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 
-export const metadata: Metadata = { title: 'Account' };
+export const metadata: Metadata = {
+  title: 'Account',
+  description: 'Sign in to access your LUNARO orders, saved pieces and private releases.',
+};
 
 // LUNARO uses Shopify's hosted Customer Account API rather than a custom
 // login form — password storage, MFA and session security stay entirely on

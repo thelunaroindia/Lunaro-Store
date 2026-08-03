@@ -41,6 +41,8 @@ export async function generateMetadata({
 
   return {
     title: collection?.title ?? 'Collection',
+    description:
+      collection?.description || `Shop the ${collection?.title ?? 'LUNARO'} collection.`,
   };
 }
 
@@ -111,7 +113,7 @@ export default async function CollectionPage({
         </p>
       )}
 
-      <FilterSort />
+      <FilterSort products={collection.products} />
       <ProductGrid products={filtered} />
     </main>
   );

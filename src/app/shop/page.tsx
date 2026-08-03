@@ -12,6 +12,7 @@ import ProductGrid from '@/components/shop/ProductGrid';
 
 export const metadata: Metadata = {
   title: PRELAUNCH_MODE ? 'The First Transmission' : 'Shop All',
+  description: 'Shop the full LUNARO catalogue.',
 };
 
 function fallbackProducts(): ProductCardData[] {
@@ -90,7 +91,7 @@ export default async function ShopPage({
         SHOP ALL
       </SectionHeading>
 
-      <FilterSort />
+      <FilterSort products={products} />
       <ProductGrid products={filtered} />
     </main>
   );

@@ -7,6 +7,7 @@ import { SectionHeading } from '@/components/ui/Eyebrow';
 
 export const metadata: Metadata = {
   title: 'Collections',
+  description: 'Explore every live LUNARO collection.',
 };
 
 // Deterministic display order and local artwork for each live Shopify

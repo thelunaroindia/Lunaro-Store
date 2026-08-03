@@ -3,7 +3,10 @@ import { contact } from '@/lib/config';
 import ContactForm from '@/components/forms/ContactForm';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 
-export const metadata: Metadata = { title: 'Contact' };
+export const metadata: Metadata = {
+  title: 'Contact',
+  description: 'Order support, product questions and collaborations — reach the LUNARO team directly.',
+};
 
 export default function ContactPage() {
   return (

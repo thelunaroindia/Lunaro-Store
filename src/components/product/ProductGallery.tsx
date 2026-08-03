@@ -58,9 +58,17 @@ export default function ProductGallery({
 
   const [active, setActive] = useState(0);
   const [zoomed, setZoomed] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
   const imageCount = galleryImages.length;
+  const activeImageUrl = galleryImages[active]?.url ?? galleryImages[0]?.url;
+
+  // Hide the swap behind a brief fade instead of a hard pop the instant a
+  // newly-selected colour's image URL changes and hasn't loaded yet.
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [activeImageUrl]);
 
   const showPrevious = useCallback(() => {
     if (imageCount <= 1) return;
@@ -193,11 +201,13 @@ export default function ProductGallery({
             fill
             priority
             sizes="(min-width: 1024px) 50vw, 100vw"
-            className={`object-cover transition-transform duration-500 ease-lunar ${
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageLoaded(true)}
+            className={`object-cover transition-[opacity,transform] duration-500 ease-lunar ${
               zoomed
                 ? 'scale-150 cursor-zoom-out'
                 : 'scale-100'
-            }`}
+            } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
         </button>
 

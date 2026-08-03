@@ -33,7 +33,7 @@ export const brandLines = {
 export const contact = {
   brandName: 'LUNARO',
   contactPerson: 'Mayank Yadav',
-  email: 'mayankyadavv95@gmail.com',
+  email: 'thelunaroindia@gmail.com',
   phone: '+91 98118 31900',
   whatsapp: '+91 98118 31900',
   instagram: '@lunarohq',
@@ -151,16 +151,19 @@ export const trackpantFitAndCare = [
   'Do not bleach',
 ] as const;
 
+// Sourced from the manufacturer's own "Oversized Classic T-Shirt" size-chart
+// image, uploaded to the tee products' Shopify media. The source chart has
+// no sleeve measurement — only chest and length are populated.
 export const sizeGuide = {
   note:
     'LUNARO garments are cut oversized by design. If you prefer a closer fit, we recommend sizing down.',
-  // Figures shown as "—" until the final size chart is measured and confirmed.
   chart: [
-    { size: 'S', chest: '—', length: '—', sleeve: '—' },
-    { size: 'M', chest: '—', length: '—', sleeve: '—' },
-    { size: 'L', chest: '—', length: '—', sleeve: '—' },
-    { size: 'XL', chest: '—', length: '—', sleeve: '—' },
-    { size: 'XXL', chest: '—', length: '—', sleeve: '—' },
+    { size: 'XS', chest: 39, length: 27 },
+    { size: 'S', chest: 41, length: 28 },
+    { size: 'M', chest: 43, length: 29 },
+    { size: 'L', chest: 45, length: 30 },
+    { size: 'XL', chest: 47, length: 31 },
+    { size: '2XL', chest: 49, length: 32 },
   ],
 } as const;
 
@@ -251,7 +254,7 @@ export const faqs = [
 ] as const;
 
 export const seoDefaults = {
-  titleTemplate: '%s — LUNARO',
+  titleTemplate: '%s | LUNARO',
   defaultTitle: 'LUNARO — Crafted in Darkness',
   description: site.description,
   ogImage: '/og/lunaro-default.jpg', // TODO: replace with a real Higgsfield-derived OG still
