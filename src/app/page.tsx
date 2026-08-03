@@ -9,13 +9,10 @@ export const metadata: Metadata = {
 };
 import PageIntro from '@/components/layout/PageIntro';
 import Hero from '@/components/home/Hero';
-import FirstTransmission from '@/components/home/FirstTransmission';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 import CollectionCarousel from '@/components/home/CollectionCarousel';
 import GarmentDetails from '@/components/home/GarmentDetails';
-import LunaroWorld from '@/components/home/LunaroWorld';
 import LookbookPreview from '@/components/home/LookbookPreview';
-import LimitedByDesign from '@/components/home/LimitedByDesign';
 import JoinOrbit from '@/components/home/JoinOrbit';
 
 // Placeholder catalogue shaped like real Shopify data so every component
@@ -53,11 +50,8 @@ export default async function HomePage() {
       <Hero />
       <FeaturedProducts products={products.slice(0, 4)} />
       <CollectionCarousel />
-      <FirstTransmission featured={products[0] ?? null} />
       <GarmentDetails />
-      <LunaroWorld />
       <LookbookPreview />
-      <LimitedByDesign />
       <JoinOrbit />
     </>
   );

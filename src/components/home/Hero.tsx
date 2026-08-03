@@ -106,7 +106,7 @@ export default function Hero() {
 
       <video
         ref={mobileVideoRef}
-        className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 md:hidden ${
+        className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-[35%_50%] transition-opacity duration-1000 md:hidden md:object-center ${
           mobileVideoReady ? 'opacity-100' : 'opacity-0'
         }`}
         poster={`/${asset.posterPath}`}

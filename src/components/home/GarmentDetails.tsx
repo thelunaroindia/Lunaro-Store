@@ -47,7 +47,7 @@ export default function GarmentDetails() {
         <Reveal delay={0.1} className="lg:order-1">
           <div className="max-w-[360px] md:max-w-xl">
             <SectionHeading eyebrow="Construction">
-              GARMENTS FROM ANOTHER ORBIT
+              THE CONSTRUCTION
             </SectionHeading>
           </div>
 
@@ -66,6 +66,10 @@ export default function GarmentDetails() {
               </div>
             ))}
           </div>
+
+          <p className="mt-8 text-sm text-lunar md:mt-10">
+            Fewer pieces. Greater intention.
+          </p>
         </Reveal>
       </div>
     </section>
