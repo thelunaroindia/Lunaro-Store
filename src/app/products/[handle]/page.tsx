@@ -4,10 +4,7 @@ import { notFound } from 'next/navigation';
 import { getProductByHandle, isShopifyConfigured } from '@/lib/shopify';
 import { placeholderProducts, PRELAUNCH_MODE } from '@/lib/config';
 import type { Product } from '@/lib/types';
-import { Eyebrow } from '@/components/ui/Eyebrow';
-import ProductGallery from '@/components/product/ProductGallery';
-import ProductOptions from '@/components/product/ProductOptions';
-import ProductAccordion from '@/components/product/ProductAccordion';
+import ProductDetail from '@/components/product/ProductDetail';
 import RelatedProducts from '@/components/product/RelatedProducts';
 
 type ProductPageProps = {
@@ -179,23 +176,7 @@ export default async function ProductPage({
 
   return (
     <main className="pb-24 pt-28 md:pt-32">
-      <div className="container-lunaro grid gap-12 lg:grid-cols-2">
-        <ProductGallery
-          images={product.images}
-          title={product.title}
-        />
-
-        <div className="lg:pl-6">
-          <Eyebrow>{product.productType || 'LUNARO'}</Eyebrow>
-
-          <h1 className="mt-3 font-display text-display-md text-lunar">
-            {product.title}
-          </h1>
-
-          <ProductOptions product={product} />
-          <ProductAccordion product={product} />
-        </div>
-      </div>
+      <ProductDetail product={product} />
 
       <RelatedProducts excludeHandle={product.handle} />
     </main>

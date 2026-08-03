@@ -2,7 +2,10 @@ import type { Metadata } from 'next';
 import { policies, contact } from '@/lib/config';
 import { PolicyLayout } from '@/components/ui/PolicyLayout';
 
-export const metadata: Metadata = { title: 'Shipping & Returns' };
+export const metadata: Metadata = {
+  title: 'Shipping & Returns',
+  description: 'Dispatch timelines, tracking and return terms for LUNARO orders.',
+};
 
 export default function ShippingReturnsPage() {
   return (

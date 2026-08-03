@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { LinkButton } from '@/components/ui/Button';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
@@ -43,10 +43,27 @@ function RevealLine({
 
 export default function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
+  const desktopVideoRef = useRef<HTMLVideoElement>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const prefersReducedMotion = useReducedMotion();
 
   const [desktopVideoReady, setDesktopVideoReady] = useState(false);
   const [mobileVideoReady, setMobileVideoReady] = useState(false);
+
+  // If loadeddata/canplay already fired before hydration attached these
+  // handlers, readyState reflects it — check it directly on mount instead
+  // of waiting for an event that already happened.
+  useEffect(() => {
+    const desktopEl = desktopVideoRef.current;
+    if (desktopEl && desktopEl.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      setDesktopVideoReady(true);
+    }
+
+    const mobileEl = mobileVideoRef.current;
+    if (mobileEl && mobileEl.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      setMobileVideoReady(true);
+    }
+  }, []);
 
   return (
     <section
@@ -65,6 +82,7 @@ export default function Hero() {
       </ParallaxLayer>
 
       <video
+        ref={desktopVideoRef}
         className={`pointer-events-none absolute inset-0 hidden h-full w-full object-cover transition-opacity duration-1000 md:block ${
           desktopVideoReady ? 'opacity-100' : 'opacity-0'
         }`}
@@ -73,14 +91,22 @@ export default function Hero() {
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         onLoadedData={() => setDesktopVideoReady(true)}
+        onCanPlay={() => setDesktopVideoReady(true)}
+        onPlaying={() => setDesktopVideoReady(true)}
+        onError={() => {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('Hero desktop video failed to load; showing placeholder.');
+          }
+        }}
       >
         <source src={`/${asset.desktopPath}`} type="video/mp4" />
       </video>
 
       <video
-        className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 md:hidden ${
+        ref={mobileVideoRef}
+        className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-[35%_50%] transition-opacity duration-1000 md:hidden md:object-center ${
           mobileVideoReady ? 'opacity-100' : 'opacity-0'
         }`}
         poster={`/${asset.posterPath}`}
@@ -88,8 +114,15 @@ export default function Hero() {
         muted
         loop
         playsInline
-        preload="none"
+        preload="metadata"
         onLoadedData={() => setMobileVideoReady(true)}
+        onCanPlay={() => setMobileVideoReady(true)}
+        onPlaying={() => setMobileVideoReady(true)}
+        onError={() => {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('Hero mobile video failed to load; showing placeholder.');
+          }
+        }}
       >
         <source src={`/${asset.mobilePath}`} type="video/mp4" />
       </video>
@@ -102,7 +135,7 @@ export default function Hero() {
         <div className="h-full w-full bg-gradient-to-t from-obsidian via-obsidian/25 to-transparent" />
       </ParallaxLayer>
 
-      <div className="container-lunaro relative z-20 pb-20 pt-40 md:pb-28">
+      <div className="container-lunaro relative z-20 pb-32 pt-40 md:pb-28">
         <RevealLine
           delay={0.1}
           reduced={!!prefersReducedMotion}

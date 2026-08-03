@@ -6,6 +6,7 @@ import { assetManifest } from '@/lib/assetManifest';
 
 export const metadata: Metadata = {
   title: 'About',
+  description: 'The LUNARO story, philosophy and design language.',
 };
 
 export default function AboutPage() {

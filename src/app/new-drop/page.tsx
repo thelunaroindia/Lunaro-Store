@@ -7,6 +7,7 @@ import ProductGrid from '@/components/shop/ProductGrid';
 
 export const metadata: Metadata = {
   title: PRELAUNCH_MODE ? 'Drop 001 — In Transmission' : 'New Drop',
+  description: 'The latest LUNARO drop, live now.',
 };
 
 function fallbackProducts(): ProductCardData[] {

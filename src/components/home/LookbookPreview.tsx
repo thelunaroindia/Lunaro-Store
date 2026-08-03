@@ -34,7 +34,7 @@ export default function LookbookPreview() {
         {PRELAUNCH_MODE ? (
           <Reveal
             scale={1.03}
-            className="relative mt-10 aspect-[4/5] max-h-[560px] overflow-hidden bg-charcoal md:mt-14 md:aspect-[16/9] md:max-h-none"
+            className="relative mt-10 aspect-[4/5] max-h-[560px] media-rounded bg-charcoal md:mt-14 md:aspect-[16/9] md:max-h-none"
           >
             <CinematicPlaceholder
               variant="lookbook"
@@ -107,18 +107,14 @@ export default function LookbookPreview() {
               </div>
             </div>
 
-            <div className="mt-14 grid gap-6 sm:grid-cols-3">
+            <div className="mt-14 flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {assetManifest.lookbookPreview.map((asset, index) => {
                 const ready = hasPublicAsset(asset.desktopPath);
 
                 return (
-                  <Reveal
+                  <div
                     key={asset.desktopPath}
-                    delay={index * 0.1}
-                    scale={1.05}
-                    className={`group relative aspect-[3/4] overflow-hidden bg-charcoal ${
-                      index === 1 ? 'sm:mt-10' : ''
-                    }`}
+                    className="group relative aspect-[3/4] w-[82vw] shrink-0 snap-start media-rounded bg-charcoal sm:w-[46vw] lg:w-[28vw] lg:max-w-[420px]"
                   >
                     <div className="h-full w-full transition-transform duration-[1200ms] ease-lunar group-hover:scale-[1.04]">
                       {ready ? (
@@ -129,7 +125,7 @@ export default function LookbookPreview() {
                             'LUNARO lookbook'
                           }
                           fill
-                          sizes="(min-width: 640px) 33vw, 100vw"
+                          sizes="(min-width: 1024px) 28vw, (min-width: 640px) 46vw, 82vw"
                           className="object-cover"
                         />
                       ) : (
@@ -143,7 +139,7 @@ export default function LookbookPreview() {
                     <p className="absolute bottom-3 left-3 text-xs uppercase tracking-wider2 text-lunar">
                       {liveCaptions[index]}
                     </p>
-                  </Reveal>
+                  </div>
                 );
               })}
             </div>

@@ -1,10 +1,21 @@
 import Image from 'next/image';
-import { fabricDetails } from '@/lib/config';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import { Reveal } from '@/components/motion/Reveal';
 import { hasPublicAsset } from '@/lib/assets';
 import { assetManifest } from '@/lib/assetManifest';
+
+type ConstructionFact = {
+  value: string;
+  detail: string;
+};
+
+const constructionFacts: ConstructionFact[] = [
+  { value: '240 GSM', detail: 'Heavyweight cotton' },
+  { value: '100% COTTON', detail: 'Soft, breathable structure' },
+  { value: 'OVERSIZED FIT', detail: 'Relaxed drop-shoulder silhouette' },
+  { value: 'BUILT TO LAST', detail: 'Reinforced everyday construction' },
+];
 
 export default function GarmentDetails() {
   const asset = assetManifest.fabricMacro;
@@ -15,7 +26,7 @@ export default function GarmentDetails() {
       <div className="container-lunaro grid gap-8 md:gap-12 lg:grid-cols-2 lg:items-center">
         <Reveal
           scale={1.04}
-          className="relative aspect-[4/3] w-full overflow-hidden bg-charcoal sm:aspect-square lg:order-2 lg:aspect-square"
+          className="relative aspect-[4/3] w-full media-rounded bg-charcoal sm:aspect-square lg:order-2 lg:aspect-square"
         >
           {ready ? (
             <Image
@@ -36,20 +47,29 @@ export default function GarmentDetails() {
         <Reveal delay={0.1} className="lg:order-1">
           <div className="max-w-[360px] md:max-w-xl">
             <SectionHeading eyebrow="Construction">
-              GARMENTS FROM ANOTHER ORBIT
+              THE CONSTRUCTION
             </SectionHeading>
           </div>
 
-          <ul className="mt-6 space-y-0 md:mt-8">
-            {fabricDetails.map((detail) => (
-              <li
-                key={detail}
-                className="border-t border-graphite py-4 text-[12px] uppercase tracking-[0.22em] text-mist md:text-sm md:tracking-wider2"
+          <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 md:mt-10 md:gap-x-8 md:gap-y-8">
+            {constructionFacts.map((fact) => (
+              <div
+                key={fact.value}
+                className="border-t border-graphite pt-4"
               >
-                {detail}
-              </li>
+                <p className="font-display text-xl text-lunar sm:text-2xl">
+                  {fact.value}
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-mist sm:text-sm">
+                  {fact.detail}
+                </p>
+              </div>
             ))}
-          </ul>
+          </div>
+
+          <p className="mt-8 text-sm text-lunar md:mt-10">
+            Fewer pieces. Greater intention.
+          </p>
         </Reveal>
       </div>
     </section>

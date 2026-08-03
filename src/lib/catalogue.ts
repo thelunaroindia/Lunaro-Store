@@ -25,14 +25,24 @@ export function applyCatalogueFilters(
 
     if (sizes.length > 0) {
       const hasSize = product.filterVariants?.some(
-        (v) => v.availableForSale && v.selectedOptions.some((o) => o.name === 'Size' && sizes.includes(o.value))
+        (v) =>
+          v.availableForSale &&
+          v.selectedOptions.some(
+            (o) => o.name.trim().toLowerCase() === 'size' && sizes.includes(o.value)
+          )
       );
       if (!hasSize) return false;
     }
 
     if (colours.length > 0) {
       const hasColour = product.filterVariants?.some((v) =>
-        v.selectedOptions.some((o) => o.name === 'Colour' && colours.includes(o.value))
+        v.selectedOptions.some((o) => {
+          const normalizedName = o.name.trim().toLowerCase();
+          return (
+            (normalizedName === 'colour' || normalizedName === 'color') &&
+            colours.includes(o.value)
+          );
+        })
       );
       if (!hasColour) return false;
     }

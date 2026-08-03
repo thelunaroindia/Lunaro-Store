@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState, useTransition } from 'react';
 import { formatMoney } from '@/lib/utils';
+import { cleanProductTitle } from '@/lib/productTitle';
 import { updateCartLine, removeFromCart } from '@/actions/cart';
 import type { Cart, CartLine } from '@/lib/types';
 
@@ -28,7 +29,7 @@ export default function CartLineItem({
 
   return (
     <div className="flex gap-4 border-b border-graphite py-5">
-      <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden bg-charcoal">
+      <div className="relative h-24 w-20 flex-shrink-0 media-rounded-sm bg-charcoal">
         {image ? (
           <Image src={image.url} alt={image.altText ?? line.merchandise.product.title} fill sizes="80px" className="object-cover" />
         ) : null}
@@ -37,7 +38,7 @@ export default function CartLineItem({
       <div className="flex flex-1 flex-col justify-between">
         <div className="flex justify-between gap-3">
           <div>
-            <p className="text-sm text-lunar">{line.merchandise.product.title}</p>
+            <p className="text-sm text-lunar">{cleanProductTitle(line.merchandise.product.title)}</p>
             <p className="mt-1 text-xs text-mist">
               {line.merchandise.selectedOptions.map((o) => o.value).join(' / ')}
             </p>

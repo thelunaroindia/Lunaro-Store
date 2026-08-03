@@ -33,7 +33,7 @@ export const brandLines = {
 export const contact = {
   brandName: 'LUNARO',
   contactPerson: 'Mayank Yadav',
-  email: 'mayankyadavv95@gmail.com',
+  email: 'thelunaroindia@gmail.com',
   phone: '+91 98118 31900',
   whatsapp: '+91 98118 31900',
   instagram: '@lunarohq',
@@ -135,16 +135,48 @@ export const fabricDetails = [
   'BUILT FOR REPEAT WEAR',
 ] as const;
 
+// Trackpant-specific facts (confirmed from live Shopify product data) —
+// kept separate from fabricDetails so tee copy never leaks onto bottoms.
+export const trackpantFabricDetails = [
+  '260 GSM Terry',
+  '90% Cotton / 10% Polyester',
+  'Two Front Pockets',
+] as const;
+
+export const trackpantFitAndCare = [
+  'Loose fit',
+  'Designed for a relaxed silhouette',
+  'Machine wash cold',
+  'Wash with similar colours',
+  'Do not bleach',
+] as const;
+
+// Sourced from the manufacturer's own "Oversized Classic T-Shirt" size-chart
+// image, uploaded to the tee products' Shopify media. The source chart has
+// no sleeve measurement — only chest and length are populated.
 export const sizeGuide = {
   note:
     'LUNARO garments are cut oversized by design. If you prefer a closer fit, we recommend sizing down.',
-  // Figures shown as "—" until the final size chart is measured and confirmed.
   chart: [
-    { size: 'S', chest: '—', length: '—', sleeve: '—' },
-    { size: 'M', chest: '—', length: '—', sleeve: '—' },
-    { size: 'L', chest: '—', length: '—', sleeve: '—' },
-    { size: 'XL', chest: '—', length: '—', sleeve: '—' },
-    { size: 'XXL', chest: '—', length: '—', sleeve: '—' },
+    { size: 'XS', chest: 39, length: 27 },
+    { size: 'S', chest: 41, length: 28 },
+    { size: 'M', chest: 43, length: 29 },
+    { size: 'L', chest: 45, length: 30 },
+    { size: 'XL', chest: 47, length: 31 },
+    { size: '2XL', chest: 49, length: 32 },
+  ],
+} as const;
+
+// Sourced from the manufacturer's own sweatpants size-chart image, uploaded
+// to both trackpant products' Shopify media (identical file on each).
+export const bottomsSizeGuide = {
+  note: 'Measurements are in inches, as provided by the manufacturer.',
+  chart: [
+    { size: 'S', waist: 30, hip: 36, outseam: 39, inseam: 27 },
+    { size: 'M', waist: 32, hip: 38, outseam: 40, inseam: 27 },
+    { size: 'L', waist: 34, hip: 40, outseam: 41, inseam: 27 },
+    { size: 'XL', waist: 36, hip: 44, outseam: 42, inseam: 27 },
+    { size: '2XL', waist: 38, hip: 46, outseam: 43, inseam: 27 },
   ],
 } as const;
 
@@ -222,7 +254,7 @@ export const faqs = [
 ] as const;
 
 export const seoDefaults = {
-  titleTemplate: '%s — LUNARO',
+  titleTemplate: '%s | LUNARO',
   defaultTitle: 'LUNARO — Crafted in Darkness',
   description: site.description,
   ogImage: '/og/lunaro-default.jpg', // TODO: replace with a real Higgsfield-derived OG still

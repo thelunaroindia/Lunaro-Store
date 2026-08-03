@@ -38,7 +38,12 @@ export default function Footer() {
         </p>
         <div className="flex gap-6">
           <span>India · INR ₹</span>
-          <a href={contact.instagramUrl} className="link-underline">
+          <a
+            href={contact.instagramUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="link-underline"
+          >
             {contact.instagram}
           </a>
         </div>

@@ -64,6 +64,17 @@
   .link-underline:hover {
     background-size: 100% 1px;
   }
+
+  /* Single source of truth for the storefront's rounded media treatment —
+     swap the size variant in per component, never hand-roll rounded-[Npx]
+     overflow-hidden inline so the radius stays consistent site-wide. */
+  .media-rounded {
+    @apply overflow-hidden rounded-[20px];
+  }
+
+  .media-rounded-sm {
+    @apply overflow-hidden rounded-[12px];
+  }
 }
 
 @media (min-width: 768px) {

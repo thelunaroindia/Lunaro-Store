@@ -81,10 +81,8 @@ export default function FeaturedProducts({
 
   if (products.length === 0) return null;
 
-  const [first, second, third, fourth] = products;
-
   return (
-    <section className="border-t border-graphite py-24 md:py-32">
+    <section className="border-t border-graphite pt-28 pb-24 md:pt-32 md:pb-32">
       <div className="container-lunaro">
         <Reveal className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading eyebrow="The Collection">
@@ -96,32 +94,12 @@ export default function FeaturedProducts({
           </LinkButton>
         </Reveal>
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-2">
-          {first && (
-            <Reveal delay={0.05} className="lg:row-span-2">
-              <ProductCard product={first} size="large" priority />
+        <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-4 lg:gap-x-8">
+          {products.map((product, index) => (
+            <Reveal key={product.id} delay={0.05 + index * 0.06}>
+              <ProductCard product={product} priority={index === 0} />
             </Reveal>
-          )}
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            {[second, third].filter(Boolean).map((product, index) => (
-              <Reveal
-                key={product!.id}
-                delay={0.1 + index * 0.08}
-              >
-                <ProductCard product={product!} />
-              </Reveal>
-            ))}
-          </div>
-
-          {fourth && (
-            <Reveal
-              delay={0.26}
-              className="sm:col-start-1 lg:col-start-2"
-            >
-              <ProductCard product={fourth} />
-            </Reveal>
-          )}
+          ))}
         </div>
       </div>
     </section>

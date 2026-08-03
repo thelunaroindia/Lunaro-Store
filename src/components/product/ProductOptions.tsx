@@ -1,6 +1,12 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import {
+  useMemo,
+  useState,
+  useTransition,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 import { formatMoney } from '@/lib/utils';
 import { addToCart } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
@@ -9,7 +15,20 @@ import StickyAddToCart from './StickyAddToCart';
 import { payments } from '@/lib/config';
 import type { Product, ProductVariant } from '@/lib/types';
 
-function findVariant(
+const TRACKPANT_PRODUCT_TYPES = [
+  'trackpant',
+  'trackpants',
+  'sweatpant',
+  'sweatpants',
+];
+
+function isTrackpant(productType: string): boolean {
+  return TRACKPANT_PRODUCT_TYPES.includes(
+    productType.trim().toLowerCase()
+  );
+}
+
+export function findVariant(
   variants: ProductVariant[],
   selected: Record<string, string>
 ): ProductVariant | undefined {
@@ -20,10 +39,39 @@ function findVariant(
   );
 }
 
+export function getInitialSelectedOptions(
+  product: Product
+): Record<string, string> {
+  const initial: Record<string, string> = {};
+
+  for (const option of product.options) {
+    const firstAvailableVariant = product.variants.find(
+      (variant) =>
+        variant.availableForSale &&
+        variant.selectedOptions.some(
+          (selectedOption) => selectedOption.name === option.name
+        )
+    );
+
+    initial[option.name] =
+      firstAvailableVariant?.selectedOptions.find(
+        (selectedOption) => selectedOption.name === option.name
+      )?.value ??
+      option.values[0] ??
+      '';
+  }
+
+  return initial;
+}
+
 export default function ProductOptions({
   product,
+  selected,
+  setSelected,
 }: {
   product: Product;
+  selected: Record<string, string>;
+  setSelected: Dispatch<SetStateAction<Record<string, string>>>;
 }) {
   const { setCart, open } = useCartUI();
   const [isPending, startTransition] = useTransition();
@@ -35,33 +83,6 @@ export default function ProductOptions({
     product.variants.every(
       (variant) => !variant.availableForSale
     );
-
-  const [selected, setSelected] = useState<Record<string, string>>(
-    () => {
-      const initial: Record<string, string> = {};
-
-      for (const option of product.options) {
-        const firstAvailableVariant = product.variants.find(
-          (variant) =>
-            variant.availableForSale &&
-            variant.selectedOptions.some(
-              (selectedOption) =>
-                selectedOption.name === option.name
-            )
-        );
-
-        initial[option.name] =
-          firstAvailableVariant?.selectedOptions.find(
-            (selectedOption) =>
-              selectedOption.name === option.name
-          )?.value ??
-          option.values[0] ??
-          '';
-      }
-
-      return initial;
-    }
-  );
 
   const activeVariant = useMemo(
     () => findVariant(product.variants, selected),
@@ -132,7 +153,7 @@ export default function ProductOptions({
   return (
     <div>
       <div className="flex items-center gap-3">
-        <p className="font-display text-2xl text-lunar">
+        <p className="text-2xl font-medium text-lunar">
           {formatMoney(sellingPrice)}
         </p>
 
@@ -201,7 +222,11 @@ export default function ProductOptions({
 
           {option.name.toLowerCase() === 'size' && (
             <LinkButton
-              href="/size-guide"
+              href={
+                isTrackpant(product.productType)
+                  ? '/size-guide?category=bottoms'
+                  : '/size-guide'
+              }
               variant="underline"
               className="mt-3 text-xs"
             >
@@ -219,20 +244,20 @@ export default function ProductOptions({
         ) : (
           <>
             <Button
-              onClick={handleAddToCart}
-              disabled={isPending}
-              className="w-full"
-            >
-              {isPending ? 'Adding…' : 'Add to Cart'}
-            </Button>
-
-            <Button
               onClick={handleBuyNow}
-              variant="ghost"
               disabled={isPending}
               className="w-full"
             >
               Buy Now
+            </Button>
+
+            <Button
+              onClick={handleAddToCart}
+              variant="ghost"
+              disabled={isPending}
+              className="w-full"
+            >
+              {isPending ? 'Adding…' : 'Add to Cart'}
             </Button>
           </>
         )}
@@ -252,14 +277,10 @@ export default function ProductOptions({
       )}
 
       {!isSoldOut && (
-        <p className="mt-6 text-[11px] text-mist">
-          {payments.methods.join(' · ')}
-        </p>
-      )}
-
-      {!isSoldOut && (
-        <p className="mt-2 text-xs text-mist">
-          Estimated dispatch: 2–4 business days.
+        <p className="mt-6 text-[11px] leading-relaxed text-mist">
+          {[...payments.methods, 'Estimated dispatch: 2–4 business days.'].join(
+            ' · '
+          )}
         </p>
       )}
 
@@ -268,7 +289,7 @@ export default function ProductOptions({
         priceLabel={priceLabel}
         disabled={isSoldOut}
         isPending={isPending}
-        onAdd={handleAddToCart}
+        onAdd={handleBuyNow}
       />
     </div>
   );

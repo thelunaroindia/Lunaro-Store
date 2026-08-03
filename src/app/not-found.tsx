@@ -1,5 +1,11 @@
+import type { Metadata } from 'next';
 import { LinkButton } from '@/components/ui/Button';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
+
+export const metadata: Metadata = {
+  title: 'Page Not Found',
+  description: 'This page could not be found.',
+};
 
 export default function NotFound() {
   return (

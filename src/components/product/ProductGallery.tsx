@@ -1,42 +1,92 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import type { ShopifyImage } from '@/lib/types';
 
 type ProductGalleryProps = {
   images: ShopifyImage[];
   title: string;
+  // The currently selected variant's own image, if any. Shown as the lead
+  // image and reconciled into the gallery below — see `galleryImages`.
+  selectedImage?: ShopifyImage | null;
 };
+
+// Qikink filenames encode the garment colour as a `c_<N>` token
+// (e.g. "Front_1_c_3.jpg", "Back_2_c_3.jpg" — both colour "3"). Anchored so
+// "c_3" never matches "c_35" — a real collision in the live catalogue.
+function extractColourToken(url: string): string | null {
+  const match = url.match(/_c_(\d+)(?=[._])/);
+  return match?.[1] ?? null;
+}
 
 export default function ProductGallery({
   images,
   title,
+  selectedImage = null,
 }: ProductGalleryProps) {
+  // Anchor on the selected variant's own image, then keep only the other
+  // product images that share its colour token (front/back of the same
+  // colour) — excluding size charts and other-colour/orphan images. If no
+  // token can be extracted, fall back to the full image set. If a token
+  // exists but nothing else matches it, the selected image shows alone
+  // rather than mixing in another colour.
+  const galleryImages = useMemo(() => {
+    if (!selectedImage) return images;
+
+    const token = extractColourToken(selectedImage.url);
+
+    const sameColour = token
+      ? images.filter(
+          (image) => extractColourToken(image.url) === token
+        )
+      : images;
+
+    const withoutSelected = sameColour.filter(
+      (image) => image.url !== selectedImage.url
+    );
+
+    return [selectedImage, ...withoutSelected];
+  }, [images, selectedImage]);
+
   const [active, setActive] = useState(0);
   const [zoomed, setZoomed] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
-  const imageCount = images.length;
+  const imageCount = galleryImages.length;
+  const activeImageUrl = galleryImages[active]?.url ?? galleryImages[0]?.url;
 
-  function showPrevious() {
+  // Hide the swap behind a brief fade instead of a hard pop the instant a
+  // newly-selected colour's image URL changes and hasn't loaded yet.
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [activeImageUrl]);
+
+  const showPrevious = useCallback(() => {
     if (imageCount <= 1) return;
 
     setZoomed(false);
     setActive((current) =>
       current === 0 ? imageCount - 1 : current - 1
     );
-  }
+  }, [imageCount]);
 
-  function showNext() {
+  const showNext = useCallback(() => {
     if (imageCount <= 1) return;
 
     setZoomed(false);
     setActive((current) =>
       current === imageCount - 1 ? 0 : current + 1
     );
-  }
+  }, [imageCount]);
 
   function selectImage(index: number) {
     setZoomed(false);
@@ -63,7 +113,7 @@ export default function ProductGallery({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [imageCount]);
+  }, [showNext, showPrevious]);
 
   useEffect(() => {
     if (active >= imageCount && imageCount > 0) {
@@ -71,9 +121,17 @@ export default function ProductGallery({
     }
   }, [active, imageCount]);
 
+  // Colour changes (including on mount): `galleryImages` always puts
+  // `selectedImage` first, so jump back to index 0 rather than retaining
+  // whatever was active for the previous colour.
+  useEffect(() => {
+    setZoomed(false);
+    setActive(0);
+  }, [selectedImage]);
+
   if (imageCount === 0) {
     return (
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal">
+      <div className="relative aspect-[4/5] w-full media-rounded bg-charcoal">
         <CinematicPlaceholder
           variant="product"
           className="h-full w-full"
@@ -82,11 +140,11 @@ export default function ProductGallery({
     );
   }
 
-  const current = images[active] ?? images[0];
+  const current = galleryImages[active] ?? galleryImages[0];
 
   if (!current) {
     return (
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal">
+      <div className="relative aspect-[4/5] w-full media-rounded bg-charcoal">
         <CinematicPlaceholder
           variant="product"
           className="h-full w-full"
@@ -98,7 +156,7 @@ export default function ProductGallery({
   return (
     <div className="min-w-0">
       <div
-        className="relative aspect-[4/5] w-full overflow-hidden bg-charcoal"
+        className="relative aspect-[4/5] w-full media-rounded bg-charcoal"
         onTouchStart={(event) => {
           const firstTouch = event.touches.item(0);
           touchStartX.current = firstTouch?.clientX ?? null;
@@ -143,11 +201,13 @@ export default function ProductGallery({
             fill
             priority
             sizes="(min-width: 1024px) 50vw, 100vw"
-            className={`object-cover transition-transform duration-500 ease-lunar ${
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageLoaded(true)}
+            className={`object-cover transition-[opacity,transform] duration-500 ease-lunar ${
               zoomed
                 ? 'scale-150 cursor-zoom-out'
                 : 'scale-100'
-            }`}
+            } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
         </button>
 
@@ -179,7 +239,7 @@ export default function ProductGallery({
       </div>
 
       <div className="mt-4 flex max-w-full gap-3 overflow-x-auto pb-2">
-        {images.map((image, index) => {
+        {galleryImages.map((image, index) => {
           const isActive = index === active;
 
           return (
@@ -193,7 +253,7 @@ export default function ProductGallery({
               aria-current={
                 isActive ? 'true' : undefined
               }
-              className={`relative aspect-[4/5] w-20 flex-none overflow-hidden bg-charcoal transition-all duration-300 ${
+              className={`relative aspect-[4/5] w-20 flex-none media-rounded-sm bg-charcoal transition-all duration-300 ${
                 isActive
                   ? 'ring-1 ring-lunar opacity-100'
                   : 'opacity-50 hover:opacity-90'

@@ -6,7 +6,10 @@ import ProductCard from '@/components/shop/ProductCard';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 import CartPageClient from './CartPageClient';
 
-export const metadata: Metadata = { title: 'Cart' };
+export const metadata: Metadata = {
+  title: 'Cart',
+  description: 'Review your selected garments before checkout.',
+};
 
 export default async function CartPage() {
   const cart = await getOrCreateCart();
