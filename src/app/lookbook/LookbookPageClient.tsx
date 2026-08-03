@@ -11,19 +11,19 @@ const looks = assetManifest.lookbookFull;
 
 const lookDetails = [
   {
-    caption: 'LOOK 01 — ORBIT',
+    caption: 'LOOK 01 — NEW DROP EDIT',
     shopHref: '/new-drop',
   },
   {
-    caption: 'LOOK 02 — ECLIPSE',
+    caption: 'LOOK 02 — GRAPHIC ART EDIT',
     shopHref: '/collections/graphic-tees',
   },
   {
-    caption: 'LOOK 03 — VOID',
+    caption: 'LOOK 03 — FOOTBALL EDIT',
     shopHref: '/collections/football-edit',
   },
   {
-    caption: 'LOOK 04 — ACTIVEWEAR',
+    caption: 'LOOK 04 — BLACK ESSENTIALS',
     shopHref: '/collections/trackpants',
   },
 ];
