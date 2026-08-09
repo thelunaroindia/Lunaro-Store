@@ -45,7 +45,7 @@ export default function ProductAccordion({ product }: { product: Product }) {
         <p>{normalizeDescription(product.description)}</p>
       </AccordionItem>
       <AccordionItem
-        title="Fabric & Construction"
+        title={trackpant ? 'Fabric & Construction' : 'Fabric & Finish'}
         headingClassName={HEADING_CLASSNAME}
         bodyClassName={BODY_CLASSNAME}
       >

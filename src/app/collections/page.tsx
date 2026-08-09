@@ -14,12 +14,14 @@ export const metadata: Metadata = {
 // collection. Title/description/handle always come from Shopify itself —
 // a handle configured here that Shopify doesn't return is simply omitted
 // (see `cards` below), never rendered as a fake or dead link.
+//
+// trackpants (Bottoms), football-edit and archive are intentionally
+// omitted — those collections are currently empty and must not be
+// customer-facing. The Shopify collections themselves are untouched;
+// re-add here once each has real products.
 const FEATURED_COLLECTIONS = [
   { handle: 'oversized-tees', image: '/images/collections/oversized-tees.jpg' },
   { handle: 'graphic-tees', image: '/images/collections/graphic-tees.jpg' },
-  { handle: 'trackpants', image: '/images/collections/bottoms.jpg' },
-  { handle: 'football-edit', image: '/images/collections/football-edit.jpg' },
-  { handle: 'archive', image: '/images/collections/archive.jpg' },
 ] as const;
 
 export default async function CollectionsPage() {

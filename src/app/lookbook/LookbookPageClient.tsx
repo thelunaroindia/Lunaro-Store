@@ -9,6 +9,9 @@ import { PRELAUNCH_MODE } from '@/lib/config';
 
 const looks = assetManifest.lookbookFull;
 
+// Looks 03 and 04 point to /shop rather than their themed collections —
+// Football Edit and Bottoms/trackpants are currently empty Shopify
+// collections, so "Shop This Look" must not dead-end there.
 const lookDetails = [
   {
     caption: 'LOOK 01 — NEW DROP EDIT',
@@ -20,11 +23,11 @@ const lookDetails = [
   },
   {
     caption: 'LOOK 03 — FOOTBALL EDIT',
-    shopHref: '/collections/football-edit',
+    shopHref: '/shop',
   },
   {
     caption: 'LOOK 04 — BLACK ESSENTIALS',
-    shopHref: '/collections/trackpants',
+    shopHref: '/shop',
   },
 ];
 

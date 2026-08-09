@@ -11,6 +11,7 @@ import { formatMoney } from '@/lib/utils';
 import { addToCart } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
 import { Button, LinkButton } from '@/components/ui/Button';
+import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
 import StickyAddToCart from './StickyAddToCart';
 import { payments } from '@/lib/config';
 import type { Product, ProductVariant } from '@/lib/types';
@@ -142,8 +143,7 @@ export default function ProductOptions({
 
       if (result.ok) {
         setCart(result.cart);
-        window.location.href =
-          result.cart.checkoutUrl;
+        openFastrCheckout(cartToFastrProducts(result.cart));
       } else {
         setError(result.error);
       }

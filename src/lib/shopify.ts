@@ -186,6 +186,18 @@ function normaliseCart(cart: any): Cart {
 
 // ── Catalogue reads ───────────────────────────────────────────────────
 
+// Internal products used for checkout/payment testing that must never reach
+// customer-facing listings. Matched by handle (not price) so this can never
+// accidentally hide a real, legitimately low-priced product. The product
+// itself is left untouched in Shopify — this only filters storefront
+// listings/search/recommendations; direct PDP access is unaffected and
+// should be prevented via Shopify's own Draft/unpublished status instead.
+const HIDDEN_PRODUCT_HANDLES = new Set(['test']);
+
+function isCustomerFacing(product: { handle: string }): boolean {
+  return !HIDDEN_PRODUCT_HANDLES.has(product.handle);
+}
+
 export async function getProducts(params?: {
   first?: number;
   sortKey?:
@@ -215,7 +227,7 @@ export async function getProducts(params?: {
     }
   );
 
-  return data.products.nodes.map(normaliseProductCard);
+  return data.products.nodes.map(normaliseProductCard).filter(isCustomerFacing);
 }
 
 export async function getProductByHandle(
@@ -304,7 +316,7 @@ export async function getCollectionByHandle(
     image: data.collection.image ?? null,
     products: (
       data.collection.products.nodes ?? []
-    ).map(normaliseProductCard),
+    ).map(normaliseProductCard).filter(isCustomerFacing),
   };
 }
 

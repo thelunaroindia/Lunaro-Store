@@ -7,12 +7,13 @@ type CollectionCard = {
   image: string;
 };
 
+// Bottoms, Football Edit and Archive are intentionally omitted — those
+// Shopify collections are currently empty and must not be surfaced to
+// customers. The collections themselves are untouched in Shopify; re-add
+// the tile here once each has real products.
 const COLLECTIONS: CollectionCard[] = [
   { name: 'NEW DROP', href: '/new-drop', image: '/images/collections/new-drop.jpg' },
   { name: 'GRAPHIC TEES', href: '/collections/graphic-tees', image: '/images/collections/graphic-tees.jpg' },
-  { name: 'BOTTOMS', href: '/collections/trackpants', image: '/images/collections/bottoms.jpg' },
-  { name: 'FOOTBALL EDIT', href: '/collections/football-edit', image: '/images/collections/football-edit.jpg' },
-  { name: 'ARCHIVE', href: '/collections/archive', image: '/images/collections/archive.jpg' },
 ];
 
 export default function CollectionCarousel() {

@@ -5,6 +5,7 @@ import { formatMoney } from '@/lib/utils';
 import { payments } from '@/lib/config';
 import { applyDiscount } from '@/actions/cart';
 import { Button } from '@/components/ui/Button';
+import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
 import CartLineItem from '@/components/cart/CartLineItem';
 import type { Cart } from '@/lib/types';
 
@@ -13,6 +14,13 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  function handleCheckout() {
+    if (checkingOut) return;
+    setCheckingOut(true);
+    openFastrCheckout(cartToFastrProducts(cart));
+  }
 
   function onApplyDiscount(e: React.FormEvent) {
     e.preventDefault();
@@ -75,12 +83,14 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
           </div>
         </div>
 
-        <a
-          href={cart.checkoutUrl}
-          className="mt-6 flex w-full items-center justify-center bg-lunar px-7 py-4 text-eyebrow uppercase tracking-wider3 text-obsidian transition-colors hover:bg-silver"
+        <button
+          type="button"
+          onClick={handleCheckout}
+          disabled={checkingOut}
+          className="mt-6 flex w-full items-center justify-center bg-lunar px-7 py-4 text-eyebrow uppercase tracking-wider3 text-obsidian transition-colors hover:bg-silver disabled:opacity-60"
         >
-          Checkout
-        </a>
+          {checkingOut ? 'Opening Checkout…' : 'Checkout'}
+        </button>
         <p className="mt-3 text-center text-[11px] text-mist">{payments.methods.join(' · ')}</p>
       </div>
     </div>

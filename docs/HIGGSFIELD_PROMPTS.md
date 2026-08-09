@@ -35,7 +35,7 @@ Where a garment's exact printed artwork must be legible, use a **real photograph
 ### 5. Product macro fabric film ✅ GENERATED
 **Use:** `src/components/home/GarmentDetails.tsx` → still frame at `/images/fabric-macro.jpg`
 **Format:** 1:1 square, 5–8s, extractable still frame
-> [Shared art direction.] Extreme macro shot of 240 GSM cotton jersey weave, camera moving in a slow, shallow-depth-of-field drift across the ribbed neckline seam and stitching detail. Lighting raked low across the fabric surface to emphasise texture and weave structure. No model, no colour outside the palette (black/charcoal fabric only, silver highlight from the raking light).
+> [Shared art direction.] Extreme macro shot of 260 GSM French Terry, camera moving in a slow, shallow-depth-of-field drift across the ribbed neckline seam and stitching detail. Lighting raked low across the fabric surface to emphasise texture and weave structure. No model, no colour outside the palette (black/charcoal fabric only, silver highlight from the raking light).
 
 ### 6. Product-detail campaign video template
 **Use:** optional embed on `src/app/products/[handle]/page.tsx` gallery

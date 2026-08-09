@@ -110,7 +110,7 @@ export const placeholderProducts = [
     title: 'ECLIPSE SIGNAL TEE',
     price: 1199,
     colour: 'Obsidian Black',
-    story: 'A signal caught mid-eclipse — graphic distortion frozen across 240 GSM cotton.',
+    story: 'A signal caught mid-eclipse — graphic distortion frozen across 260 GSM cotton.',
   },
   {
     handle: 'void-explorer-tee',
@@ -128,11 +128,13 @@ export const placeholderProducts = [
   },
 ] as const;
 
+// The confirmed oversized-tee fabric spec — single source of truth so the
+// PDP "Fabric & Finish" accordion never drifts from what's actually
+// manufactured. Update here only when the real spec changes.
 export const fabricDetails = [
-  '240 GSM PREMIUM COTTON',
-  'OVERSIZED SILHOUETTE',
-  'LIMITED ARTWORK',
-  'BUILT FOR REPEAT WEAR',
+  '260 GSM French Terry',
+  '2x1 Lycra Rib',
+  'Bio Wash + Silicone Wash + Gold Finish',
 ] as const;
 
 // Trackpant-specific facts (confirmed from live Shopify product data) —

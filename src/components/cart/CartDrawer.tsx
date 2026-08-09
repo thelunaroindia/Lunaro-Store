@@ -1,16 +1,24 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useCartUI } from '@/context/CartUIContext';
 import { formatMoney } from '@/lib/utils';
 import { payments } from '@/lib/config';
 import { LinkButton } from '@/components/ui/Button';
+import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
 import CartLineItem from './CartLineItem';
 
 export default function CartDrawer() {
   const { cart, setCart, isOpen, close } = useCartUI();
   const panelRef = useRef<HTMLDivElement>(null);
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  function handleCheckout() {
+    if (checkingOut || !cart) return;
+    setCheckingOut(true);
+    openFastrCheckout(cartToFastrProducts(cart));
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -80,12 +88,14 @@ export default function CartDrawer() {
               <span>{formatMoney(cart.cost.subtotalAmount)}</span>
             </div>
             <p className="mt-2 text-xs text-mist">Taxes and shipping calculated at checkout.</p>
-            <a
-              href={cart.checkoutUrl}
-              className="mt-5 flex w-full items-center justify-center bg-lunar px-7 py-4 text-eyebrow uppercase tracking-wider3 text-obsidian transition-colors hover:bg-silver"
+            <button
+              type="button"
+              onClick={handleCheckout}
+              disabled={checkingOut}
+              className="mt-5 flex w-full items-center justify-center bg-lunar px-7 py-4 text-eyebrow uppercase tracking-wider3 text-obsidian transition-colors hover:bg-silver disabled:opacity-60"
             >
-              Checkout
-            </a>
+              {checkingOut ? 'Opening Checkout…' : 'Checkout'}
+            </button>
             <p className="mt-3 text-center text-[11px] text-mist">{payments.methods.join(' · ')}</p>
             <Link
               href="/cart"

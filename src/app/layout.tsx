@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Bodoni_Moda, Space_Grotesk } from 'next/font/google';
 import { MotionConfig } from 'framer-motion';
+import Script from 'next/script';
 import './globals.css';
 import { site, seoDefaults } from '@/lib/config';
 import { getOrCreateCart } from '@/actions/cart';
@@ -51,6 +52,11 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+// Fastr / Shiprocket Checkout "seller domain" — not yet supplied by Fastr,
+// so this is intentionally blank rather than a guessed value. Get the exact
+// value from Fastr and set NEXT_PUBLIC_FASTR_SELLER_DOMAIN before launch.
+const fastrSellerDomain = process.env.NEXT_PUBLIC_FASTR_SELLER_DOMAIN ?? '';
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const cart = await getOrCreateCart();
   // Computed server-side (never as a NEXT_PUBLIC_ var) so the Account nav
@@ -60,6 +66,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en-IN" className={`${display.variable} ${sans.variable}`}>
+      <head>
+        <link rel="stylesheet" href="https://fastrr-boost-ui.pickrr.com/assets/styles/shopify.css" />
+      </head>
       <body>
         <MotionConfig reducedMotion="user">
         <CartUIProvider initialCart={cart}>
@@ -74,9 +83,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main id="main-content">{children}</main>
             <Footer />
             <CartDrawer />
+            <input type="hidden" value={fastrSellerDomain} id="sellerDomain" />
           </WishlistProvider>
         </CartUIProvider>
         </MotionConfig>
+        <Script
+          src="https://fastrr-boost-ui.pickrr.com/assets/js/channels/shopify.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

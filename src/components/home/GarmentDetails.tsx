@@ -11,7 +11,7 @@ type ConstructionFact = {
 };
 
 const constructionFacts: ConstructionFact[] = [
-  { value: '240 GSM', detail: 'Heavyweight cotton' },
+  { value: '260 GSM', detail: 'Heavyweight cotton' },
   { value: '100% COTTON', detail: 'Soft, breathable structure' },
   { value: 'OVERSIZED FIT', detail: 'Relaxed drop-shoulder silhouette' },
   { value: 'BUILT TO LAST', detail: 'Reinforced everyday construction' },

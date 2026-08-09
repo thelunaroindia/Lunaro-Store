@@ -65,7 +65,7 @@ export default function AboutPage() {
             <p className="eyebrow text-mist">Built With Intention</p>
 
             <p className="mt-3 text-mist">
-              Cut from heavyweight 240 GSM premium cotton and built for lasting
+              Cut from heavyweight 260 GSM premium cotton and built for lasting
               structure, comfort and presence. Every garment is considered from
               fabric to final finish.
             </p>
