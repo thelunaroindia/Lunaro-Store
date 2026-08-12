@@ -8,12 +8,12 @@
   }
 
   html {
-    @apply scroll-smooth;
+    @apply scroll-smooth overflow-x-hidden;
     scroll-padding-top: 88px;
   }
 
   body {
-    @apply bg-obsidian text-lunar font-sans antialiased;
+    @apply bg-obsidian text-lunar font-sans antialiased overflow-x-hidden;
   }
 
   ::selection {

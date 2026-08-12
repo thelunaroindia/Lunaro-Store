@@ -7,21 +7,37 @@ import { PRELAUNCH_MODE } from '@/lib/config';
 import type { ProductCardData } from '@/lib/types';
 
 // Partial-reveal imagery for the concealed cards — real LUNARO editorial
-// photography, heavily darkened and blurred so nothing is fully shown yet.
-// Reuses the same two approved homepage collection images rather than
-// inventing new artwork for a still-concealed drop.
+// photography, silhouette clearly visible but blurred just enough that the
+// print/artwork itself stays concealed. Reuses the same two approved
+// homepage collection images rather than inventing new artwork for a still-
+// concealed drop.
+//
+// objectPosition is tuned per image so the garment/model stays framed
+// in-shot on mobile's short, near-square card rather than being cropped by
+// a default center position. filter/opacity are tuned per image too — the
+// two source photos have very different native exposure (the ORBIT still is
+// a much darker, lower-key shot than ECLIPSE), so a single shared value
+// left ORBIT reading as near-black. Values below were measured (pixel
+// brightness sampled after compositing) so both land at a comparably
+// visible, silhouette-legible brightness rather than guessed by eye.
 const concealedGarments = [
   {
     number: '01',
     title: 'ORBIT',
     line: 'Engineered forms shaped by motion, distance and human ambition.',
     image: '/images/collections/new-drop.jpg',
+    objectPosition: '50% 18%',
+    filter: 'blur(3px) brightness(3)',
+    opacity: 0.85,
   },
   {
     number: '02',
     title: 'ECLIPSE',
     line: 'A study in shadow, obscured light and celestial darkness.',
     image: '/images/collections/graphic-tees.jpg',
+    objectPosition: '50% 30%',
+    filter: 'blur(3px) brightness(2)',
+    opacity: 0.75,
   },
 ];
 
@@ -49,34 +65,31 @@ export default function FeaturedProducts({
                 delay={0.05 + index * 0.08}
                 className="h-full"
               >
-                <article className="group relative flex h-full min-h-[320px] flex-col justify-between overflow-hidden bg-obsidian p-6 sm:min-h-[360px] sm:p-8 md:min-h-[520px] md:p-10">
+                <article className="group relative flex h-full min-h-[320px] flex-col justify-end overflow-hidden bg-obsidian p-6 sm:min-h-[360px] sm:p-8 md:min-h-[520px] md:p-10">
                   <Image
                     src={garment.image}
                     alt=""
                     aria-hidden="true"
                     fill
                     sizes="(min-width: 768px) 50vw, 100vw"
-                    className="object-cover opacity-30 blur-md scale-110"
+                    style={{
+                      objectPosition: garment.objectPosition,
+                      filter: garment.filter,
+                      opacity: garment.opacity,
+                    }}
+                    className="object-cover scale-110"
                   />
-
-                  <div className="absolute inset-0 bg-obsidian/40" />
 
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.045),transparent_58%)]" />
 
-                  <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-charcoal/80 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-obsidian via-obsidian/70 to-transparent" />
 
                   <div className="relative z-10">
                     <p className="eyebrow text-silver">
                       {garment.number}
                     </p>
 
-                    <p className="mt-3 text-[10px] uppercase tracking-[0.35em] text-mist">
-                      Transmission Pending
-                    </p>
-                  </div>
-
-                  <div className="relative z-10">
-                    <p className="mb-3 text-[10px] uppercase tracking-[0.28em] text-mist">
+                    <p className="mb-3 mt-3 text-[10px] uppercase tracking-[0.28em] text-mist">
                       Look {garment.number}
                     </p>
 
