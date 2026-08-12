@@ -41,20 +41,23 @@ export default function LookbookPreview() {
               className="h-full w-full"
             />
 
-            {/* Partial reveal — real approved LUNARO editorial photography.
-                Sits a level clearer than the Look 01/02 cards (this is the
-                "partial editorial reveal" step of the homepage's reveal
-                hierarchy, between the Look cards' silhouette-only treatment
-                and the fully clear New Drop image), but still short of a
-                full, sharp reveal. */}
+            {/* Partial reveal — real approved LUNARO editorial photography,
+                a cropped garment/moody-detail frame distinct from the Look
+                01/02 cards (new-drop.jpg / graphic-tees.jpg) and the New
+                Drop/Graphic Tees tiles below, so no source image repeats
+                across homepage sections. Sits a level clearer than the Look
+                01/02 cards (this is the "partial editorial reveal" step of
+                the homepage's reveal hierarchy, between the Look cards'
+                silhouette-only treatment and the fully clear New Drop
+                image), but still short of a full, sharp reveal. */}
             <Image
-              src="/images/collections/graphic-tees.jpg"
+              src="/images/lookbook/quiet-weight.png"
               alt=""
               aria-hidden="true"
               fill
               sizes="100vw"
               style={{
-                objectPosition: '50% 25%',
+                objectPosition: '50% 30%',
                 filter: 'blur(2px) brightness(1.3)',
                 opacity: 0.85,
               }}
