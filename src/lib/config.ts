@@ -5,6 +5,23 @@
 // nothing here is wired to fake functionality.
 export const PRELAUNCH_MODE = true;
 
+// Temporary purchase-flow test switch. While PRELAUNCH_MODE keeps every
+// product page concealed, this unlocks ONE real, already-connected Shopify
+// product (PURCHASE_TEST_PRODUCT_HANDLE) so the full
+// Product → Cart → Fastr → Shopify order pipeline can be exercised end to
+// end before launch. It touches nothing else — no cart/Fastr/Shopify logic,
+// no homepage content, no other product handle.
+//
+// Set back to `false` the moment testing is done — that alone fully
+// restores today's prelaunch restrictions with no other change required.
+export const PURCHASE_TEST_MODE = true;
+
+// Must be a real handle already live in the connected Shopify store — never
+// a fabricated product. As of this writing the store has exactly one
+// product connected via the Storefront API ("test product", handle "test"),
+// so that is what this unlocks.
+export const PURCHASE_TEST_PRODUCT_HANDLE = 'test';
+
 // Drop 001's confirmed release date, as an ISO 8601 string (e.g.
 // '2026-09-01T00:00:00+05:30'). Left null until a real date is approved —
 // the Hero's date/countdown display simply doesn't render anything while

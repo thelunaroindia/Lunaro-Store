@@ -2,7 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getProductByHandle, isShopifyConfigured } from '@/lib/shopify';
-import { placeholderProducts, PRELAUNCH_MODE } from '@/lib/config';
+import {
+  placeholderProducts,
+  PRELAUNCH_MODE,
+  PURCHASE_TEST_MODE,
+  PURCHASE_TEST_PRODUCT_HANDLE,
+} from '@/lib/config';
 import type { Product } from '@/lib/types';
 import ProductDetail from '@/components/product/ProductDetail';
 import RelatedProducts from '@/components/product/RelatedProducts';
@@ -13,10 +18,20 @@ type ProductPageProps = {
   }>;
 };
 
+// Temporary purchase-test carve-out — see PURCHASE_TEST_MODE in
+// src/lib/config.ts. Concealment applies to every handle except this one
+// exact test product while the flag is on; set the flag back to false to
+// remove the carve-out entirely.
+function isPurchaseTestUnlock(handle: string): boolean {
+  return PURCHASE_TEST_MODE && handle === PURCHASE_TEST_PRODUCT_HANDLE;
+}
+
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
-  if (PRELAUNCH_MODE) {
+  const { handle } = await params;
+
+  if (PRELAUNCH_MODE && !isPurchaseTestUnlock(handle)) {
     return {
       title: 'Reveal Pending',
       description:
@@ -27,8 +42,6 @@ export async function generateMetadata({
       },
     };
   }
-
-  const { handle } = await params;
 
   if (!isShopifyConfigured()) {
     return {
@@ -50,6 +63,11 @@ export async function generateMetadata({
     openGraph: {
       images: product.images[0] ? [product.images[0].url] : undefined,
     },
+    // The purchase-test unlock is temporary and not meant for discovery —
+    // keep it out of search results even though the URL itself resolves.
+    ...(isPurchaseTestUnlock(handle) && {
+      robots: { index: false, follow: false },
+    }),
   };
 }
 
@@ -122,7 +140,9 @@ function placeholderAsProduct(handle: string): Product | null {
 export default async function ProductPage({
   params,
 }: ProductPageProps) {
-  if (PRELAUNCH_MODE) {
+  const { handle } = await params;
+
+  if (PRELAUNCH_MODE && !isPurchaseTestUnlock(handle)) {
     return (
       <main className="container-lunaro flex min-h-[85svh] items-center justify-center pb-24 pt-32 md:pt-40">
         <div className="w-full max-w-3xl text-center">
@@ -153,8 +173,6 @@ export default async function ProductPage({
       </main>
     );
   }
-
-  const { handle } = await params;
 
   let product: Product | null = null;
 
