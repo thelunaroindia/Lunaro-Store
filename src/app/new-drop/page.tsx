@@ -56,10 +56,6 @@ export default async function NewDropPage() {
             <div className="terminator mx-auto mt-10 max-w-xs" />
 
             <div className="mt-8 flex flex-col items-center gap-3">
-              <p className="text-eyebrow uppercase tracking-wider2 text-lunar">
-                REVEAL PENDING
-              </p>
-
               <p className="max-w-md text-xs uppercase tracking-wider2 text-silver">
                 The first garments remain concealed.
               </p>

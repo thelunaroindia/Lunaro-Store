@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import { LinkButton } from '@/components/ui/Button';
 import ProductCard from '@/components/shop/ProductCard';
@@ -5,16 +6,22 @@ import { Reveal } from '@/components/motion/Reveal';
 import { PRELAUNCH_MODE } from '@/lib/config';
 import type { ProductCardData } from '@/lib/types';
 
+// Partial-reveal imagery for the concealed cards — real LUNARO editorial
+// photography, heavily darkened and blurred so nothing is fully shown yet.
+// Reuses the same two approved homepage collection images rather than
+// inventing new artwork for a still-concealed drop.
 const concealedGarments = [
   {
     number: '01',
     title: 'ORBIT',
     line: 'Engineered forms shaped by motion, distance and human ambition.',
+    image: '/images/collections/new-drop.jpg',
   },
   {
     number: '02',
     title: 'ECLIPSE',
     line: 'A study in shadow, obscured light and celestial darkness.',
+    image: '/images/collections/graphic-tees.jpg',
   },
 ];
 
@@ -43,6 +50,17 @@ export default function FeaturedProducts({
                 className="h-full"
               >
                 <article className="group relative flex h-full min-h-[320px] flex-col justify-between overflow-hidden bg-obsidian p-6 sm:min-h-[360px] sm:p-8 md:min-h-[520px] md:p-10">
+                  <Image
+                    src={garment.image}
+                    alt=""
+                    aria-hidden="true"
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="object-cover opacity-30 blur-md scale-110"
+                  />
+
+                  <div className="absolute inset-0 bg-obsidian/40" />
+
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.045),transparent_58%)]" />
 
                   <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-charcoal/80 to-transparent" />

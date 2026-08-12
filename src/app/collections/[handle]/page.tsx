@@ -71,10 +71,6 @@ export default async function CollectionPage({
 
           <div className="terminator mx-auto mt-10 max-w-xs" />
 
-          <p className="mt-8 text-eyebrow uppercase tracking-wider2 text-lunar">
-            REVEAL PENDING
-          </p>
-
           <Link
             href="/new-drop"
             className="mt-10 inline-block border border-lunar/30 px-7 py-4 text-eyebrow uppercase tracking-wider2 text-lunar transition-colors hover:bg-lunar hover:text-obsidian"

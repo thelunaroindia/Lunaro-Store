@@ -106,13 +106,13 @@ export default function NewsletterForm({
 
           <h2 className="mt-4 max-w-sm font-display text-[2rem] leading-[0.98] text-lunar md:text-4xl">
             {PRELAUNCH_MODE
-              ? 'RECEIVE THE FIRST SIGNAL'
+              ? 'EARLY ACCESS TO DROP 001'
               : 'PRIVATE ACCESS TO FUTURE DROPS'}
           </h2>
 
           <p className="mt-4 max-w-sm text-sm leading-7 text-mist">
             {PRELAUNCH_MODE
-              ? 'Get release dates, private transmissions and first access to Drop 001.'
+              ? 'Be first to know the release date, and get early access before Drop 001 opens to everyone else.'
               : 'Receive early access to new releases, editorial transmissions and limited drops.'}
           </p>
         </>

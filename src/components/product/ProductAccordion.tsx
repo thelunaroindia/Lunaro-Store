@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { AccordionItem } from '@/components/ui/Accordion';
 import {
   fabricDetails,
@@ -76,6 +77,9 @@ export default function ProductAccordion({ product }: { product: Product }) {
         bodyClassName={BODY_CLASSNAME}
       >
         <p>{policies.shipping.points[0]}</p>
+        <Link href="/shipping-returns" className="link-underline mt-3 inline-block text-lunar">
+          Read the full Shipping &amp; Returns policy
+        </Link>
       </AccordionItem>
     </div>
   );

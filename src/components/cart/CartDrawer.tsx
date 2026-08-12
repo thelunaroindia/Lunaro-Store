@@ -96,7 +96,9 @@ export default function CartDrawer() {
             >
               {checkingOut ? 'Opening Checkout…' : 'Checkout'}
             </button>
-            <p className="mt-3 text-center text-[11px] text-mist">{payments.methods.join(' · ')}</p>
+            <p className="mt-3 text-center text-[11px] text-mist">
+              Secure Payments — {payments.methods.join(' · ')}
+            </p>
             <Link
               href="/cart"
               onClick={close}

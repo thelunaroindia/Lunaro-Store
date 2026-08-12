@@ -9,6 +9,14 @@ import { PRELAUNCH_MODE } from '@/lib/config';
 
 const looks = assetManifest.lookbookFull;
 
+// Partial-reveal imagery shown behind the concealed overlay during
+// prelaunch — real approved LUNARO editorial photography, alternated per
+// look and heavily blurred/darkened so nothing is fully shown yet.
+const partialRevealImages = [
+  '/images/collections/new-drop.jpg',
+  '/images/collections/graphic-tees.jpg',
+];
+
 // Looks 03 and 04 point to /shop rather than their themed collections —
 // Football Edit and Bottoms/trackpants are currently empty Shopify
 // collections, so "Shop This Look" must not dead-end there.
@@ -117,7 +125,23 @@ export default function LookbookPageClient() {
           }
         }}
       >
-        {PRELAUNCH_MODE || imageFailed ? (
+        {PRELAUNCH_MODE ? (
+          <>
+            <CinematicPlaceholder
+              variant="lookbook"
+              className="h-full w-full"
+            />
+            <Image
+              src={partialRevealImages[index % partialRevealImages.length] ?? partialRevealImages[0]!}
+              alt=""
+              aria-hidden="true"
+              fill
+              priority={index === 0}
+              sizes="100vw"
+              className="object-cover opacity-45 blur-md scale-110"
+            />
+          </>
+        ) : imageFailed ? (
           <CinematicPlaceholder
             variant="lookbook"
             className="h-full w-full"
@@ -147,10 +171,6 @@ export default function LookbookPageClient() {
             <div className="border border-lunar/20 bg-obsidian/65 px-8 py-6 text-center backdrop-blur-sm md:px-12 md:py-8">
               <p className="text-eyebrow uppercase tracking-[0.35em] text-mist">
                 {transmissionStatus}
-              </p>
-
-              <p className="mt-3 font-display text-3xl text-lunar md:text-5xl">
-                Reveal Pending
               </p>
 
               <p className="mx-auto mt-4 max-w-sm text-xs uppercase leading-6 tracking-wider2 text-silver">

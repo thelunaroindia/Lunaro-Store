@@ -91,7 +91,9 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
         >
           {checkingOut ? 'Opening Checkout…' : 'Checkout'}
         </button>
-        <p className="mt-3 text-center text-[11px] text-mist">{payments.methods.join(' · ')}</p>
+        <p className="mt-3 text-center text-[11px] text-mist">
+          Secure Payments — {payments.methods.join(' · ')}
+        </p>
       </div>
     </div>
   );

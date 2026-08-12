@@ -61,10 +61,6 @@ export default async function ShopPage({
           </p>
 
           <div className="terminator mx-auto mt-10 max-w-xs" />
-
-          <p className="mt-8 text-eyebrow uppercase tracking-wider2 text-lunar">
-            REVEAL PENDING
-          </p>
         </div>
       </main>
     );

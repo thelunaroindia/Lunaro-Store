@@ -41,7 +41,19 @@ export default function LookbookPreview() {
               className="h-full w-full"
             />
 
-            <div className="absolute inset-0 bg-obsidian/50" />
+            {/* Partial-reveal imagery — real approved LUNARO editorial
+                photography, heavily blurred/darkened so nothing is fully
+                shown yet. */}
+            <Image
+              src="/images/collections/new-drop.jpg"
+              alt=""
+              aria-hidden="true"
+              fill
+              sizes="100vw"
+              className="object-cover opacity-40 blur-md scale-110"
+            />
+
+            <div className="absolute inset-0 bg-obsidian/35" />
 
             <div className="absolute inset-0 flex items-center justify-center p-5 md:p-10">
               <div className="w-full max-w-xl border border-lunar/20 bg-obsidian/70 px-6 py-8 text-center backdrop-blur-sm md:px-12 md:py-10">

@@ -7,6 +7,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react';
+import Link from 'next/link';
 import { formatMoney } from '@/lib/utils';
 import { addToCart } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
@@ -278,11 +279,19 @@ export default function ProductOptions({
 
       {!isSoldOut && (
         <p className="mt-6 text-[11px] leading-relaxed text-mist">
+          Secure Payments —{' '}
           {[...payments.methods, 'Estimated dispatch: 2–4 business days.'].join(
             ' · '
           )}
         </p>
       )}
+
+      <p className="mt-3 text-[11px] text-mist">
+        <Link href="/shipping-returns" className="link-underline text-lunar">
+          Easy Returns &amp; Exchange
+        </Link>
+        {' — see policy for details.'}
+      </p>
 
       <StickyAddToCart
         title={product.title}

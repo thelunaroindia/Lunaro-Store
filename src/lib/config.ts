@@ -4,6 +4,15 @@
 // Replace TODO-marked values with real data when it is available;
 // nothing here is wired to fake functionality.
 export const PRELAUNCH_MODE = true;
+
+// Drop 001's confirmed release date, as an ISO 8601 string (e.g.
+// '2026-09-01T00:00:00+05:30'). Left null until a real date is approved —
+// the Hero's date/countdown display simply doesn't render anything while
+// this is null, rather than showing an invented date. Set this one value
+// to go live; every component that reads it (Hero.tsx) picks it up
+// immediately with no other code change.
+export const DROP_DATE: string | null = null;
+
 export const site = {
   name: 'LUNARO',
   domain: 'lunaro.in',
@@ -129,11 +138,15 @@ export const placeholderProducts = [
 ] as const;
 
 // The confirmed oversized-tee fabric spec — single source of truth so the
-// PDP "Fabric & Finish" accordion never drifts from what's actually
-// manufactured. Update here only when the real spec changes.
+// PDP "Fabric & Finish" accordion and the homepage Construction section
+// never drift from what's actually manufactured. Update here only when the
+// real spec changes.
 export const fabricDetails = [
-  '260 GSM French Terry',
+  '260 GSM',
+  'French Terry',
+  '100% Cotton',
   '2x1 Lycra Rib',
+  'Oversized Fit',
   'Bio Wash + Silicone Wash + Gold Finish',
 ] as const;
 
