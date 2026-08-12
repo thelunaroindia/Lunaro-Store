@@ -41,42 +41,40 @@ export default function LookbookPreview() {
               className="h-full w-full"
             />
 
-            {/* Partial-reveal imagery — real approved LUNARO editorial
-                photography, heavily blurred/darkened so nothing is fully
-                shown yet. */}
+            {/* Partial reveal — real approved LUNARO editorial photography.
+                Sits a level clearer than the Look 01/02 cards (this is the
+                "partial editorial reveal" step of the homepage's reveal
+                hierarchy, between the Look cards' silhouette-only treatment
+                and the fully clear New Drop image), but still short of a
+                full, sharp reveal. */}
             <Image
-              src="/images/collections/new-drop.jpg"
+              src="/images/collections/graphic-tees.jpg"
               alt=""
               aria-hidden="true"
               fill
               sizes="100vw"
-              className="object-cover opacity-40 blur-md scale-110"
+              style={{
+                objectPosition: '50% 25%',
+                filter: 'blur(2px) brightness(1.3)',
+                opacity: 0.85,
+              }}
+              className="object-cover scale-105"
             />
 
-            <div className="absolute inset-0 bg-obsidian/35" />
+            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-obsidian via-obsidian/60 to-transparent" />
 
-            <div className="absolute inset-0 flex items-center justify-center p-5 md:p-10">
-              <div className="w-full max-w-xl border border-lunar/20 bg-obsidian/70 px-6 py-8 text-center backdrop-blur-sm md:px-12 md:py-10">
-                <p className="text-[10px] uppercase tracking-[0.35em] text-mist">
-                  Editorial Transmission
-                </p>
+            <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10">
+              <p className="text-[10px] uppercase tracking-[0.35em] text-mist">
+                Drop 001 / Editorial 001
+              </p>
 
-                <h3 className="mx-auto mt-4 max-w-lg font-display text-[2.25rem] leading-[0.95] text-lunar sm:text-5xl md:text-6xl">
-                  THE LOOKS REMAIN CONCEALED
-                </h3>
-
-                <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-mist">
-                  The first visual chapter is taking shape in darkness.
-                </p>
-
-                <LinkButton
-                  href="/lookbook"
-                  variant="ghost"
-                  className="mt-7"
-                >
-                  Enter Lookbook
-                </LinkButton>
-              </div>
+              <LinkButton
+                href="/lookbook"
+                variant="ghost"
+                className="mt-5 w-fit"
+              >
+                Enter Lookbook →
+              </LinkButton>
             </div>
           </Reveal>
         ) : (

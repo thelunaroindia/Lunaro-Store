@@ -159,21 +159,24 @@ export default function Hero() {
           {brandLines.primary}
         </RevealLine>
 
-        <RevealLine
-          delay={0.52}
-          reduced={!!prefersReducedMotion}
-          className="mt-6 max-w-md text-sm text-mist md:text-base"
-        >
-          {PRELAUNCH_MODE
-            ? 'The first transmission is taking shape in darkness.'
-            : 'A new uniform for those drawn to the unknown.'}
-        </RevealLine>
+        {/* Live mode only — in prelaunch, this line just restated the
+            eyebrow + "Reveal Pending" below, so it's dropped entirely
+            there rather than saying the same thing a third time. */}
+        {!PRELAUNCH_MODE && (
+          <RevealLine
+            delay={0.52}
+            reduced={!!prefersReducedMotion}
+            className="mt-6 max-w-md text-sm text-mist md:text-base"
+          >
+            A new uniform for those drawn to the unknown.
+          </RevealLine>
+        )}
 
         {PRELAUNCH_MODE && (
           <RevealLine
-            delay={0.62}
+            delay={0.52}
             reduced={!!prefersReducedMotion}
-            className="mt-5 text-[11px] uppercase tracking-[0.3em] text-silver/80"
+            className="mt-6 text-[11px] uppercase tracking-[0.3em] text-silver/80"
           >
             {dropDateLabel ? (
               <>

@@ -15,11 +15,12 @@ import type { ProductCardData } from '@/lib/types';
 // objectPosition is tuned per image so the garment/model stays framed
 // in-shot on mobile's short, near-square card rather than being cropped by
 // a default center position. filter/opacity are tuned per image too — the
-// two source photos have very different native exposure (the ORBIT still is
-// a much darker, lower-key shot than ECLIPSE), so a single shared value
-// left ORBIT reading as near-black. Values below were measured (pixel
-// brightness sampled after compositing) so both land at a comparably
-// visible, silhouette-legible brightness rather than guessed by eye.
+// two source photos have very different native exposure (ORBIT is a much
+// darker, lower-key shot; ECLIPSE has a bright near-white garment that
+// blows out at matching settings). Values below were measured (composited
+// pixel brightness, including the 95th-percentile highlight, not just the
+// mean) so both land at comparable peak brightness — same editorial
+// campaign, no blown-out area — rather than guessed by eye.
 const concealedGarments = [
   {
     number: '01',
@@ -36,8 +37,8 @@ const concealedGarments = [
     line: 'A study in shadow, obscured light and celestial darkness.',
     image: '/images/collections/graphic-tees.jpg',
     objectPosition: '50% 30%',
-    filter: 'blur(3px) brightness(2)',
-    opacity: 0.75,
+    filter: 'blur(3px) brightness(1.4)',
+    opacity: 0.65,
   },
 ];
 

@@ -10,9 +10,15 @@ type ConstructionFact = {
   detail: string;
 };
 
+// The complete factual construction spec — matches src/lib/config.ts →
+// fabricDetails (the PDP "Fabric & Finish" source of truth). "Built to
+// Last" is kept as an additional brand statement, not a substitute for
+// any of the five material facts above it.
 const constructionFacts: ConstructionFact[] = [
   { value: '260 GSM', detail: 'Heavyweight cotton' },
+  { value: 'FRENCH TERRY', detail: 'Brushed interior face' },
   { value: '100% COTTON', detail: 'Soft, breathable structure' },
+  { value: '2×1 LYCRA RIB', detail: 'Structured neckline & cuffs' },
   { value: 'OVERSIZED FIT', detail: 'Relaxed drop-shoulder silhouette' },
   { value: 'BUILT TO LAST', detail: 'Reinforced everyday construction' },
 ];
