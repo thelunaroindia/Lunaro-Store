@@ -138,11 +138,25 @@ export async function shopifyAdminFetch<T>(
   const json = await res.json();
 
   if (json.errors) {
-    throw new Error(
-      Array.isArray(json.errors)
-        ? json.errors.map((e: { message: string }) => e.message).join(', ')
-        : String(json.errors)
-    );
+    const messages = Array.isArray(json.errors)
+      ? json.errors.map((e: { message: string }) => e.message).join(', ')
+      : String(json.errors);
+
+    if (json.data == null) {
+      // No usable data at all — the query itself failed outright (bad
+      // syntax, fully denied access, etc.). Nothing for the caller to
+      // work with, so this is unconditionally fatal.
+      throw new Error(messages);
+    }
+
+    // Partial response: some field(s) errored (e.g. out-of-scope access to
+    // a field we shouldn't have requested), but Shopify still returned
+    // data for everything else in the same query. Log it for visibility —
+    // this should never happen silently — but don't discard otherwise
+    // usable data just because an unrelated field failed. Each caller is
+    // responsible for checking that the specific fields it depends on are
+    // actually present before trusting them.
+    console.warn('[shopifyAdmin] Partial GraphQL response with field errors:', messages);
   }
 
   return json.data as T;

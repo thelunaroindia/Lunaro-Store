@@ -8,9 +8,15 @@ import { isShopifyAdminConfigured, shopifyAdminFetch, lastTenDigits } from '@/li
 // the customer's phone, not a manually entered email, so email was never
 // a reliable second factor for real orders placed through it. The order
 // is fetched by number only; the phone match happens here in code against
-// the real Shopify order/customer phone, normalized to the last 10 digits
-// so +91XXXXXXXXXX / 91XXXXXXXXXX / XXXXXXXXXX all compare equal — the
-// same normalization src/app/order-confirmation/page.tsx already uses.
+// the real Shopify order phone, normalized to the last 10 digits so
+// +91XXXXXXXXXX / 91XXXXXXXXXX / XXXXXXXXXX all compare equal — the same
+// normalization src/app/order-confirmation/page.tsx already uses.
+//
+// Deliberately requests only order-level fields (order.phone,
+// order.shippingAddress.phone) — never `customer { ... }`. This app is
+// scoped to read_orders only; querying any Customer object field returns
+// a field-level "Access denied" GraphQL error, since that requires the
+// separate read_customers scope this app intentionally doesn't have.
 
 export async function POST(req: NextRequest) {
   const { orderNumber, phone } = (await req.json().catch(() => ({}))) as {
@@ -44,7 +50,7 @@ export async function POST(req: NextRequest) {
           name: string;
           displayFulfillmentStatus: string;
           phone: string | null;
-          customer: { phone: string | null } | null;
+          shippingAddress: { phone: string | null } | null;
           fulfillments: { trackingInfo: { number: string; url: string; company: string }[] }[];
         }[];
       };
@@ -56,7 +62,7 @@ export async function POST(req: NextRequest) {
               name
               displayFulfillmentStatus
               phone
-              customer { phone }
+              shippingAddress { phone }
               fulfillments(first: 5) {
                 trackingInfo { number url company }
               }
@@ -68,11 +74,22 @@ export async function POST(req: NextRequest) {
     );
 
     const order = data.orders.nodes[0];
-    const orderPhoneDigits = lastTenDigits(order?.phone ?? order?.customer?.phone ?? '');
 
-    if (!order || !orderPhoneDigits || orderPhoneDigits !== phoneDigits) {
+    // Try order.phone first, then order.shippingAddress.phone — report
+    // (server-side only) exactly which one matched, since that's genuinely
+    // useful to know when diagnosing a real order.
+    let matchedField: 'order.phone' | 'order.shippingAddress.phone' | null = null;
+    if (order && lastTenDigits(order.phone ?? '') === phoneDigits) {
+      matchedField = 'order.phone';
+    } else if (order && lastTenDigits(order.shippingAddress?.phone ?? '') === phoneDigits) {
+      matchedField = 'order.shippingAddress.phone';
+    }
+
+    if (!order || !matchedField) {
       return NextResponse.json({ error: 'No order found with that number and phone.' }, { status: 404 });
     }
+
+    console.log(`[track-order] Verified ${order.name} via ${matchedField}`);
 
     return NextResponse.json({
       orderName: order.name,
