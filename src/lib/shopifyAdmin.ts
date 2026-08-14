@@ -56,7 +56,12 @@ async function requestAccessToken(): Promise<string> {
   });
 
   if (!res.ok) {
-    throw new Error(`Shopify Admin OAuth token request failed: ${res.status}`);
+    // Shopify's OAuth error body (e.g. {"error":"invalid_client"}) never
+    // contains our own secret values — safe to surface in the server log
+    // for diagnosis. Still never reaches the client: every caller of this
+    // module catches errors and returns a fixed generic message.
+    const bodyText = await res.text().catch(() => '');
+    throw new Error(`Shopify Admin OAuth token request failed: ${res.status} ${bodyText}`);
   }
 
   const json = (await res.json()) as { access_token?: string; expires_in?: number };
