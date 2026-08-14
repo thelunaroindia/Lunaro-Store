@@ -31,17 +31,20 @@ The frontend reads products/collections and manages carts through the **Storefro
 
 Check the current supported version at any time: Admin → Settings → Apps and sales channels → Develop apps → your app → API version, or the [Shopify API version changelog](https://shopify.dev/docs/api/usage/versioning). Storefront API versions are released quarterly (e.g. `2024-10`, `2025-01`) — update this env var when you upgrade, don't leave an expired version in production.
 
-## 3. Create a second, read-only token for order tracking
+## 3. Create a read-only Dev Dashboard app for order lookups
 
-`/track-order` needs the **Admin API** (Storefront can't look up orders by number/email). Keep this token as narrowly scoped as possible.
+`/track-order` and `/order-confirmation` need the **Admin API** (Storefront can't look up orders by number/email or verify a phone against an order) — handled by `src/lib/shopifyAdmin.ts`. Keep this app as narrowly scoped as possible.
 
-1. Same app (`LUNARO Storefront`) or a new one — **Configuration → Admin API integration**.
-2. Scopes: `read_orders` **only**. Do not add `write_orders` or any other scope to this token.
-3. Copy the Admin API access token into:
+Dev Dashboard apps for a store you own don't issue a permanent static Admin API token — they authenticate via the **OAuth client credentials grant**, so this app hands you a Client ID/Secret instead of a token, and `src/lib/shopifyAdmin.ts` exchanges them for a short-lived access token itself at request time (cached in memory, refreshed automatically before it expires).
+
+1. [Shopify Dev Dashboard](https://dev.shopify.com/dashboard) → create an app (e.g. `LUNARO Order Verification`) → install it on `lunaro-9855.myshopify.com` (or your store's domain).
+2. Admin API scopes: `read_orders` **only**. Do not add `write_orders`, `read_customers`, or any other scope unless a specific feature genuinely needs it.
+3. From the app's API credentials, copy the **Client ID** and **Client secret** into:
    ```
-   SHOPIFY_ADMIN_API_TOKEN=shpat_xxxxxxxx
+   SHOPIFY_ADMIN_CLIENT_ID=
+   SHOPIFY_ADMIN_CLIENT_SECRET=
    ```
-4. This variable must never be prefixed `NEXT_PUBLIC_` and is only ever read inside `src/app/api/track-order/route.ts` (server-side).
+4. Both variables must never be prefixed `NEXT_PUBLIC_` — they're read only inside `src/lib/shopifyAdmin.ts` (server-side), which is the sole place either credential, or any access token derived from them, ever exists.
 
 ## 4. Add products
 
