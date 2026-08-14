@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { formatMoney } from '@/lib/utils';
 import { LinkButton } from '@/components/ui/Button';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
+import { isShopifyAdminConfigured, shopifyAdminFetch, lastTenDigits } from '@/lib/shopifyAdmin';
 import type { Money } from '@/lib/types';
 
 export const metadata: Metadata = {
@@ -11,12 +12,6 @@ export const metadata: Metadata = {
   // never meant for search discovery.
   robots: { index: false, follow: false },
 };
-
-// Same Shopify Admin API pattern as /api/track-order — a token scoped to
-// read_orders only, read server-side, never sent to the client.
-const DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
-const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN;
-const API_VERSION = process.env.SHOPIFY_API_VERSION || '2024-10';
 
 type VerifiedOrder = {
   name: string;
@@ -32,10 +27,6 @@ type VerifiedOrder = {
   } | null;
 };
 
-function lastTenDigits(value: string): string {
-  return value.replace(/\D/g, '').slice(-10);
-}
-
 function formatStatus(status: string): string {
   return status.replaceAll('_', ' ').toLowerCase();
 }
@@ -50,7 +41,7 @@ async function getVerifiedOrder(
   orderNumberRaw: string,
   phoneRaw: string
 ): Promise<VerifiedOrder | null> {
-  if (!DOMAIN || !ADMIN_TOKEN) return null;
+  if (!isShopifyAdminConfigured()) return null;
 
   const phoneDigits = lastTenDigits(phoneRaw);
   if (!phoneDigits) return null;
@@ -58,36 +49,45 @@ async function getVerifiedOrder(
   const name = orderNumberRaw.startsWith('#') ? orderNumberRaw : `#${orderNumberRaw}`;
 
   try {
-    const res = await fetch(`https://${DOMAIN}/admin/api/${API_VERSION}/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Access-Token': ADMIN_TOKEN,
-      },
-      body: JSON.stringify({
-        query: `#graphql
-          query OrderConfirmation($query: String!) {
-            orders(first: 1, query: $query) {
-              nodes {
-                name
-                displayFinancialStatus
-                displayFulfillmentStatus
-                phone
-                customer { phone }
-                totalPriceSet { shopMoney { amount currencyCode } }
-                shippingLine { title }
-                shippingAddress { city province country zip }
-              }
+    const data = await shopifyAdminFetch<{
+      orders: {
+        nodes: {
+          name: string;
+          displayFinancialStatus: string;
+          displayFulfillmentStatus: string;
+          phone: string | null;
+          customer: { phone: string | null } | null;
+          totalPriceSet: { shopMoney: Money };
+          shippingLine: { title: string } | null;
+          shippingAddress: {
+            city: string | null;
+            province: string | null;
+            country: string | null;
+            zip: string | null;
+          } | null;
+        }[];
+      };
+    }>(
+      `#graphql
+        query OrderConfirmation($query: String!) {
+          orders(first: 1, query: $query) {
+            nodes {
+              name
+              displayFinancialStatus
+              displayFulfillmentStatus
+              phone
+              customer { phone }
+              totalPriceSet { shopMoney { amount currencyCode } }
+              shippingLine { title }
+              shippingAddress { city province country zip }
             }
           }
-        `,
-        variables: { query: `name:${name}` },
-      }),
-      cache: 'no-store',
-    });
+        }
+      `,
+      { query: `name:${name}` }
+    );
 
-    const json = await res.json();
-    const order = json?.data?.orders?.nodes?.[0];
+    const order = data.orders.nodes[0];
     if (!order) return null;
 
     const orderPhoneDigits = lastTenDigits(order.phone ?? order.customer?.phone ?? '');
