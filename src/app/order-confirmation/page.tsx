@@ -36,7 +36,12 @@ function formatStatus(status: string): string {
 // and phone as plain query params — never proof of payment on their own.
 // This looks the order up server-side via the Admin API and only returns
 // data once the order's own phone number matches what was passed in, the
-// same two-factor pattern /api/track-order already uses with email.
+// same two-factor pattern /api/track-order uses (order.phone, then
+// order.shippingAddress.phone as a fallback).
+//
+// Deliberately requests only order-level fields — never `customer { ... }`.
+// This app is scoped to read_orders only; any Customer object field
+// requires the separate read_customers scope it intentionally doesn't have.
 async function getVerifiedOrder(
   orderNumberRaw: string,
   phoneRaw: string
@@ -56,10 +61,10 @@ async function getVerifiedOrder(
           displayFinancialStatus: string;
           displayFulfillmentStatus: string;
           phone: string | null;
-          customer: { phone: string | null } | null;
           totalPriceSet: { shopMoney: Money };
           shippingLine: { title: string } | null;
           shippingAddress: {
+            phone: string | null;
             city: string | null;
             province: string | null;
             country: string | null;
@@ -76,10 +81,9 @@ async function getVerifiedOrder(
               displayFinancialStatus
               displayFulfillmentStatus
               phone
-              customer { phone }
               totalPriceSet { shopMoney { amount currencyCode } }
               shippingLine { title }
-              shippingAddress { city province country zip }
+              shippingAddress { phone city province country zip }
             }
           }
         }
@@ -90,8 +94,16 @@ async function getVerifiedOrder(
     const order = data.orders.nodes[0];
     if (!order) return null;
 
-    const orderPhoneDigits = lastTenDigits(order.phone ?? order.customer?.phone ?? '');
-    if (!orderPhoneDigits || orderPhoneDigits !== phoneDigits) return null;
+    let matchedField: 'order.phone' | 'order.shippingAddress.phone' | null = null;
+    if (lastTenDigits(order.phone ?? '') === phoneDigits) {
+      matchedField = 'order.phone';
+    } else if (lastTenDigits(order.shippingAddress?.phone ?? '') === phoneDigits) {
+      matchedField = 'order.shippingAddress.phone';
+    }
+
+    if (!matchedField) return null;
+
+    console.log(`[order-confirmation] Verified ${order.name} via ${matchedField}`);
 
     return {
       name: order.name,
