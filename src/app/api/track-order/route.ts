@@ -1,19 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isShopifyAdminConfigured, shopifyAdminFetch } from '@/lib/shopifyAdmin';
+import { isShopifyAdminConfigured, shopifyAdminFetch, lastTenDigits } from '@/lib/shopifyAdmin';
 
-// Uses the Shopify Admin API (NOT the Storefront API) with a token scoped
-// to `read_orders` only. This token must never be exposed to the client —
-// it is read here, server-side, exclusively. See docs/SHOPIFY_SETUP.md for
-// how to create a scoped custom app token for this purpose.
+// Uses the Shopify Admin API (NOT the Storefront API), via the shared
+// src/lib/shopifyAdmin.ts helper — credentials never reach the client.
+//
+// Verifies by order number + phone (not email): Fastr checkout collects
+// the customer's phone, not a manually entered email, so email was never
+// a reliable second factor for real orders placed through it. The order
+// is fetched by number only; the phone match happens here in code against
+// the real Shopify order/customer phone, normalized to the last 10 digits
+// so +91XXXXXXXXXX / 91XXXXXXXXXX / XXXXXXXXXX all compare equal — the
+// same normalization src/app/order-confirmation/page.tsx already uses.
 
 export async function POST(req: NextRequest) {
-  const { orderNumber, email } = (await req.json().catch(() => ({}))) as {
+  const { orderNumber, phone } = (await req.json().catch(() => ({}))) as {
     orderNumber?: string;
-    email?: string;
+    phone?: string;
   };
 
-  if (!orderNumber || !email) {
-    return NextResponse.json({ error: 'Enter your order number and email.' }, { status: 400 });
+  if (!orderNumber || !phone) {
+    return NextResponse.json({ error: 'Enter your order number and phone number.' }, { status: 400 });
+  }
+
+  const phoneDigits = lastTenDigits(phone);
+
+  if (!phoneDigits) {
+    return NextResponse.json({ error: 'Enter a valid phone number.' }, { status: 400 });
   }
 
   if (!isShopifyAdminConfigured()) {
@@ -31,7 +43,8 @@ export async function POST(req: NextRequest) {
         nodes: {
           name: string;
           displayFulfillmentStatus: string;
-          email: string;
+          phone: string | null;
+          customer: { phone: string | null } | null;
           fulfillments: { trackingInfo: { number: string; url: string; company: string }[] }[];
         }[];
       };
@@ -42,7 +55,8 @@ export async function POST(req: NextRequest) {
             nodes {
               name
               displayFulfillmentStatus
-              email
+              phone
+              customer { phone }
               fulfillments(first: 5) {
                 trackingInfo { number url company }
               }
@@ -50,13 +64,14 @@ export async function POST(req: NextRequest) {
           }
         }
       `,
-      { query: `name:${normalisedName} email:${email}` }
+      { query: `name:${normalisedName}` }
     );
 
     const order = data.orders.nodes[0];
+    const orderPhoneDigits = lastTenDigits(order?.phone ?? order?.customer?.phone ?? '');
 
-    if (!order || order.email?.toLowerCase() !== email.toLowerCase()) {
-      return NextResponse.json({ error: 'No order found with that number and email.' }, { status: 404 });
+    if (!order || !orderPhoneDigits || orderPhoneDigits !== phoneDigits) {
+      return NextResponse.json({ error: 'No order found with that number and phone.' }, { status: 404 });
     }
 
     return NextResponse.json({

@@ -12,7 +12,7 @@ type Result = {
 
 export default function TrackOrderPageClient() {
   const [orderNumber, setOrderNumber] = useState('');
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [state, setState] = useState<'idle' | 'loading' | 'found' | 'not-found' | 'error'>('idle');
   const [result, setResult] = useState<Result | null>(null);
   const [message, setMessage] = useState('');
@@ -25,7 +25,7 @@ export default function TrackOrderPageClient() {
       const res = await fetch('/api/track-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderNumber, email }),
+        body: JSON.stringify({ orderNumber, phone }),
       });
       const data = await res.json();
       if (res.status === 404) {
@@ -49,7 +49,7 @@ export default function TrackOrderPageClient() {
     <UtilityPageBackdrop>
       <div className="container-lunaro max-w-xl pt-32 pb-24 md:pt-40">
       <h1 className="font-display text-display-md text-lunar">TRACK ORDER</h1>
-      <p className="mt-6 text-mist">Enter your order number and the email used at checkout.</p>
+      <p className="mt-6 text-mist">Enter your order number and the phone number used at checkout.</p>
 
       <form onSubmit={onSubmit} className="mt-10 space-y-6">
         <div>
@@ -66,15 +66,16 @@ export default function TrackOrderPageClient() {
           />
         </div>
         <div>
-          <label htmlFor="email" className="eyebrow text-mist">
-            Email
+          <label htmlFor="phone" className="eyebrow text-mist">
+            Phone Number
           </label>
           <input
-            id="email"
-            type="email"
+            id="phone"
+            type="tel"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="+91 98765 43210"
             className="mt-2 w-full border-b border-graphite bg-transparent py-3 text-sm text-lunar placeholder:text-mist focus:border-lunar focus:outline-none"
           />
         </div>
@@ -85,7 +86,7 @@ export default function TrackOrderPageClient() {
 
       {state === 'not-found' && (
         <p className="mt-8 text-sm text-mist">
-          No order found with that number and email. Double-check your confirmation email, or contact support.
+          No order found with that number and phone number. Double-check your confirmation message, or contact support.
         </p>
       )}
       {state === 'error' && <p className="mt-8 text-sm text-silver">{message}</p>}

@@ -281,7 +281,7 @@ export const faqs = [
   },
   {
     q: 'How do I track my order?',
-    a: 'Use the Track Order page with your order number and email, or the tracking link sent to you once your order ships.',
+    a: 'Use the Track Order page with your order number and phone number, or the tracking link sent to you once your order ships.',
   },
 ] as const;
 
