@@ -9,10 +9,12 @@ import { isShopifyAdminConfigured, shopifyAdminFetch } from '@/lib/shopifyAdmin'
 // "early-access") rather than a form that accepts an email and stores it
 // nowhere. No new third-party service — reuses existing Shopify infra.
 //
-// If write_customers isn't granted yet, shopifyAdminFetch throws (Shopify
-// denies the customerCreate field outright, same as any other missing-scope
-// call), which is caught below and surfaced honestly as "not available
-// right now" — never a fake success.
+// If write_customers isn't granted yet, Shopify denies the customerCreate
+// field itself and returns { data: { customerCreate: null }, errors: [...] }
+// — shopifyAdminFetch treats that as a tolerable partial response (data is
+// present, just this one field is null) rather than throwing, so the null
+// check below is what actually catches it and returns the honest "not
+// available right now" fallback — never a fake success.
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
       customerCreate: {
         customer: { id: string } | null;
         userErrors: { field: string[] | null; message: string }[];
-      };
+      } | null;
     }>(
       `#graphql
         mutation EarlyAccessSignup($input: CustomerInput!) {
@@ -56,6 +58,14 @@ export async function POST(req: NextRequest) {
         },
       }
     );
+
+    if (!data.customerCreate) {
+      console.error('[newsletter] customerCreate field was null — likely missing write_customers scope.');
+      return NextResponse.json(
+        { error: "Sign-up isn't available right now — please check back soon." },
+        { status: 503 }
+      );
+    }
 
     const { customer, userErrors } = data.customerCreate;
 
