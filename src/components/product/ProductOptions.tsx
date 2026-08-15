@@ -2,6 +2,7 @@
 
 import {
   useMemo,
+  useRef,
   useState,
   useTransition,
   type Dispatch,
@@ -11,10 +12,12 @@ import Link from 'next/link';
 import { formatMoney } from '@/lib/utils';
 import { addToCart } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
-import { Button, LinkButton } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
+import { trackEvent } from '@/lib/analytics';
 import StickyAddToCart from './StickyAddToCart';
-import { payments } from '@/lib/config';
+import SizeGuideDrawer from './SizeGuideDrawer';
+import { payments, prepaidIncentive } from '@/lib/config';
 import type { Product, ProductVariant } from '@/lib/types';
 
 const TRACKPANT_PRODUCT_TYPES = [
@@ -30,6 +33,16 @@ function isTrackpant(productType: string): boolean {
   );
 }
 
+// Shopify gives every product at least one option. Products with no real
+// customer choice (no colour/size set up in Admin) still carry a single
+// "Title" option with the single value "Default Title" — Shopify's own
+// placeholder, not a real selection. Showing it as a selectable pill reads
+// as an unfinished, technical UI, so it's hidden entirely rather than
+// rendered as if it were a real choice.
+function isRealOption(option: { name: string; values: string[] }): boolean {
+  return !(option.name === 'Title' && option.values.length === 1 && option.values[0] === 'Default Title');
+}
+
 export function findVariant(
   variants: ProductVariant[],
   selected: Record<string, string>
@@ -41,12 +54,50 @@ export function findVariant(
   );
 }
 
+// Used only to decide whether a specific value-button should render as
+// unavailable. Unlike findVariant (which needs an exact match across every
+// option to compute the single active variant), this treats any
+// not-yet-chosen option as a wildcard — otherwise, while Size is still
+// unselected (see getInitialSelectedOptions), every Colour button would
+// wrongly appear sold out simply because no variant can match an empty
+// Size value.
+function hasAvailableVariantFor(
+  variants: ProductVariant[],
+  selected: Record<string, string>,
+  optionName: string,
+  value: string
+): boolean {
+  const candidate = { ...selected, [optionName]: value };
+
+  return variants.some(
+    (variant) =>
+      variant.availableForSale &&
+      variant.selectedOptions.every((option) => {
+        const chosen = candidate[option.name];
+        return !chosen || chosen === option.value;
+      })
+  );
+}
+
+// Every option auto-selects its first available value — EXCEPT Size when
+// there's a genuine choice to make (2+ sizes). Auto-selecting a size would
+// let Buy Now silently ship whatever size happened to be first, which is
+// exactly how wrong-size orders (and the returns/RTO they cause) happen.
+// Colour and single-value options carry no such risk, so they still default
+// for a faster, less fussy flow.
 export function getInitialSelectedOptions(
   product: Product
 ): Record<string, string> {
   const initial: Record<string, string> = {};
 
   for (const option of product.options) {
+    const isSize = option.name.toLowerCase() === 'size';
+
+    if (isSize && option.values.length > 1) {
+      initial[option.name] = '';
+      continue;
+    }
+
     const firstAvailableVariant = product.variants.find(
       (variant) =>
         variant.availableForSale &&
@@ -78,6 +129,16 @@ export default function ProductOptions({
   const { setCart, open } = useCartUI();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [showSizePrompt, setShowSizePrompt] = useState(false);
+  const sizeFieldsetRef = useRef<HTMLFieldSetElement | null>(null);
+
+  const trackpant = isTrackpant(product.productType);
+  const visibleOptions = product.options.filter(isRealOption);
+  const sizeOption = visibleOptions.find(
+    (option) => option.name.toLowerCase() === 'size'
+  );
+  const needsSizeSelection = Boolean(sizeOption) && !selected[sizeOption!.name];
 
   const productSoldOut =
     !product.availableForSale ||
@@ -92,16 +153,10 @@ export default function ProductOptions({
   );
 
   const isSoldOut =
-    productSoldOut ||
-    !activeVariant ||
-    !activeVariant.availableForSale;
-
-  const isLowStock =
-    !productSoldOut &&
-    activeVariant?.availableForSale &&
-    typeof activeVariant.quantityAvailable === 'number' &&
-    activeVariant.quantityAvailable > 0 &&
-    activeVariant.quantityAvailable <= 5;
+    !needsSizeSelection &&
+    (productSoldOut ||
+      !activeVariant ||
+      !activeVariant.availableForSale);
 
   const sellingPrice =
     activeVariant?.price ??
@@ -117,8 +172,23 @@ export default function ProductOptions({
 
   const priceLabel = formatMoney(sellingPrice);
 
+  function focusSizeSelector() {
+    setShowSizePrompt(true);
+    sizeFieldsetRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  }
+
   function handleAddToCart() {
-    if (!activeVariant || isSoldOut || isPending) return;
+    if (isPending) return;
+
+    if (needsSizeSelection) {
+      focusSizeSelector();
+      return;
+    }
+
+    if (!activeVariant || isSoldOut) return;
 
     setError('');
 
@@ -126,6 +196,10 @@ export default function ProductOptions({
       const result = await addToCart(activeVariant.id, 1);
 
       if (result.ok) {
+        trackEvent('add_to_cart', {
+          product_id: product.id,
+          variant_id: activeVariant.id,
+        });
         setCart(result.cart);
         open();
       } else {
@@ -135,7 +209,14 @@ export default function ProductOptions({
   }
 
   function handleBuyNow() {
-    if (!activeVariant || isSoldOut || isPending) return;
+    if (isPending) return;
+
+    if (needsSizeSelection) {
+      focusSizeSelector();
+      return;
+    }
+
+    if (!activeVariant || isSoldOut) return;
 
     setError('');
 
@@ -143,6 +224,10 @@ export default function ProductOptions({
       const result = await addToCart(activeVariant.id, 1);
 
       if (result.ok) {
+        trackEvent('buy_now', {
+          product_id: product.id,
+          variant_id: activeVariant.id,
+        });
         setCart(result.cart);
         openFastrCheckout(cartToFastrProducts(result.cart));
       } else {
@@ -150,6 +235,16 @@ export default function ProductOptions({
       }
     });
   }
+
+  const buyNowLabel = needsSizeSelection
+    ? 'Select a Size'
+    : 'Buy Now';
+
+  const addToCartLabel = needsSizeSelection
+    ? 'Select a Size'
+    : isPending
+      ? 'Adding…'
+      : 'Add to Cart';
 
   return (
     <div>
@@ -169,73 +264,96 @@ export default function ProductOptions({
         Inclusive of taxes. Shipping calculated at checkout.
       </p>
 
-      {product.options.map((option) => (
-        <fieldset key={option.name} className="mt-8">
-          <legend className="eyebrow text-mist">
-            {option.name}
-          </legend>
+      {visibleOptions.map((option) => {
+        const isSize = option.name.toLowerCase() === 'size';
 
-          <div className="mt-3 flex flex-wrap gap-2">
-            {option.values.map((value) => {
-              const isSelected =
-                selected[option.name] === value;
+        return (
+          <fieldset
+            key={option.name}
+            ref={isSize ? sizeFieldsetRef : undefined}
+            className="mt-8"
+          >
+            <div className="flex items-baseline justify-between">
+              <legend className="eyebrow text-mist">
+                {option.name}
+              </legend>
 
-              const variantForValue = findVariant(
-                product.variants,
-                {
-                  ...selected,
-                  [option.name]: value,
-                }
-              );
-
-              const unavailable =
-                productSoldOut ||
-                !variantForValue ||
-                !variantForValue.availableForSale;
-
-              return (
+              {isSize && (
                 <button
-                  key={value}
                   type="button"
-                  onClick={() =>
-                    setSelected((current) => ({
-                      ...current,
-                      [option.name]: value,
-                    }))
-                  }
-                  aria-pressed={isSelected}
-                  disabled={unavailable}
-                  className={`border px-4 py-2 text-sm transition-all duration-300 ease-lunar ${
-                    isSelected
-                      ? 'border-lunar text-lunar'
-                      : 'border-graphite text-mist hover:border-mist'
-                  } ${
-                    unavailable
-                      ? 'cursor-not-allowed opacity-30 line-through'
-                      : 'hover:scale-[1.03]'
-                  }`}
+                  onClick={() => {
+                    trackEvent('open_size_guide', { product_id: product.id });
+                    setSizeGuideOpen(true);
+                  }}
+                  className="link-underline text-xs text-lunar"
                 >
-                  {value}
+                  Size Guide
                 </button>
-              );
-            })}
-          </div>
+              )}
+            </div>
 
-          {option.name.toLowerCase() === 'size' && (
-            <LinkButton
-              href={
-                isTrackpant(product.productType)
-                  ? '/size-guide?category=bottoms'
-                  : '/size-guide'
-              }
-              variant="underline"
-              className="mt-3 text-xs"
-            >
-              Size Guide
-            </LinkButton>
-          )}
-        </fieldset>
-      ))}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {option.values.map((value) => {
+                const isSelected =
+                  selected[option.name] === value;
+
+                const unavailable =
+                  productSoldOut ||
+                  !hasAvailableVariantFor(
+                    product.variants,
+                    selected,
+                    option.name,
+                    value
+                  );
+
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => {
+                      setSelected((current) => ({
+                        ...current,
+                        [option.name]: value,
+                      }));
+                      if (isSize) setShowSizePrompt(false);
+                      trackEvent('select_item_variant', {
+                        product_id: product.id,
+                        option: option.name,
+                      });
+                    }}
+                    aria-pressed={isSelected}
+                    disabled={unavailable}
+                    className={`border px-4 py-2 text-sm transition-all duration-300 ease-lunar ${
+                      isSelected
+                        ? 'border-lunar text-lunar'
+                        : 'border-graphite text-mist hover:border-mist'
+                    } ${
+                      unavailable
+                        ? 'cursor-not-allowed opacity-30 line-through'
+                        : 'hover:scale-[1.03]'
+                    }`}
+                  >
+                    {value}
+                  </button>
+                );
+              })}
+            </div>
+
+            {isSize && showSizePrompt && needsSizeSelection && (
+              <p className="mt-3 text-xs text-silver" role="alert">
+                Select a size to continue.
+              </p>
+            )}
+          </fieldset>
+        );
+      })}
+
+      <p className="mt-4 text-xs leading-relaxed text-mist">
+        <span className="text-lunar">FIT</span> —{' '}
+        {trackpant
+          ? 'Loose fit, designed for a relaxed silhouette.'
+          : 'Oversized silhouette, true to size in the shoulder.'}
+      </p>
 
       <div className="mt-8 space-y-3">
         {isSoldOut ? (
@@ -249,7 +367,7 @@ export default function ProductOptions({
               disabled={isPending}
               className="w-full"
             >
-              Buy Now
+              {buyNowLabel}
             </Button>
 
             <Button
@@ -258,21 +376,20 @@ export default function ProductOptions({
               disabled={isPending}
               className="w-full"
             >
-              {isPending ? 'Adding…' : 'Add to Cart'}
+              {addToCartLabel}
             </Button>
           </>
         )}
       </div>
 
-      {isLowStock && (
-        <p className="mt-3 text-xs text-silver">
-          Only {activeVariant?.quantityAvailable} left in this
-          size.
+      {!isSoldOut && (
+        <p className="mt-3 text-xs text-mist">
+          {prepaidIncentive}
         </p>
       )}
 
       {error && (
-        <p className="mt-3 text-xs text-silver">
+        <p className="mt-3 text-xs text-silver" role="alert">
           {error}
         </p>
       )}
@@ -297,8 +414,15 @@ export default function ProductOptions({
         title={product.title}
         priceLabel={priceLabel}
         disabled={isSoldOut}
+        needsSizeSelection={needsSizeSelection}
         isPending={isPending}
         onAdd={handleBuyNow}
+      />
+
+      <SizeGuideDrawer
+        open={sizeGuideOpen}
+        onClose={() => setSizeGuideOpen(false)}
+        category={trackpant ? 'bottoms' : 'tops'}
       />
     </div>
   );

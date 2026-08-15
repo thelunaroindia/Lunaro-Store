@@ -37,6 +37,12 @@ export async function getOrCreateCart(): Promise<Cart | null> {
  return null;
 }
 
+// Never forward a raw Shopify/API error string to the customer — it's
+// unreadable technical detail on a page meant to feel like a private
+// showroom. Log the real error server-side for diagnosis; the client only
+// ever sees calm, fixed copy.
+const GENERIC_CART_ERROR = "We couldn't update your bag. Please try again.";
+
 export async function addToCart(
   merchandiseId: string,
   quantity: number = 1
@@ -57,7 +63,8 @@ export async function addToCart(
     const cart = await addCartLines(cartId, [{ merchandiseId, quantity }]);
     return { ok: true, cart };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Could not add this item to your cart.' };
+    console.error('[cart] addToCart failed', err);
+    return { ok: false, error: GENERIC_CART_ERROR };
   }
 }
 
@@ -76,7 +83,8 @@ export async function updateCartLine(
         : await updateCartLines(cartId, [{ id: lineId, quantity }]);
     return { ok: true, cart };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Could not update your cart.' };
+    console.error('[cart] updateCartLine failed', err);
+    return { ok: false, error: GENERIC_CART_ERROR };
   }
 }
 
@@ -90,7 +98,8 @@ export async function removeFromCart(
     const cart = await removeCartLines(cartId, [lineId]);
     return { ok: true, cart };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Could not remove this item.' };
+    console.error('[cart] removeFromCart failed', err);
+    return { ok: false, error: GENERIC_CART_ERROR };
   }
 }
 
@@ -108,7 +117,8 @@ export async function applyDiscount(
     }
     return { ok: true, cart };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Could not apply this code.' };
+    console.error('[cart] applyDiscount failed', err);
+    return { ok: false, error: GENERIC_CART_ERROR };
   }
 }
 

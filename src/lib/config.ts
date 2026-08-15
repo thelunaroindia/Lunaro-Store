@@ -212,6 +212,12 @@ export const bottomsSizeGuide = {
   ],
 } as const;
 
+// Confirmed by LUNARO directly against the live Fastr dashboard config —
+// keep this as the one place that states the rate so PDP copy never drifts
+// from what Fastr actually applies at checkout. Fastr remains the source
+// of truth for the final payable amount; this is messaging only.
+export const prepaidIncentive = '5% off on prepaid orders.' as const;
+
 export const payments = {
   // "Pay Online" is whatever methods are enabled in Shopify Admin →
   // Settings → Payments — nothing here is a promise beyond what's actually

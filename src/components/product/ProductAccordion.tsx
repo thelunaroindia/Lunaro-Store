@@ -34,17 +34,20 @@ const BODY_CLASSNAME = 'text-[15px] leading-[1.75] text-mist';
 
 export default function ProductAccordion({ product }: { product: Product }) {
   const trackpant = isTrackpant(product.productType);
+  const hasDescription = product.description.trim().length > 0;
 
   return (
     <div className="mt-10">
-      <AccordionItem
-        title="Description"
-        defaultOpen
-        headingClassName={HEADING_CLASSNAME}
-        bodyClassName={BODY_CLASSNAME}
-      >
-        <p>{normalizeDescription(product.description)}</p>
-      </AccordionItem>
+      {hasDescription && (
+        <AccordionItem
+          title="Description"
+          defaultOpen
+          headingClassName={HEADING_CLASSNAME}
+          bodyClassName={BODY_CLASSNAME}
+        >
+          <p>{normalizeDescription(product.description)}</p>
+        </AccordionItem>
+      )}
       <AccordionItem
         title={trackpant ? 'Fabric & Construction' : 'Fabric & Finish'}
         headingClassName={HEADING_CLASSNAME}
