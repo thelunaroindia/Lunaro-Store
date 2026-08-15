@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isShopifyAdminConfigured, shopifyAdminFetch } from '@/lib/shopifyAdmin';
-import { createEarlyAccessToken, EARLY_ACCESS_COOKIE } from '@/lib/earlyAccess';
 
-// Early-access signups are stored as real Shopify customers — tagged
-// `early-access`, with explicit single-opt-in email marketing consent —
-// via the same Admin API app used for order lookups (src/lib/shopifyAdmin.ts),
-// with the write_customers scope added. This gives a genuine, exportable,
-// segmentable list in Shopify Admin → Customers (filter by tag
-// "early-access") rather than a form that accepts an email and stores it
-// nowhere. No new third-party service — reuses existing Shopify infra.
+// Launch-notification signups are stored as real Shopify customers —
+// tagged `early-access` (kept as-is; renaming would mean re-tagging every
+// existing customer in Shopify Admin for no functional benefit), with
+// explicit single-opt-in email marketing consent — via the same Admin API
+// app used for order lookups (src/lib/shopifyAdmin.ts), with the
+// write_customers scope added. This gives a genuine, exportable,
+// segmentable list in Shopify Admin → Customers rather than a form that
+// accepts an email and stores it nowhere. No new third-party service —
+// reuses existing Shopify infra.
+//
+// IMPORTANT: a successful signup here means ONLY "you're on the launch
+// notification list." It must never issue any storefront-access grant —
+// there is no private Early Access shopping for Drop 001. See
+// src/lib/earlyAccess.ts for why that utility still exists but is no
+// longer called from here.
 //
 // If write_customers isn't granted, or the customer operation otherwise
 // fails, this returns the same honest "not available right now" — never a
-// fake success, and the early-access cookie is only ever set after a real,
-// verified Shopify operation succeeds.
+// fake success.
 
 type ConsentResult = {
   customerId: string;
@@ -163,7 +169,7 @@ export async function POST(req: NextRequest) {
     if (result.kind === 'failed') {
       console.error('[newsletter] customerCreate userErrors', result.messages);
       return NextResponse.json(
-        { error: "We couldn't grant access just yet. Please try again." },
+        { error: "We couldn't add you to the list just yet. Please try again." },
         { status: 500 }
       );
     }
@@ -173,7 +179,7 @@ export async function POST(req: NextRequest) {
       // fabricated success. Without read_customers this app can't look
       // up their id to re-verify/repair tag or consent state, so that
       // part is intentionally not claimed here (see final report).
-      console.log('[newsletter] Signup email already exists as a Shopify customer — granting access, consent not re-verified.');
+      console.log('[newsletter] Signup email already exists as a Shopify customer — confirming list membership, consent not re-verified.');
     } else {
       let subscribed = result.subscribed;
 
@@ -192,21 +198,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const response = NextResponse.json({ ok: true });
-
-    response.cookies.set(EARLY_ACCESS_COOKIE.name, createEarlyAccessToken(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: EARLY_ACCESS_COOKIE.maxAgeSeconds,
-    });
-
-    return response;
+    // No storefront-access cookie is set here — a successful signup means
+    // only "you're on the launch notification list," never "you can shop."
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[newsletter] Shopify Admin API error', err);
     return NextResponse.json(
-      { error: "We couldn't grant access just yet. Please try again." },
+      { error: "We couldn't add you to the list just yet. Please try again." },
       { status: 500 }
     );
   }

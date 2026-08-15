@@ -22,13 +22,15 @@ export const PURCHASE_TEST_MODE = false;
 // so that is what this unlocks.
 export const PURCHASE_TEST_PRODUCT_HANDLE = 'test';
 
-// Drop 001's confirmed release date, as an ISO 8601 string (e.g.
-// '2026-09-01T00:00:00+05:30'). Left null until a real date is approved —
-// the Hero's date/countdown display simply doesn't render anything while
-// this is null, rather than showing an invented date. Set this one value
-// to go live; every component that reads it (Hero.tsx) picks it up
-// immediately with no other code change.
-export const DROP_DATE: string | null = null;
+// The confirmed public-launch date, as an ISO 8601 string (e.g.
+// '2026-09-01T00:00:00+05:30') — when the store opens and PRELAUNCH_MODE
+// will deliberately be flipped to false. Left null until a real date is
+// approved; the Hero simply shows "Coming Soon." while this is null,
+// rather than an invented or estimated date. Setting this value only
+// changes what's *displayed* — it does NOT automatically launch the
+// store. Every component that reads it (Hero.tsx) picks it up immediately
+// with no other code change.
+export const LAUNCH_DATE: string | null = null;
 
 export const site = {
   name: 'LUNARO',

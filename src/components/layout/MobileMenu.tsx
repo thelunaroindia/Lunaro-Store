@@ -27,27 +27,19 @@ export default function MobileMenu({
   open,
   onClose,
   customerAccountsEnabled,
-  earlyAccessGranted,
 }: {
   open: boolean;
   onClose: () => void;
   customerAccountsEnabled: boolean;
-  earlyAccessGranted: boolean;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  // An authorized visitor still sees the prelaunch-appropriate editorial
-  // items, but also needs a way to actually reach Shop/New Drop from the
-  // mobile menu — desktop's header nav already shows nav.main unconditionally
-  // and lets each page's own gate decide what's visible; this closes the
-  // same gap on mobile rather than leaving authorized shoppers with no menu
-  // path to the catalogue at all.
-  const primaryNavigation =
-    PRELAUNCH_MODE && !earlyAccessGranted
-      ? prelaunchNavigation
-      : PRELAUNCH_MODE
-        ? [nav.main[0], nav.main[1], ...prelaunchNavigation]
-        : nav.main;
+  // No commerce during prelaunch for anyone — the mobile menu shows only
+  // the editorial/brand items until PRELAUNCH_MODE is genuinely false.
+  // There is no Early Access grant that changes this anymore.
+  const primaryNavigation = PRELAUNCH_MODE
+    ? prelaunchNavigation
+    : nav.main;
 
   useEffect(() => {
     if (open) {
@@ -167,7 +159,7 @@ export default function MobileMenu({
 
           <p className="mt-4 text-[10px] uppercase tracking-[0.28em] text-mist/70">
             {PRELAUNCH_MODE
-              ? 'Drop 001 — In Transmission'
+              ? 'Drop 001 — Coming Soon'
               : 'Crafted in Darkness'}
           </p>
         </div>

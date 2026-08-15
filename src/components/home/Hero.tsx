@@ -6,15 +6,16 @@ import Image from 'next/image';
 import { LinkButton } from '@/components/ui/Button';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import { ParallaxLayer } from '@/components/motion/ParallaxLayer';
-import { brandLines, PRELAUNCH_MODE, DROP_DATE } from '@/lib/config';
+import { brandLines, PRELAUNCH_MODE, LAUNCH_DATE } from '@/lib/config';
 import { assetManifest } from '@/lib/assetManifest';
 
 const asset = assetManifest.heroFilm;
 
-// Renders nothing until DROP_DATE (src/lib/config.ts) is actually set —
-// no placeholder or invented date ships in the meantime.
-const dropDateLabel = DROP_DATE
-  ? new Date(DROP_DATE).toLocaleDateString('en-IN', {
+// Renders nothing until LAUNCH_DATE (src/lib/config.ts) is actually set —
+// no placeholder, estimated, or invented date ships in the meantime; the
+// Hero simply says "Coming Soon." instead.
+const launchDateLabel = LAUNCH_DATE
+  ? new Date(LAUNCH_DATE).toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -138,9 +139,7 @@ export default function Hero() {
           reduced={!!prefersReducedMotion}
           className="eyebrow text-silver"
         >
-          {PRELAUNCH_MODE
-            ? 'DROP 001 — IN TRANSMISSION'
-            : 'DROP 001 — NOW LIVE'}
+          {PRELAUNCH_MODE ? 'DROP 001' : 'DROP 001 — NOW LIVE'}
         </RevealLine>
 
         <RevealLine
@@ -160,8 +159,8 @@ export default function Hero() {
         </RevealLine>
 
         {/* Live mode only — in prelaunch, this line just restated the
-            eyebrow + "First Drop Incoming" below, so it's dropped entirely
-            there rather than saying the same thing a third time. */}
+            eyebrow + "Coming Soon" below, so it's dropped entirely there
+            rather than saying the same thing a third time. */}
         {!PRELAUNCH_MODE && (
           <RevealLine
             delay={0.52}
@@ -178,13 +177,13 @@ export default function Hero() {
             reduced={!!prefersReducedMotion}
             className="mt-6 text-[11px] uppercase tracking-[0.3em] text-silver/80"
           >
-            {dropDateLabel ? (
+            {launchDateLabel ? (
               <>
-                First Drop Incoming — arrives{' '}
-                <span className="text-lunar">{dropDateLabel}</span>
+                Launching{' '}
+                <span className="text-lunar">{launchDateLabel}</span>.
               </>
             ) : (
-              'First Drop Incoming.'
+              'Coming Soon.'
             )}
           </RevealLine>
         )}
@@ -200,10 +199,10 @@ export default function Hero() {
           transition={{ duration: 0.9, ease: EASE, delay: 0.7 }}
         >
           <LinkButton
-            href={PRELAUNCH_MODE ? '#early-access' : '/shop'}
+            href={PRELAUNCH_MODE ? '#notify' : '/shop'}
             variant="ghost"
           >
-            {PRELAUNCH_MODE ? 'Get Early Access' : 'Shop the Drop'}
+            {PRELAUNCH_MODE ? 'Join the List' : 'Shop the Drop'}
           </LinkButton>
         </motion.div>
       </div>

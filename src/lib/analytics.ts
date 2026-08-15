@@ -11,7 +11,7 @@ import type { Cart } from '@/lib/types';
 // their env var isn't set — trackEvent() degrades silently either way).
 //
 // Never pass an email address, phone number, name, address, order-lookup
-// credentials, or early-access cookie contents in `params` — these events
+// credentials, or any cookie/session contents in `params` — these events
 // flow into GA4/Meta, neither of which should ever see PII.
 
 declare global {
@@ -60,9 +60,9 @@ export function trackEvent(name: string, params: Record<string, unknown> = {}): 
       if (standardName) {
         window.fbq('track', standardName, params);
       } else {
-        // Custom events (including early_access_success, renamed below to
-        // Meta's own vocabulary per the brief) go through trackCustom —
-        // Meta's documented mechanism for non-standard event names.
+        // Custom events (including launch_notification_success, renamed
+        // below to Meta's own vocabulary) go through trackCustom — Meta's
+        // documented mechanism for non-standard event names.
         window.fbq('trackCustom', metaCustomEventName(name), params);
       }
     }
@@ -90,7 +90,7 @@ function metaStandardEventName(name: string): string | null {
 }
 
 function metaCustomEventName(name: string): string {
-  if (name === 'early_access_success') return 'EarlyAccessSignup';
+  if (name === 'launch_notification_success') return 'LaunchNotificationSignup';
   return name;
 }
 

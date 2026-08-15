@@ -8,7 +8,6 @@ import {
   PURCHASE_TEST_MODE,
   PURCHASE_TEST_PRODUCT_HANDLE,
 } from '@/lib/config';
-import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import { canonicalUrl } from '@/lib/canonical';
 import type { Product } from '@/lib/types';
 import ProductDetail from '@/components/product/ProductDetail';
@@ -27,11 +26,14 @@ function isPurchaseTestUnlock(handle: string): boolean {
   return PURCHASE_TEST_MODE && handle === PURCHASE_TEST_PRODUCT_HANDLE;
 }
 
-// A visitor with a verified early-access grant (see src/lib/earlyAccess.ts)
-// sees every real product, not just the purchase-test handle — this is
-// the actual Drop 001 shopping journey the early-access system exists for.
+// There is no Early Access grant for Drop 001 anymore — the ONLY way a
+// product page unlocks during prelaunch is the internal purchase-test
+// carve-out above (development-only, requires PURCHASE_TEST_MODE to also
+// be flipped on, and stays out of search/sitemap discovery). A visitor's
+// old signed early-access cookie, if any, is deliberately never consulted
+// here.
 function isUnlocked(handle: string): boolean {
-  return isPurchaseTestUnlock(handle) || isEarlyAccessGranted();
+  return isPurchaseTestUnlock(handle);
 }
 
 export async function generateMetadata({

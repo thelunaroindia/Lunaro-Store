@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { getProducts, isShopifyConfigured } from '@/lib/shopify';
 import { placeholderProducts, PRELAUNCH_MODE } from '@/lib/config';
-import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import { canonicalUrl } from '@/lib/canonical';
 import type { ProductCardData } from '@/lib/types';
 import { SectionHeading } from '@/components/ui/Eyebrow';
@@ -35,7 +34,9 @@ function fallbackProducts(): ProductCardData[] {
 }
 
 export default async function NewDropPage() {
-  if (PRELAUNCH_MODE && !isEarlyAccessGranted()) {
+  // No shopping access exists during prelaunch — see shop/page.tsx for the
+  // same reasoning.
+  if (PRELAUNCH_MODE) {
     return (
       <main className="container-lunaro pb-24 pt-32 md:pt-40">
         <section className="flex min-h-[70svh] items-center justify-center">

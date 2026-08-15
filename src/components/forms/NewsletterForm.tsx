@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Button, LinkButton } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { PRELAUNCH_MODE } from '@/lib/config';
 import { trackEvent } from '@/lib/analytics';
 
@@ -21,7 +21,7 @@ export default function NewsletterForm({
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
-    trackEvent('early_access_view');
+    trackEvent('launch_notification_view');
   }, []);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -39,7 +39,7 @@ export default function NewsletterForm({
 
     setState('loading');
     setError('');
-    trackEvent('early_access_submit');
+    trackEvent('launch_notification_submit');
 
     try {
       const res = await fetch('/api/newsletter', {
@@ -57,7 +57,7 @@ export default function NewsletterForm({
         const message =
           typeof data?.error === 'string' && data.error.trim().length > 0
             ? data.error
-            : "We couldn't grant access just yet. Please try again.";
+            : "We couldn't add you to the list just yet. Please try again.";
 
         setError(message);
         setState('error');
@@ -66,9 +66,13 @@ export default function NewsletterForm({
 
       setEmail('');
       setState('success');
-      trackEvent('early_access_success');
+      // Only fires after the server has genuinely confirmed the Shopify
+      // signup succeeded (a non-ok response above never reaches this line)
+      // — this event must never claim storefront access, because none is
+      // granted. It means exactly one thing: added to the launch list.
+      trackEvent('launch_notification_success');
     } catch {
-      setError("We couldn't grant access just yet. Please try again.");
+      setError("We couldn't add you to the list just yet. Please try again.");
       setState('error');
     }
   }
@@ -85,9 +89,7 @@ export default function NewsletterForm({
         aria-live="polite"
       >
         {!compact && (
-          <p className="eyebrow text-silver">
-            {PRELAUNCH_MODE ? 'Private Access' : 'Transmission received'}
-          </p>
+          <p className="eyebrow text-silver">Drop Notification</p>
         )}
 
         <p
@@ -97,33 +99,14 @@ export default function NewsletterForm({
               : 'mt-3 font-display text-2xl leading-tight text-lunar md:text-3xl'
           }
         >
-          {PRELAUNCH_MODE ? 'Access granted.' : 'You’re inside the orbit.'}
+          You&rsquo;re on the list.
         </p>
 
-        {!compact && PRELAUNCH_MODE && (
-          <>
-            <p className="mt-3 max-w-sm text-sm leading-6 text-mist">
-              You’re inside. Discover Drop 001 before the public release.
-            </p>
-
-            <LinkButton
-              href="/new-drop"
-              variant="ghost"
-              className="mt-6 w-fit"
-              onClick={() => trackEvent('early_access_enter_drop')}
-            >
-              Enter Drop 001
-            </LinkButton>
-
-            <p className="mt-4 text-xs leading-5 text-mist">
-              Private access is now active on this device.
-            </p>
-          </>
-        )}
-
-        {!compact && !PRELAUNCH_MODE && (
+        {!compact && (
           <p className="mt-3 max-w-sm text-sm leading-6 text-mist">
-            Private release details will reach you before the signal goes public.
+            {PRELAUNCH_MODE
+              ? "We'll let you know when Drop 001 goes live."
+              : "We'll let you know about new drops and releases."}
           </p>
         )}
       </div>
@@ -147,19 +130,19 @@ export default function NewsletterForm({
       {!compact && (
         <>
           <p className="eyebrow text-silver">
-            Join the orbit
+            Drop Notification
           </p>
 
           <h2 className="mt-4 max-w-sm font-display text-[2rem] leading-[0.98] text-lunar md:text-4xl">
             {PRELAUNCH_MODE
-              ? 'EARLY ACCESS TO DROP 001'
-              : 'PRIVATE ACCESS TO FUTURE DROPS'}
+              ? 'BE THERE WHEN DROP 001 ARRIVES.'
+              : 'STAY CONNECTED.'}
           </h2>
 
           <p className="mt-4 max-w-sm text-sm leading-7 text-mist">
             {PRELAUNCH_MODE
-              ? 'Join the list for first access to the debut collection, private drop notifications and launch access before public release.'
-              : 'Receive early access to new releases, editorial transmissions and limited drops.'}
+              ? 'Join the list to be notified when the first drop goes live.'
+              : 'Receive updates on new releases and limited drops.'}
           </p>
         </>
       )}
@@ -203,7 +186,7 @@ export default function NewsletterForm({
           disabled={state === 'loading'}
           className="min-h-12 shrink-0 px-2"
         >
-          {state === 'loading' ? 'Sending…' : PRELAUNCH_MODE ? 'Get Early Access' : 'Join'}
+          {state === 'loading' ? 'Sending…' : PRELAUNCH_MODE ? 'Notify Me' : 'Join'}
         </Button>
       </div>
 
@@ -221,7 +204,7 @@ export default function NewsletterForm({
         id="newsletter-note"
         className="mt-3 text-xs leading-5 text-mist"
       >
-        {PRELAUNCH_MODE ? 'Private access. Drop notices. No noise.' : 'No spam. Unsubscribe anytime.'}
+        {PRELAUNCH_MODE ? 'Drop notices. No noise.' : 'No spam. Unsubscribe anytime.'}
       </p>
     </form>
   );

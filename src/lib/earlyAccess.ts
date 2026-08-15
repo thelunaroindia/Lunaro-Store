@@ -1,6 +1,13 @@
 import { cookies } from 'next/headers';
 import { createHmac, timingSafeEqual } from 'crypto';
 
+// NOT CURRENTLY USED FOR DROP 001. LUNARO's pre-launch strategy no longer
+// offers private Early Access shopping — email signup only joins a launch
+// notification list (see /api/newsletter), and every commerce route gates
+// on PRELAUNCH_MODE alone, never on isEarlyAccessGranted(). This module is
+// kept, unwired, in case a future drop wants a genuine private-access
+// mechanism again — nothing here currently affects who can shop.
+//
 // Signed, HttpOnly, server-verifiable early-access grant — deliberately
 // NOT a plain "earlyAccess=true" cookie a visitor could set from the
 // browser console, and deliberately not backed by a database (nothing to

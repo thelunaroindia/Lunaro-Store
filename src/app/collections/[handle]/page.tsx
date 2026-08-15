@@ -7,7 +7,6 @@ import {
   type CatalogueSearchParams,
 } from '@/lib/catalogue';
 import { PRELAUNCH_MODE } from '@/lib/config';
-import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import { canonicalUrl } from '@/lib/canonical';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import FilterSort from '@/components/shop/FilterSort';
@@ -23,7 +22,9 @@ type CollectionPageProps = {
 export async function generateMetadata({
   params,
 }: CollectionPageProps): Promise<Metadata> {
-  if (PRELAUNCH_MODE && !isEarlyAccessGranted()) {
+  // No shopping access exists during prelaunch — see shop/page.tsx for the
+  // same reasoning.
+  if (PRELAUNCH_MODE) {
     return {
       title: 'Collection Concealed',
       description:
@@ -58,7 +59,9 @@ export default async function CollectionPage({
   params,
   searchParams,
 }: CollectionPageProps) {
-  if (PRELAUNCH_MODE && !isEarlyAccessGranted()) {
+  // No shopping access exists during prelaunch — see shop/page.tsx for the
+  // same reasoning.
+  if (PRELAUNCH_MODE) {
     return (
       <main className="container-lunaro flex min-h-[85svh] items-center justify-center pb-24 pt-32 md:pt-40">
         <div className="w-full max-w-3xl text-center">

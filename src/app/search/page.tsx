@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getProducts, isShopifyConfigured } from '@/lib/shopify';
 import { PRELAUNCH_MODE } from '@/lib/config';
-import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import { canonicalUrl } from '@/lib/canonical';
 import ProductGrid from '@/components/shop/ProductGrid';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
@@ -19,11 +18,10 @@ export const metadata: Metadata = {
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
   // Search reads real Shopify catalogue data by title/tag — the same
   // real-inventory exposure every other shopping surface (/shop, /new-drop,
-  // /collections/[handle], /products/[handle]) already gates. This page had
-  // no such gate, so a direct /search?q=... URL could bypass Early Access
-  // entirely once real products exist — closing that gap here, matching the
-  // exact pattern those pages already use.
-  if (PRELAUNCH_MODE && !isEarlyAccessGranted()) {
+  // /collections/[handle], /products/[handle]) already gates. No shopping
+  // access exists during prelaunch for anyone, so this stays concealed
+  // regardless of any cookie.
+  if (PRELAUNCH_MODE) {
     return (
       <UtilityPageBackdrop>
         <main className="container-lunaro flex min-h-[70svh] items-center justify-center pb-24 pt-32 md:pt-40">

@@ -5,7 +5,6 @@ import {
   type CatalogueSearchParams,
 } from '@/lib/catalogue';
 import { placeholderProducts, PRELAUNCH_MODE } from '@/lib/config';
-import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import { canonicalUrl } from '@/lib/canonical';
 import type { ProductCardData } from '@/lib/types';
 import { SectionHeading } from '@/components/ui/Eyebrow';
@@ -44,7 +43,10 @@ export default async function ShopPage({
 }: {
   searchParams: CatalogueSearchParams;
 }) {
-  if (PRELAUNCH_MODE && !isEarlyAccessGranted()) {
+  // No shopping access exists during prelaunch — commerce stays concealed
+  // for everyone, regardless of any cookie. There is no Early Access grant
+  // for Drop 001; the store opens all at once on public launch.
+  if (PRELAUNCH_MODE) {
     return (
       <main className="container-lunaro flex min-h-[80svh] items-center justify-center pb-24 pt-32 md:pt-40">
         <div className="w-full max-w-5xl text-center">
