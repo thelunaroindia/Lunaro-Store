@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { site } from '@/lib/config';
+import { site, PRELAUNCH_MODE } from '@/lib/config';
 import { getProducts, getCollections, getTransmissions, isShopifyConfigured } from '@/lib/shopify';
 
 const staticRoutes = [
@@ -31,9 +31,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (!isShopifyConfigured()) return entries;
 
+  // Individual product/collection PDPs are concealed behind the Early
+  // Access gate while PRELAUNCH_MODE is true (see products/[handle] and
+  // collections/[handle]) — listing their URLs in the sitemap would invite
+  // crawlers to real product pages before they're actually visible to an
+  // unauthenticated visitor. Currently a no-op (the only connected product
+  // is the internal, non-customer-facing `test` handle, already filtered
+  // out by getProducts()), but this stops it from silently leaking once
+  // real inventory is added in a later phase while still in prelaunch.
+  // Transmissions (editorial) stay listed regardless — genuinely public
+  // during prelaunch per the Early Access design.
   const [products, collections, transmissions] = await Promise.all([
-    getProducts({ first: 250 }).catch(() => []),
-    getCollections(250).catch(() => []),
+    PRELAUNCH_MODE ? Promise.resolve([]) : getProducts({ first: 250 }).catch(() => []),
+    PRELAUNCH_MODE ? Promise.resolve([]) : getCollections(250).catch(() => []),
     getTransmissions(250).catch(() => []),
   ]);
 

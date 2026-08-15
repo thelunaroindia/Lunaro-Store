@@ -8,8 +8,10 @@ import MobileMenu from './MobileMenu';
 
 export default function Header({
   customerAccountsEnabled,
+  earlyAccessGranted,
 }: {
   customerAccountsEnabled: boolean;
+  earlyAccessGranted: boolean;
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -60,7 +62,14 @@ export default function Header({
           </nav>
 
           <div className="flex items-center gap-6">
-            {!PRELAUNCH_MODE && (
+            {/* Search and Cart are shopping surfaces — an authorized Early
+                Access visitor can genuinely use both (their cart isn't
+                empty just because the site is still in prelaunch for
+                everyone else), so they stay visible once access is
+                granted, not only once PRELAUNCH_MODE fully ends. Account
+                stays full-launch-only — it's a separate identity feature
+                unrelated to the Early Access shopping flow. */}
+            {(!PRELAUNCH_MODE || earlyAccessGranted) && (
               <>
                 <Link
                   href="/search"
@@ -69,7 +78,7 @@ export default function Header({
                   Search
                 </Link>
 
-                {customerAccountsEnabled && (
+                {customerAccountsEnabled && !PRELAUNCH_MODE && (
                   <Link
                     href="/account"
                     className="link-underline hidden text-eyebrow uppercase tracking-wider2 text-lunar md:inline"
@@ -115,6 +124,7 @@ export default function Header({
         open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         customerAccountsEnabled={customerAccountsEnabled}
+        earlyAccessGranted={earlyAccessGranted}
       />
     </>
   );

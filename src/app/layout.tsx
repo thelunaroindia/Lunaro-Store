@@ -5,6 +5,7 @@ import Script from 'next/script';
 import './globals.css';
 import { site, seoDefaults } from '@/lib/config';
 import { getOrCreateCart } from '@/actions/cart';
+import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import { CartUIProvider } from '@/context/CartUIContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import Header from '@/components/layout/Header';
@@ -65,6 +66,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // link only ever appears when Shopify Customer Accounts is actually
   // configured — no client/server mismatch, no placeholder link to nowhere.
   const customerAccountsEnabled = Boolean(process.env.SHOPIFY_CUSTOMER_ACCOUNT_URL);
+  // An authorized Early Access visitor can actually shop and needs the cart
+  // icon/nav to reach it — computed server-side from the signed cookie
+  // (src/lib/earlyAccess.ts), same trust boundary every gated page already
+  // uses, never inferred client-side.
+  const earlyAccessGranted = isEarlyAccessGranted();
 
   return (
     <html lang="en-IN" className={`${display.variable} ${sans.variable}`}>
@@ -81,7 +87,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             >
               Skip to content
             </a>
-            <Header customerAccountsEnabled={customerAccountsEnabled} />
+            <Header
+              customerAccountsEnabled={customerAccountsEnabled}
+              earlyAccessGranted={earlyAccessGranted}
+            />
             <main id="main-content">{children}</main>
             <Footer />
             <CartDrawer />

@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { getProducts, isShopifyConfigured } from '@/lib/shopify';
+import { PRELAUNCH_MODE } from '@/lib/config';
+import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import ProductGrid from '@/components/shop/ProductGrid';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 
@@ -9,6 +12,44 @@ export const metadata: Metadata = {
 };
 
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
+  // Search reads real Shopify catalogue data by title/tag — the same
+  // real-inventory exposure every other shopping surface (/shop, /new-drop,
+  // /collections/[handle], /products/[handle]) already gates. This page had
+  // no such gate, so a direct /search?q=... URL could bypass Early Access
+  // entirely once real products exist — closing that gap here, matching the
+  // exact pattern those pages already use.
+  if (PRELAUNCH_MODE && !isEarlyAccessGranted()) {
+    return (
+      <UtilityPageBackdrop>
+        <main className="container-lunaro flex min-h-[70svh] items-center justify-center pb-24 pt-32 md:pt-40">
+          <div className="w-full max-w-3xl text-center">
+            <p className="eyebrow text-silver">DROP 001 — IN TRANSMISSION</p>
+
+            <h1 className="mt-6 font-display text-6xl leading-[0.9] text-lunar md:text-8xl">
+              SEARCH
+              <br />
+              CONCEALED
+            </h1>
+
+            <p className="mx-auto mt-8 max-w-lg text-sm leading-7 text-mist md:text-base">
+              The collection remains beyond the visible. Search will open
+              once the first transmission is ready.
+            </p>
+
+            <div className="terminator mx-auto mt-10 max-w-xs" />
+
+            <Link
+              href="/new-drop"
+              className="mt-10 inline-block border border-lunar/30 px-7 py-4 text-eyebrow uppercase tracking-wider2 text-lunar transition-colors hover:bg-lunar hover:text-obsidian"
+            >
+              Enter the Transmission
+            </Link>
+          </div>
+        </main>
+      </UtilityPageBackdrop>
+    );
+  }
+
   const query = searchParams.q?.trim() ?? '';
   const hasQuery = query.length > 0;
 

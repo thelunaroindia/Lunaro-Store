@@ -27,16 +27,27 @@ export default function MobileMenu({
   open,
   onClose,
   customerAccountsEnabled,
+  earlyAccessGranted,
 }: {
   open: boolean;
   onClose: () => void;
   customerAccountsEnabled: boolean;
+  earlyAccessGranted: boolean;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  const primaryNavigation = PRELAUNCH_MODE
-    ? prelaunchNavigation
-    : nav.main;
+  // An authorized visitor still sees the prelaunch-appropriate editorial
+  // items, but also needs a way to actually reach Shop/New Drop from the
+  // mobile menu — desktop's header nav already shows nav.main unconditionally
+  // and lets each page's own gate decide what's visible; this closes the
+  // same gap on mobile rather than leaving authorized shoppers with no menu
+  // path to the catalogue at all.
+  const primaryNavigation =
+    PRELAUNCH_MODE && !earlyAccessGranted
+      ? prelaunchNavigation
+      : PRELAUNCH_MODE
+        ? [nav.main[0], nav.main[1], ...prelaunchNavigation]
+        : nav.main;
 
   useEffect(() => {
     if (open) {

@@ -289,6 +289,14 @@ export const faqs = [
     q: 'How do I track my order?',
     a: 'Use the Track Order page with your order number and phone number, or the tracking link sent to you once your order ships.',
   },
+  {
+    q: 'Do you offer Cash on Delivery?',
+    a: `Cash on Delivery is available where eligible, alongside ${payments.methods.join(', ')}. ${prepaidIncentive}`,
+  },
+  {
+    q: 'What is your returns policy?',
+    a: policies.shipping.points[2],
+  },
 ] as const;
 
 export const seoDefaults = {
