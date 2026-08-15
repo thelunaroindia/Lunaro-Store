@@ -160,7 +160,7 @@ export default function Hero() {
         </RevealLine>
 
         {/* Live mode only — in prelaunch, this line just restated the
-            eyebrow + "Reveal Pending" below, so it's dropped entirely
+            eyebrow + "First Drop Incoming" below, so it's dropped entirely
             there rather than saying the same thing a third time. */}
         {!PRELAUNCH_MODE && (
           <RevealLine
@@ -180,11 +180,11 @@ export default function Hero() {
           >
             {dropDateLabel ? (
               <>
-                Reveal Pending — Drop 001 arrives{' '}
+                First Drop Incoming — arrives{' '}
                 <span className="text-lunar">{dropDateLabel}</span>
               </>
             ) : (
-              'Reveal Pending'
+              'First Drop Incoming.'
             )}
           </RevealLine>
         )}
@@ -200,10 +200,10 @@ export default function Hero() {
           transition={{ duration: 0.9, ease: EASE, delay: 0.7 }}
         >
           <LinkButton
-            href={PRELAUNCH_MODE ? '/about' : '/shop'}
+            href={PRELAUNCH_MODE ? '#early-access' : '/shop'}
             variant="ghost"
           >
-            {PRELAUNCH_MODE ? 'Enter the World' : 'Explore the Drop'}
+            {PRELAUNCH_MODE ? 'Get Early Access' : 'Shop the Drop'}
           </LinkButton>
         </motion.div>
       </div>

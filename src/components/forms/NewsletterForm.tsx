@@ -73,7 +73,7 @@ export default function NewsletterForm({
       >
         {!compact && (
           <p className="eyebrow text-silver">
-            Transmission received
+            {PRELAUNCH_MODE ? 'Access requested' : 'Transmission received'}
           </p>
         )}
 
@@ -84,10 +84,12 @@ export default function NewsletterForm({
               : 'mt-3 font-display text-2xl leading-tight text-lunar md:text-3xl'
           }
         >
-          You’re inside the orbit.
+          {PRELAUNCH_MODE
+            ? "Access requested. You'll hear from us before the drop."
+            : 'You’re inside the orbit.'}
         </p>
 
-        {!compact && (
+        {!compact && !PRELAUNCH_MODE && (
           <p className="mt-3 max-w-sm text-sm leading-6 text-mist">
             Private release details will reach you before the signal goes public.
           </p>
@@ -112,7 +114,7 @@ export default function NewsletterForm({
 
           <p className="mt-4 max-w-sm text-sm leading-7 text-mist">
             {PRELAUNCH_MODE
-              ? 'Be first to know the release date, and get early access before Drop 001 opens to everyone else.'
+              ? 'Join the list for first access to the debut collection, private drop notifications and launch access before public release.'
               : 'Receive early access to new releases, editorial transmissions and limited drops.'}
           </p>
         </>
@@ -157,7 +159,7 @@ export default function NewsletterForm({
           disabled={state === 'loading'}
           className="min-h-12 shrink-0 px-2"
         >
-          {state === 'loading' ? 'Sending…' : 'Join'}
+          {state === 'loading' ? 'Sending…' : PRELAUNCH_MODE ? 'Get Early Access' : 'Join'}
         </Button>
       </div>
 
