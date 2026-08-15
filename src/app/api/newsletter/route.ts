@@ -21,7 +21,7 @@ type ConsentResult = {
 };
 
 async function createCustomer(email: string): Promise<
-  | { kind: 'created'; customerId: string; subscribed: boolean }
+  | { kind: 'created'; customerId: string; subscribed: boolean; tags: string[] }
   | { kind: 'already-exists' }
   | { kind: 'failed'; messages: string }
   | { kind: 'not-configured' }
@@ -30,6 +30,7 @@ async function createCustomer(email: string): Promise<
     customerCreate: {
       customer: {
         id: string;
+        tags: string[];
         emailMarketingConsent: { marketingState: string } | null;
       } | null;
       userErrors: { field: string[] | null; message: string }[];
@@ -40,6 +41,7 @@ async function createCustomer(email: string): Promise<
         customerCreate(input: $input) {
           customer {
             id
+            tags
             emailMarketingConsent { marketingState }
           }
           userErrors { field message }
@@ -69,6 +71,7 @@ async function createCustomer(email: string): Promise<
       kind: 'created',
       customerId: customer.id,
       subscribed: customer.emailMarketingConsent?.marketingState === 'SUBSCRIBED',
+      tags: customer.tags,
     };
   }
 
@@ -183,7 +186,7 @@ export async function POST(req: NextRequest) {
       }
 
       console.log(
-        `[newsletter] Customer ${result.customerId} created. Marketing consent verified as ${
+        `[newsletter] Customer ${result.customerId} created. Tags: [${result.tags.join(', ')}]. Marketing consent verified as ${
           subscribed ? 'SUBSCRIBED' : 'NOT SUBSCRIBED'
         }.`
       );
