@@ -5,6 +5,7 @@ import {
   type CatalogueSearchParams,
 } from '@/lib/catalogue';
 import { placeholderProducts, PRELAUNCH_MODE } from '@/lib/config';
+import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import type { ProductCardData } from '@/lib/types';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import FilterSort from '@/components/shop/FilterSort';
@@ -41,7 +42,7 @@ export default async function ShopPage({
 }: {
   searchParams: CatalogueSearchParams;
 }) {
-  if (PRELAUNCH_MODE) {
+  if (PRELAUNCH_MODE && !isEarlyAccessGranted()) {
     return (
       <main className="container-lunaro flex min-h-[80svh] items-center justify-center pb-24 pt-32 md:pt-40">
         <div className="w-full max-w-5xl text-center">

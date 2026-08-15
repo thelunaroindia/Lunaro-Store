@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getProducts, isShopifyConfigured } from '@/lib/shopify';
 import { placeholderProducts, PRELAUNCH_MODE } from '@/lib/config';
+import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import type { ProductCardData } from '@/lib/types';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import ProductGrid from '@/components/shop/ProductGrid';
@@ -32,7 +33,7 @@ function fallbackProducts(): ProductCardData[] {
 }
 
 export default async function NewDropPage() {
-  if (PRELAUNCH_MODE) {
+  if (PRELAUNCH_MODE && !isEarlyAccessGranted()) {
     return (
       <main className="container-lunaro pb-24 pt-32 md:pt-40">
         <section className="flex min-h-[70svh] items-center justify-center">

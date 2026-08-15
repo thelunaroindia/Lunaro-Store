@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
-import { Button } from '@/components/ui/Button';
+import { useEffect, useState, type FormEvent } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { Button, LinkButton } from '@/components/ui/Button';
 import { PRELAUNCH_MODE } from '@/lib/config';
+import { trackEvent } from '@/lib/analytics';
 
 type State = 'idle' | 'loading' | 'success' | 'error';
+
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export default function NewsletterForm({
   compact = false,
@@ -14,9 +18,16 @@ export default function NewsletterForm({
   const [email, setEmail] = useState('');
   const [state, setState] = useState<State>('idle');
   const [error, setError] = useState('');
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    trackEvent('early_access_view');
+  }, []);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (state === 'loading') return;
 
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -28,6 +39,7 @@ export default function NewsletterForm({
 
     setState('loading');
     setError('');
+    trackEvent('early_access_submit');
 
     try {
       const res = await fetch('/api/newsletter', {
@@ -45,7 +57,7 @@ export default function NewsletterForm({
         const message =
           typeof data?.error === 'string' && data.error.trim().length > 0
             ? data.error
-            : 'Something went wrong. Try again in a moment.';
+            : "We couldn't grant access just yet. Please try again.";
 
         setError(message);
         setState('error');
@@ -54,14 +66,15 @@ export default function NewsletterForm({
 
       setEmail('');
       setState('success');
+      trackEvent('early_access_success');
     } catch {
-      setError('Something went wrong. Try again in a moment.');
+      setError("We couldn't grant access just yet. Please try again.");
       setState('error');
     }
   }
 
   if (state === 'success') {
-    return (
+    const content = (
       <div
         className={
           compact
@@ -73,7 +86,7 @@ export default function NewsletterForm({
       >
         {!compact && (
           <p className="eyebrow text-silver">
-            {PRELAUNCH_MODE ? 'Access requested' : 'Transmission received'}
+            {PRELAUNCH_MODE ? 'Private Access' : 'Transmission received'}
           </p>
         )}
 
@@ -84,10 +97,29 @@ export default function NewsletterForm({
               : 'mt-3 font-display text-2xl leading-tight text-lunar md:text-3xl'
           }
         >
-          {PRELAUNCH_MODE
-            ? "Access requested. You'll hear from us before the drop."
-            : 'You’re inside the orbit.'}
+          {PRELAUNCH_MODE ? 'Access granted.' : 'You’re inside the orbit.'}
         </p>
+
+        {!compact && PRELAUNCH_MODE && (
+          <>
+            <p className="mt-3 max-w-sm text-sm leading-6 text-mist">
+              You’re inside. Discover Drop 001 before the public release.
+            </p>
+
+            <LinkButton
+              href="/new-drop"
+              variant="ghost"
+              className="mt-6 w-fit"
+              onClick={() => trackEvent('early_access_enter_drop')}
+            >
+              Enter Drop 001
+            </LinkButton>
+
+            <p className="mt-4 text-xs leading-5 text-mist">
+              Private access is now active on this device.
+            </p>
+          </>
+        )}
 
         {!compact && !PRELAUNCH_MODE && (
           <p className="mt-3 max-w-sm text-sm leading-6 text-mist">
@@ -95,6 +127,18 @@ export default function NewsletterForm({
           </p>
         )}
       </div>
+    );
+
+    if (prefersReducedMotion) return content;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: EASE }}
+      >
+        {content}
+      </motion.div>
     );
   }
 
@@ -177,7 +221,7 @@ export default function NewsletterForm({
         id="newsletter-note"
         className="mt-3 text-xs leading-5 text-mist"
       >
-        No spam. Unsubscribe anytime.
+        {PRELAUNCH_MODE ? 'Private access. Drop notices. No noise.' : 'No spam. Unsubscribe anytime.'}
       </p>
     </form>
   );

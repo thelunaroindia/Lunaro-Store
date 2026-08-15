@@ -8,6 +8,7 @@ import {
   PURCHASE_TEST_MODE,
   PURCHASE_TEST_PRODUCT_HANDLE,
 } from '@/lib/config';
+import { isEarlyAccessGranted } from '@/lib/earlyAccess';
 import type { Product } from '@/lib/types';
 import ProductDetail from '@/components/product/ProductDetail';
 import RelatedProducts from '@/components/product/RelatedProducts';
@@ -19,11 +20,17 @@ type ProductPageProps = {
 };
 
 // Temporary purchase-test carve-out — see PURCHASE_TEST_MODE in
-// src/lib/config.ts. Concealment applies to every handle except this one
-// exact test product while the flag is on; set the flag back to false to
-// remove the carve-out entirely.
+// src/lib/config.ts. Unlocks exactly this one handle while the flag is on;
+// set the flag back to false to remove the carve-out entirely.
 function isPurchaseTestUnlock(handle: string): boolean {
   return PURCHASE_TEST_MODE && handle === PURCHASE_TEST_PRODUCT_HANDLE;
+}
+
+// A visitor with a verified early-access grant (see src/lib/earlyAccess.ts)
+// sees every real product, not just the purchase-test handle — this is
+// the actual Drop 001 shopping journey the early-access system exists for.
+function isUnlocked(handle: string): boolean {
+  return isPurchaseTestUnlock(handle) || isEarlyAccessGranted();
 }
 
 export async function generateMetadata({
@@ -31,7 +38,7 @@ export async function generateMetadata({
 }: ProductPageProps): Promise<Metadata> {
   const { handle } = await params;
 
-  if (PRELAUNCH_MODE && !isPurchaseTestUnlock(handle)) {
+  if (PRELAUNCH_MODE && !isUnlocked(handle)) {
     return {
       title: 'Reveal Pending',
       description:
@@ -142,7 +149,7 @@ export default async function ProductPage({
 }: ProductPageProps) {
   const { handle } = await params;
 
-  if (PRELAUNCH_MODE && !isPurchaseTestUnlock(handle)) {
+  if (PRELAUNCH_MODE && !isUnlocked(handle)) {
     return (
       <main className="container-lunaro flex min-h-[85svh] items-center justify-center pb-24 pt-32 md:pt-40">
         <div className="w-full max-w-3xl text-center">
