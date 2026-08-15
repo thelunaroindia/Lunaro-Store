@@ -16,8 +16,8 @@ via Higgsfield with its download URL.
 | Fabric macro | ✅ generated |
 | About manifesto | ✅ generated |
 | Lookbook (preview + full, 7 images total) | not yet generated |
-| Favicon | not yet created |
-| Default OG image | not yet created |
+| Favicon | ✅ added — `public/favicon.ico` |
+| Default OG image | ✅ added — `public/og/lunaro-default.jpg` |
 
 ## Why generated assets aren't already sitting in this folder
 
