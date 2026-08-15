@@ -9,7 +9,7 @@ import ProductOptions, {
 } from './ProductOptions';
 import ProductAccordion from './ProductAccordion';
 import { cleanProductTitle } from '@/lib/productTitle';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
 import type { Product } from '@/lib/types';
 
 // "DROP 001" is only ever shown when Shopify's own tag says so — the same
@@ -49,8 +49,15 @@ export default function ProductDetail({ product }: { product: Product }) {
   const descriptor = editorialDescriptor(product.description);
 
   useEffect(() => {
-    trackEvent('view_item', { product_id: product.id });
-    // Fires once per product page view — product identity only, no PII.
+    trackEvent('view_item', {
+      product_id: product.id,
+      product_handle: product.handle,
+      currency: product.priceRange.minVariantPrice.currencyCode,
+      value: Number(product.priceRange.minVariantPrice.amount),
+      internal_test: isInternalTestProduct(product.handle),
+    });
+    // Fires once per product page view (product identity changing is the
+    // only thing that should re-fire it) — real price/currency, no PII.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 

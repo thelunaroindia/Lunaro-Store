@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react';
 import { formatMoney } from '@/lib/utils';
 import { cleanProductTitle } from '@/lib/productTitle';
 import { updateCartLine, removeFromCart } from '@/actions/cart';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
 import type { Cart, CartLine } from '@/lib/types';
 
 // Mirrors the PDP's isRealOption check (src/components/product/ProductOptions.tsx)
@@ -44,8 +44,11 @@ export default function CartLineItem({
 
       if (result.ok) {
         trackEvent(next <= 0 ? 'remove_from_cart' : 'update_cart_quantity', {
-          product_id: line.merchandise.product.handle,
+          product_handle: line.merchandise.product.handle,
+          currency: line.merchandise.price.currencyCode,
+          value: Number(line.merchandise.price.amount),
           quantity: next,
+          internal_test: isInternalTestProduct(line.merchandise.product.handle),
         });
         onCartChange(result.cart);
       } else {

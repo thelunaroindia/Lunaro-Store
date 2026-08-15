@@ -14,7 +14,7 @@ import { addToCart } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
 import { Button } from '@/components/ui/Button';
 import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
 import StickyAddToCart from './StickyAddToCart';
 import SizeGuideDrawer from './SizeGuideDrawer';
 import { payments, prepaidIncentive } from '@/lib/config';
@@ -198,7 +198,12 @@ export default function ProductOptions({
       if (result.ok) {
         trackEvent('add_to_cart', {
           product_id: product.id,
+          product_handle: product.handle,
           variant_id: activeVariant.id,
+          currency: activeVariant.price.currencyCode,
+          value: Number(activeVariant.price.amount),
+          quantity: 1,
+          internal_test: isInternalTestProduct(product.handle),
         });
         setCart(result.cart);
         open();
@@ -224,12 +229,22 @@ export default function ProductOptions({
       const result = await addToCart(activeVariant.id, 1);
 
       if (result.ok) {
-        trackEvent('buy_now', {
+        const eventParams = {
           product_id: product.id,
+          product_handle: product.handle,
           variant_id: activeVariant.id,
-        });
+          currency: activeVariant.price.currencyCode,
+          value: Number(activeVariant.price.amount),
+          quantity: 1,
+          internal_test: isInternalTestProduct(product.handle),
+        };
+        trackEvent('buy_now', eventParams);
         setCart(result.cart);
         openFastrCheckout(cartToFastrProducts(result.cart));
+        // Buy Now opens the identical Fastr checkout overlay the cart's
+        // Checkout button does — counted as a genuine checkout attempt so
+        // abandonment can be measured across both entry points, not just one.
+        trackEvent('begin_checkout', eventParams);
       } else {
         setError(result.error);
       }
@@ -282,7 +297,11 @@ export default function ProductOptions({
                 <button
                   type="button"
                   onClick={() => {
-                    trackEvent('open_size_guide', { product_id: product.id });
+                    trackEvent('open_size_guide', {
+                      product_id: product.id,
+                      product_handle: product.handle,
+                      internal_test: isInternalTestProduct(product.handle),
+                    });
                     setSizeGuideOpen(true);
                   }}
                   className="link-underline text-xs text-lunar"
@@ -311,15 +330,25 @@ export default function ProductOptions({
                     key={value}
                     type="button"
                     onClick={() => {
+                      if (isSize) setShowSizePrompt(false);
+
+                      // Only a genuine change is a variant "selection" — a
+                      // re-click of the value already active isn't a new
+                      // signal and would just inflate event volume.
+                      if (!isSelected) {
+                        trackEvent('select_item_variant', {
+                          product_id: product.id,
+                          product_handle: product.handle,
+                          option: option.name,
+                          value,
+                          internal_test: isInternalTestProduct(product.handle),
+                        });
+                      }
+
                       setSelected((current) => ({
                         ...current,
                         [option.name]: value,
                       }));
-                      if (isSize) setShowSizePrompt(false);
-                      trackEvent('select_item_variant', {
-                        product_id: product.id,
-                        option: option.name,
-                      });
                     }}
                     aria-pressed={isSelected}
                     disabled={unavailable}

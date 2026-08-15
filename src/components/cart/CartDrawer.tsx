@@ -7,7 +7,7 @@ import { formatMoney } from '@/lib/utils';
 import { payments, prepaidIncentive } from '@/lib/config';
 import { LinkButton } from '@/components/ui/Button';
 import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent, cartEventParams } from '@/lib/analytics';
 import CartLineItem from './CartLineItem';
 
 // Fastr's SDK exposes no close/cancel/error callback (confirmed against the
@@ -26,7 +26,7 @@ export default function CartDrawer() {
 
   useEffect(() => {
     if (isOpen && cart && cart.lines.length > 0) {
-      trackEvent('view_cart', { line_count: cart.lines.length });
+      trackEvent('view_cart', cartEventParams(cart));
     }
     // Fires each time the drawer opens with items in it — cart contents
     // only, no PII.
@@ -36,7 +36,7 @@ export default function CartDrawer() {
   function handleCheckout() {
     if (checkingOut || !cart) return;
     setCheckingOut(true);
-    trackEvent('begin_checkout', { line_count: cart.lines.length });
+    trackEvent('begin_checkout', cartEventParams(cart));
     openFastrCheckout(cartToFastrProducts(cart));
     setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
   }

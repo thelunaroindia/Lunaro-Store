@@ -6,7 +6,7 @@ import { payments, prepaidIncentive } from '@/lib/config';
 import { applyDiscount } from '@/actions/cart';
 import { Button } from '@/components/ui/Button';
 import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent, cartEventParams } from '@/lib/analytics';
 import CartLineItem from '@/components/cart/CartLineItem';
 import type { Cart } from '@/lib/types';
 
@@ -23,7 +23,7 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
 
   useEffect(() => {
     if (cart.lines.length > 0) {
-      trackEvent('view_cart', { line_count: cart.lines.length });
+      trackEvent('view_cart', cartEventParams(cart));
     }
     // Fires once per full-cart-page load — cart contents only, no PII.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -32,7 +32,7 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
   function handleCheckout() {
     if (checkingOut) return;
     setCheckingOut(true);
-    trackEvent('begin_checkout', { line_count: cart.lines.length });
+    trackEvent('begin_checkout', cartEventParams(cart));
     openFastrCheckout(cartToFastrProducts(cart));
     setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
   }

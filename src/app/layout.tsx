@@ -10,6 +10,8 @@ import { WishlistProvider } from '@/context/WishlistContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/cart/CartDrawer';
+import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
+import MetaPixel from '@/components/analytics/MetaPixel';
 
 // Display face — a Didone serif in the Bodoni tradition, the same register
 // used by fashion editorial mastheads. Used only for headlines, never body copy.
@@ -91,6 +93,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           src="https://fastrr-boost-ui.pickrr.com/assets/js/channels/shopify.js"
           strategy="afterInteractive"
         />
+        <GoogleAnalytics />
+        <MetaPixel />
       </body>
     </html>
   );

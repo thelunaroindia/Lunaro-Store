@@ -3,7 +3,26 @@ import { formatMoney } from '@/lib/utils';
 import { LinkButton } from '@/components/ui/Button';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 import { isShopifyAdminConfigured, shopifyAdminFetch, lastTenDigits } from '@/lib/shopifyAdmin';
+import PurchaseTracker from '@/components/analytics/PurchaseTracker';
 import type { Money } from '@/lib/types';
+
+type PaymentType = 'prepaid' | 'cod' | 'unknown';
+
+// Per docs/SHIPROCKET_SETUP.md's own description of this store's setup:
+// COD orders are placed against a manual payment method literally named
+// "Cash on Delivery" in Shopify Admin → Settings → Payments; every other
+// order goes through the real gateway (Razorpay). paymentGatewayNames is a
+// standard Order field already covered by this app's existing read_orders
+// scope — no broader Shopify permission requested for this.
+function derivePaymentType(gatewayNames: string[]): PaymentType {
+  if (gatewayNames.length === 0) return 'unknown';
+
+  const isCod = gatewayNames.some((gateway) =>
+    /cash on delivery|\bcod\b/i.test(gateway)
+  );
+
+  return isCod ? 'cod' : 'prepaid';
+}
 
 export const metadata: Metadata = {
   title: 'Order Confirmed',
@@ -19,6 +38,7 @@ type VerifiedOrder = {
   financialStatus: string;
   fulfillmentStatus: string;
   shippingMethod: string | null;
+  paymentType: PaymentType;
   address: {
     city: string | null;
     province: string | null;
@@ -63,6 +83,7 @@ async function getVerifiedOrder(
           phone: string | null;
           totalPriceSet: { shopMoney: Money };
           shippingLine: { title: string } | null;
+          paymentGatewayNames: string[] | null;
           shippingAddress: {
             phone: string | null;
             city: string | null;
@@ -83,6 +104,7 @@ async function getVerifiedOrder(
               phone
               totalPriceSet { shopMoney { amount currencyCode } }
               shippingLine { title }
+              paymentGatewayNames
               shippingAddress { phone city province country zip }
             }
           }
@@ -111,6 +133,7 @@ async function getVerifiedOrder(
       financialStatus: order.displayFinancialStatus,
       fulfillmentStatus: order.displayFulfillmentStatus,
       shippingMethod: order.shippingLine?.title ?? null,
+      paymentType: derivePaymentType(order.paymentGatewayNames ?? []),
       address: order.shippingAddress
         ? {
             city: order.shippingAddress.city,
@@ -149,6 +172,17 @@ export default async function OrderConfirmationPage({
 
         {order ? (
           <>
+            {/* Mounts only for a server-verified order (Shopify Admin API
+                confirmed order number + phone match above) — never on a
+                guessed/unverified URL. See PurchaseTracker.tsx for the
+                dedup strategy that makes refreshing this page safe. */}
+            <PurchaseTracker
+              orderName={order.name}
+              currency={order.total.currencyCode}
+              value={Number(order.total.amount)}
+              paymentType={order.paymentType}
+            />
+
             <p className="mt-6 text-sm text-mist">
               Order {order.name}
               <br />
