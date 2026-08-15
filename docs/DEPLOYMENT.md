@@ -21,7 +21,7 @@ Vercel → Project → **Settings → Environment Variables**. Add every variabl
 | `SHOPIFY_API_VERSION` | ✅ | ✅ |
 | `SHOPIFY_ADMIN_API_TOKEN` | ✅ | optional |
 | `SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID` / `_URL` | ✅ (once enabled) | optional |
-| `NEXT_PUBLIC_SITE_URL` | `https://lunaro.in` | leave as preview URL or unset |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.lunaro.in` (the real production host — non-www redirects here) | leave as preview URL or unset |
 | `NEXT_PUBLIC_INSTAGRAM_URL` | ✅ | ✅ |
 | `RESEND_API_KEY`, `CONTACT_FORM_TO_EMAIL` | ✅ | optional |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_META_PIXEL_ID` | ✅ (once created — see below) | leave blank |

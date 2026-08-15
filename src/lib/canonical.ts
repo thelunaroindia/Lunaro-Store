@@ -1,12 +1,10 @@
-// Canonical URL host is deliberately its own constant, independent from
-// site.url/metadataBase (src/lib/config.ts, still resolves to
-// https://lunaro.in via NEXT_PUBLIC_SITE_URL) — so adding canonical tags
-// never touches OG/Twitter metadata resolution, which reads metadataBase.
-// www.lunaro.in is the verified single production host: every non-www and
-// http variant 308-redirects here at the Vercel domain level (checked
-// directly against production before this file was written).
-const CANONICAL_HOST = 'https://www.lunaro.in';
+import { site } from './config';
 
+// Reuses site.url as the one authoritative production origin — the same
+// value metadataBase/OG/Twitter/sitemap/robots all resolve from — rather
+// than maintaining a second, separately-hardcoded host constant that could
+// drift out of sync with it.
+//
 // Builds an absolute canonical URL from a bare path, always ignoring query
 // strings (a canonical URL must never vary by query parameter — e.g.
 // /search?q=black canonicalizes to exactly /search) and always without a
@@ -17,5 +15,5 @@ export function canonicalUrl(path: string): string {
   const trimmed =
     withoutQuery === '/' ? '' : withoutQuery.replace(/\/+$/, '');
 
-  return `${CANONICAL_HOST}${trimmed || '/'}`;
+  return `${site.url}${trimmed || '/'}`;
 }

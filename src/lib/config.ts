@@ -32,13 +32,20 @@ export const PURCHASE_TEST_PRODUCT_HANDLE = 'test';
 // with no other code change.
 export const LAUNCH_DATE: string | null = null;
 
+// The single authoritative production origin. www.lunaro.in is the
+// verified real production host — every non-www/http variant 308-redirects
+// here at the Vercel domain level (checked directly against production).
+// `|| default` (not `??`) deliberately, since NEXT_PUBLIC_SITE_URL has at
+// times been set to an empty string in Vercel rather than left truly
+// unset — `??` only falls back on null/undefined, so an empty string would
+// otherwise silently win and break metadataBase (new URL('') throws).
 export const site = {
   name: 'LUNARO',
   domain: 'lunaro.in',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://lunaro.in',
+  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.lunaro.in',
   tagline: 'CRAFTED IN DARKNESS.',
   description:
-    'LUNARO is a premium oversized streetwear label from India, built from lunar silence, deep space and human ambition. Limited drops, garment-first design.',
+    'LUNARO is a premium oversized fashion label from India, built on restraint and considered design. Limited drops, garment-first design.',
   locale: 'en_IN',
   currency: 'INR',
 } as const;
