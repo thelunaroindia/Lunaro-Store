@@ -8,6 +8,7 @@ import {
 } from '@/lib/catalogue';
 import { PRELAUNCH_MODE } from '@/lib/config';
 import { isEarlyAccessGranted } from '@/lib/earlyAccess';
+import { canonicalUrl } from '@/lib/canonical';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import FilterSort from '@/components/shop/FilterSort';
 import ProductGrid from '@/components/shop/ProductGrid';
@@ -44,6 +45,12 @@ export async function generateMetadata({
     title: collection?.title ?? 'Collection',
     description:
       collection?.description || `Shop the ${collection?.title ?? 'LUNARO'} collection.`,
+    // Skip canonical when the collection genuinely doesn't exist — nothing
+    // real to canonicalize to; the page component's own notFound() handles
+    // this case.
+    ...(collection && {
+      alternates: { canonical: canonicalUrl(`/collections/${handle}`) },
+    }),
   };
 }
 

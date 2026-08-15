@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { contact } from '@/lib/config';
+import { canonicalUrl } from '@/lib/canonical';
 import ContactForm from '@/components/forms/ContactForm';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 
 export const metadata: Metadata = {
   title: 'Contact',
   description: 'Order support, product questions and collaborations — reach the LUNARO team directly.',
+  alternates: { canonical: canonicalUrl('/contact') },
 };
 
 export default function ContactPage() {

@@ -3,11 +3,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getCollections, isShopifyConfigured } from '@/lib/shopify';
 import { PRELAUNCH_MODE } from '@/lib/config';
+import { canonicalUrl } from '@/lib/canonical';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 
 export const metadata: Metadata = {
   title: 'Collections',
   description: 'Explore every live LUNARO collection.',
+  alternates: { canonical: canonicalUrl('/collections') },
 };
 
 // Deterministic display order and local artwork for each live Shopify

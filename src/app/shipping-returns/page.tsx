@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { policies, contact } from '@/lib/config';
+import { canonicalUrl } from '@/lib/canonical';
 import { PolicyLayout } from '@/components/ui/PolicyLayout';
 
 export const metadata: Metadata = {
   title: 'Shipping & Returns',
   description: 'Dispatch timelines, tracking and return terms for LUNARO orders.',
+  alternates: { canonical: canonicalUrl('/shipping-returns') },
 };
 
 export default function ShippingReturnsPage() {

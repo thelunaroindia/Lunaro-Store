@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { faqs } from '@/lib/config';
+import { canonicalUrl } from '@/lib/canonical';
 import { AccordionItem } from '@/components/ui/Accordion';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 
 export const metadata: Metadata = {
   title: 'FAQ',
   description: 'Answers to common questions about sizing, shipping and LUNARO drops.',
+  alternates: { canonical: canonicalUrl('/faq') },
 };
 
 export default function FaqPage() {

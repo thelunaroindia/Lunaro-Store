@@ -9,6 +9,7 @@ import {
   PURCHASE_TEST_PRODUCT_HANDLE,
 } from '@/lib/config';
 import { isEarlyAccessGranted } from '@/lib/earlyAccess';
+import { canonicalUrl } from '@/lib/canonical';
 import type { Product } from '@/lib/types';
 import ProductDetail from '@/components/product/ProductDetail';
 import RelatedProducts from '@/components/product/RelatedProducts';
@@ -72,9 +73,11 @@ export async function generateMetadata({
     },
     // The purchase-test unlock is temporary and not meant for discovery —
     // keep it out of search results even though the URL itself resolves.
-    ...(isPurchaseTestUnlock(handle) && {
-      robots: { index: false, follow: false },
-    }),
+    // No canonical either — a noindex page shouldn't also assert "this is
+    // the canonical version of me," a mixed signal worth avoiding.
+    ...(isPurchaseTestUnlock(handle)
+      ? { robots: { index: false, follow: false } }
+      : { alternates: { canonical: canonicalUrl(`/products/${handle}`) } }),
   };
 }
 

@@ -3,10 +3,12 @@ import Image from 'next/image';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import { hasPublicAsset } from '@/lib/assets';
 import { assetManifest } from '@/lib/assetManifest';
+import { canonicalUrl } from '@/lib/canonical';
 
 export const metadata: Metadata = {
   title: 'About',
   description: 'The LUNARO story, philosophy and design language.',
+  alternates: { canonical: canonicalUrl('/about') },
 };
 
 export default function AboutPage() {

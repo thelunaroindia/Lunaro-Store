@@ -6,6 +6,7 @@ import {
 } from '@/lib/catalogue';
 import { placeholderProducts, PRELAUNCH_MODE } from '@/lib/config';
 import { isEarlyAccessGranted } from '@/lib/earlyAccess';
+import { canonicalUrl } from '@/lib/canonical';
 import type { ProductCardData } from '@/lib/types';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import FilterSort from '@/components/shop/FilterSort';
@@ -14,6 +15,7 @@ import ProductGrid from '@/components/shop/ProductGrid';
 export const metadata: Metadata = {
   title: PRELAUNCH_MODE ? 'The First Transmission' : 'Shop All',
   description: 'Shop the full LUNARO catalogue.',
+  alternates: { canonical: canonicalUrl('/shop') },
 };
 
 function fallbackProducts(): ProductCardData[] {

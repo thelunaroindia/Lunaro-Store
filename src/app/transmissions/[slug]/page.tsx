@@ -3,11 +3,20 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getTransmissionByHandle, getTransmissions, isShopifyConfigured } from '@/lib/shopify';
+import { canonicalUrl } from '@/lib/canonical';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   if (!isShopifyConfigured()) return { title: 'Transmission' };
   const article = await getTransmissionByHandle(params.slug).catch(() => null);
-  return { title: article?.seo.title || article?.title || 'Transmission' };
+
+  // No canonical when the article genuinely doesn't exist — the page
+  // component's own notFound() handles that case.
+  if (!article) return { title: 'Transmission' };
+
+  return {
+    title: article.seo.title || article.title,
+    alternates: { canonical: canonicalUrl(`/transmissions/${params.slug}`) },
+  };
 }
 
 export default async function TransmissionArticlePage({ params }: { params: { slug: string } }) {

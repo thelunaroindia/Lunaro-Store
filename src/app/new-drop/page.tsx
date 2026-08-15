@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getProducts, isShopifyConfigured } from '@/lib/shopify';
 import { placeholderProducts, PRELAUNCH_MODE } from '@/lib/config';
 import { isEarlyAccessGranted } from '@/lib/earlyAccess';
+import { canonicalUrl } from '@/lib/canonical';
 import type { ProductCardData } from '@/lib/types';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import ProductGrid from '@/components/shop/ProductGrid';
@@ -9,6 +10,7 @@ import ProductGrid from '@/components/shop/ProductGrid';
 export const metadata: Metadata = {
   title: PRELAUNCH_MODE ? 'Drop 001 — In Transmission' : 'New Drop',
   description: 'The latest LUNARO drop, live now.',
+  alternates: { canonical: canonicalUrl('/new-drop') },
 };
 
 function fallbackProducts(): ProductCardData[] {

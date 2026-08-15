@@ -2,9 +2,13 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getTransmissions, isShopifyConfigured } from '@/lib/shopify';
+import { canonicalUrl } from '@/lib/canonical';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 
-export const metadata: Metadata = { title: 'Transmissions' };
+export const metadata: Metadata = {
+  title: 'Transmissions',
+  alternates: { canonical: canonicalUrl('/transmissions') },
+};
 
 const placeholderTransmissions = [
   {

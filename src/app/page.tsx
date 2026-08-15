@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import { getProducts, isShopifyConfigured } from '@/lib/shopify';
 import { placeholderProducts, seoDefaults } from '@/lib/config';
+import { canonicalUrl } from '@/lib/canonical';
 import type { ProductCardData } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: { absolute: seoDefaults.defaultTitle },
   description: seoDefaults.description,
+  alternates: { canonical: canonicalUrl('/') },
 };
 import PageIntro from '@/components/layout/PageIntro';
 import Hero from '@/components/home/Hero';

@@ -3,12 +3,17 @@ import Link from 'next/link';
 import { getProducts, isShopifyConfigured } from '@/lib/shopify';
 import { PRELAUNCH_MODE } from '@/lib/config';
 import { isEarlyAccessGranted } from '@/lib/earlyAccess';
+import { canonicalUrl } from '@/lib/canonical';
 import ProductGrid from '@/components/shop/ProductGrid';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 
+// A static export, not generateMetadata — deliberately query-string-blind,
+// so /search?q=black and /search?q=white both canonicalize to exactly
+// /search rather than each other or a query-specific URL.
 export const metadata: Metadata = {
   title: 'Search',
   description: 'Search the current LUNARO collection.',
+  alternates: { canonical: canonicalUrl('/search') },
 };
 
 export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {

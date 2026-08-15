@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { sizeGuide, bottomsSizeGuide } from '@/lib/config';
+import { canonicalUrl } from '@/lib/canonical';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 
 export const metadata: Metadata = {
   title: 'Size Guide',
   description: 'Measurements for LUNARO tees and bottoms.',
+  alternates: { canonical: canonicalUrl('/size-guide') },
 };
 
 export default async function SizeGuidePage({
