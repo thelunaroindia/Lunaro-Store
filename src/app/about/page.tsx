@@ -21,7 +21,7 @@ export default function AboutPage() {
         <p className="eyebrow text-silver">Origin</p>
 
         <h1 className="mt-5 font-display text-display-lg text-lunar">
-          LUNARO is for those who were never meant to remain where they began.
+          Made for those who were never meant to remain where they began.
         </h1>
       </div>
 
@@ -45,52 +45,57 @@ export default function AboutPage() {
 
         <div className="space-y-10">
           <section>
-            <p className="eyebrow text-mist">Philosophy</p>
+            <p className="eyebrow text-mist">01 — Philosophy</p>
 
-            <p className="mt-3 text-mist">
-              LUNARO exists in the space between the familiar and the unknown.
-              We create for those drawn to silence, distance and the possibility
-              of becoming something more.
+            <p className="mt-3 max-w-md text-mist">
+              LUNARO was built on the belief that what you wear should say
+              something before you do. We create pieces with presence —
+              considered, distinctive, and made for people who choose their
+              own direction.
             </p>
           </section>
 
           <section>
-            <p className="eyebrow text-mist">Design Language</p>
+            <p className="eyebrow text-mist">02 — Design Language</p>
 
-            <p className="mt-3 text-mist">
-              Strong silhouettes. Restrained detail. A world shaped by shadow,
-              space and lunar light. Nothing excessive. Nothing without purpose.
+            <p className="mt-3 max-w-md text-mist">
+              Restraint over excess. Detail over noise. Every piece begins
+              with a strong silhouette and is refined until nothing feels
+              accidental. The result is clothing that feels distinct without
+              asking for attention.
             </p>
           </section>
 
           <section>
-            <p className="eyebrow text-mist">Built With Intention</p>
+            <p className="eyebrow text-mist">03 — Built With Intention</p>
 
-            <p className="mt-3 text-mist">
-              Cut from heavyweight 260 GSM premium cotton and built for lasting
-              structure, comfort and presence. Every garment is considered from
-              fabric to final finish.
+            <p className="mt-3 max-w-md text-mist">
+              From the weight of the fabric to the fall of the silhouette,
+              every decision is deliberate. Construction, proportion, texture
+              and finish are considered as one — because the difference is
+              often found in what others overlook.
             </p>
           </section>
 
           <section>
-            <p className="eyebrow text-mist">Limited By Design</p>
+            <p className="eyebrow text-mist">04 — Made To Be Worn</p>
 
-            <p className="mt-3 text-mist">
-              Each release is produced in a fixed run and never repeated in the
-              same form. Fewer pieces. Greater intention. Clothing made to be
-              remembered, not replaced.
+            <p className="mt-3 max-w-md text-mist">
+              LUNARO is not designed to exist only in photographs. These are
+              pieces made to become part of how you dress, move and live —
+              elevated enough to be remembered, effortless enough to return
+              to.
             </p>
           </section>
 
           <section>
-            <p className="eyebrow text-mist">
-              Beyond The First Transmission
-            </p>
+            <p className="eyebrow text-mist">05 — What Comes Next</p>
 
-            <p className="mt-3 text-mist">
-              LUNARO will continue to evolve through new forms, materials and
-              worlds. The universe expands, but the vision remains unchanged.
+            <p className="mt-3 max-w-md text-mist">
+              LUNARO begins with a single collection, not a single idea. New
+              silhouettes, materials and expressions will follow, while the
+              standard remains the same: make fewer decisions, make better
+              ones.
             </p>
           </section>
         </div>
@@ -98,8 +103,9 @@ export default function AboutPage() {
 
       <div className="container-lunaro mt-24 max-w-2xl border-t border-graphite pt-12">
         <p className="font-display text-2xl italic text-editorial">
-          &ldquo;We are not here to follow the world as it is. We are here to
-          enter the one that comes next.&rdquo;
+          &ldquo;We don&rsquo;t make clothes to fill wardrobes.
+          <br />
+          We make pieces worth choosing.&rdquo;
         </p>
       </div>
     </div>
