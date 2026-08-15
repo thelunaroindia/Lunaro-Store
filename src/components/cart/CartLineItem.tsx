@@ -5,7 +5,23 @@ import { useState, useTransition } from 'react';
 import { formatMoney } from '@/lib/utils';
 import { cleanProductTitle } from '@/lib/productTitle';
 import { updateCartLine, removeFromCart } from '@/actions/cart';
+import { trackEvent } from '@/lib/analytics';
 import type { Cart, CartLine } from '@/lib/types';
+
+// Mirrors the PDP's isRealOption check (src/components/product/ProductOptions.tsx)
+// — a single "Title: Default Title" line is Shopify's own placeholder for
+// products with no real colour/size set up, not information worth showing.
+function realSelectedOptions(
+  options: { name: string; value: string }[]
+): { name: string; value: string }[] {
+  const only = options.length === 1 ? options[0] : undefined;
+
+  if (only && only.name === 'Title' && only.value === 'Default Title') {
+    return [];
+  }
+
+  return options;
+}
 
 export default function CartLineItem({
   line,
@@ -17,13 +33,24 @@ export default function CartLineItem({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
   const image = line.merchandise.product.images[0];
+  const variantLabel = realSelectedOptions(line.merchandise.selectedOptions)
+    .map((o) => o.value)
+    .join(' / ');
 
   function changeQty(next: number) {
     setError('');
     startTransition(async () => {
       const result = next <= 0 ? await removeFromCart(line.id) : await updateCartLine(line.id, next);
-      if (result.ok) onCartChange(result.cart);
-      else setError(result.error);
+
+      if (result.ok) {
+        trackEvent(next <= 0 ? 'remove_from_cart' : 'update_cart_quantity', {
+          product_id: line.merchandise.product.handle,
+          quantity: next,
+        });
+        onCartChange(result.cart);
+      } else {
+        setError(result.error);
+      }
     });
   }
 
@@ -39,9 +66,9 @@ export default function CartLineItem({
         <div className="flex justify-between gap-3">
           <div>
             <p className="text-sm text-lunar">{cleanProductTitle(line.merchandise.product.title)}</p>
-            <p className="mt-1 text-xs text-mist">
-              {line.merchandise.selectedOptions.map((o) => o.value).join(' / ')}
-            </p>
+            {variantLabel && (
+              <p className="mt-1 text-xs text-mist">{variantLabel}</p>
+            )}
           </div>
           <p className="whitespace-nowrap text-sm text-mist">{formatMoney(line.cost.totalAmount)}</p>
         </div>
@@ -56,7 +83,10 @@ export default function CartLineItem({
             >
               −
             </button>
-            <span aria-live="polite">{line.quantity}</span>
+            <span aria-live="polite">
+              <span className="sr-only">Quantity: </span>
+              {line.quantity}
+            </span>
             <button
               onClick={() => changeQty(line.quantity + 1)}
               disabled={isPending}

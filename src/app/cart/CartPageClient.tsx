@@ -1,13 +1,18 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { formatMoney } from '@/lib/utils';
-import { payments } from '@/lib/config';
+import { payments, prepaidIncentive } from '@/lib/config';
 import { applyDiscount } from '@/actions/cart';
 import { Button } from '@/components/ui/Button';
 import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
+import { trackEvent } from '@/lib/analytics';
 import CartLineItem from '@/components/cart/CartLineItem';
 import type { Cart } from '@/lib/types';
+
+// See CartDrawer.tsx for why this is a bounded safety-net reset rather than
+// a real close/cancel callback — Fastr's SDK doesn't expose one.
+const CHECKOUT_REENABLE_MS = 2500;
 
 export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
   const [cart, setCart] = useState(initialCart);
@@ -16,10 +21,20 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
   const [isPending, startTransition] = useTransition();
   const [checkingOut, setCheckingOut] = useState(false);
 
+  useEffect(() => {
+    if (cart.lines.length > 0) {
+      trackEvent('view_cart', { line_count: cart.lines.length });
+    }
+    // Fires once per full-cart-page load — cart contents only, no PII.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function handleCheckout() {
     if (checkingOut) return;
     setCheckingOut(true);
+    trackEvent('begin_checkout', { line_count: cart.lines.length });
     openFastrCheckout(cartToFastrProducts(cart));
+    setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
   }
 
   function onApplyDiscount(e: React.FormEvent) {
@@ -91,6 +106,7 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
         >
           {checkingOut ? 'Opening Checkout…' : 'Checkout'}
         </button>
+        <p className="mt-3 text-center text-xs text-mist">{prepaidIncentive}</p>
         <p className="mt-3 text-center text-[11px] text-mist">
           Secure Payments — {payments.methods.join(' · ')}
         </p>

@@ -4,20 +4,41 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useCartUI } from '@/context/CartUIContext';
 import { formatMoney } from '@/lib/utils';
-import { payments } from '@/lib/config';
+import { payments, prepaidIncentive } from '@/lib/config';
 import { LinkButton } from '@/components/ui/Button';
 import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
+import { trackEvent } from '@/lib/analytics';
 import CartLineItem from './CartLineItem';
+
+// Fastr's SDK exposes no close/cancel/error callback (confirmed against the
+// live window.shiprocketCheckoutEvents object — only buyProduct/buyCart/
+// buyDirect exist), so there's no real event to react to when the customer
+// closes the checkout overlay without paying. Without this, "checkingOut"
+// would stay true forever and the button would be stuck disabled. This is a
+// bounded safety-net re-enable, not a delay on opening checkout itself —
+// openFastrCheckout() below still fires immediately, synchronously, on click.
+const CHECKOUT_REENABLE_MS = 2500;
 
 export default function CartDrawer() {
   const { cart, setCart, isOpen, close } = useCartUI();
   const panelRef = useRef<HTMLDivElement>(null);
   const [checkingOut, setCheckingOut] = useState(false);
 
+  useEffect(() => {
+    if (isOpen && cart && cart.lines.length > 0) {
+      trackEvent('view_cart', { line_count: cart.lines.length });
+    }
+    // Fires each time the drawer opens with items in it — cart contents
+    // only, no PII.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   function handleCheckout() {
     if (checkingOut || !cart) return;
     setCheckingOut(true);
+    trackEvent('begin_checkout', { line_count: cart.lines.length });
     openFastrCheckout(cartToFastrProducts(cart));
+    setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
   }
 
   useEffect(() => {
@@ -96,6 +117,7 @@ export default function CartDrawer() {
             >
               {checkingOut ? 'Opening Checkout…' : 'Checkout'}
             </button>
+            <p className="mt-3 text-center text-xs text-mist">{prepaidIncentive}</p>
             <p className="mt-3 text-center text-[11px] text-mist">
               Secure Payments — {payments.methods.join(' · ')}
             </p>
