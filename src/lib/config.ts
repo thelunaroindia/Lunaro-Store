@@ -14,7 +14,7 @@ export const PRELAUNCH_MODE = true;
 //
 // Set back to `false` the moment testing is done — that alone fully
 // restores today's prelaunch restrictions with no other change required.
-export const PURCHASE_TEST_MODE = true;
+export const PURCHASE_TEST_MODE = false;
 
 // Must be a real handle already live in the connected Shopify store — never
 // a fabricated product. As of this writing the store has exactly one
