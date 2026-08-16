@@ -102,7 +102,7 @@ export default function LookbookPreview() {
               <div className="absolute inset-0 flex items-end p-6 md:p-10">
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-                    Current Orbit
+                    Current Edition
                   </p>
 
                   <h3 className="mt-3 font-display text-4xl text-white md:text-6xl">

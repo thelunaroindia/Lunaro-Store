@@ -34,7 +34,7 @@ const concealedGarments = [
   {
     number: '02',
     title: 'ECLIPSE',
-    line: 'A study in shadow, obscured light and celestial darkness.',
+    line: 'A study in shadow, restraint and considered form.',
     image: '/images/collections/graphic-tees.jpg',
     objectPosition: '50% 30%',
     filter: 'blur(3px) brightness(1.4)',
@@ -54,7 +54,7 @@ export default function FeaturedProducts({
           <Reveal>
             <div className="max-w-[320px] md:max-w-none">
   <SectionHeading eyebrow="The Collection">
-    GARMENTS IN ORBIT
+    FORM IN FOCUS
   </SectionHeading>
 </div>
           </Reveal>
@@ -118,7 +118,7 @@ export default function FeaturedProducts({
       <div className="container-lunaro">
         <Reveal className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading eyebrow="The Collection">
-            GARMENTS IN ORBIT
+            FORM IN FOCUS
           </SectionHeading>
 
           <LinkButton href="/shop" variant="underline">
