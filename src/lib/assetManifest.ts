@@ -84,6 +84,13 @@ export const assetManifest = {
   { index: 2, desktopPath: 'images/lookbook/presence.png' },
   { index: 3, desktopPath: 'images/lookbook/quiet-weight.png' },
 ],
+ // NOTE on index 3 (below): its image asset is a known-bad placeholder —
+ // see the TODO directly on that entry. It cannot reach a customer today
+ // because LookbookPageClient.tsx never reads any lookbookFull.desktopPath
+ // while PRELAUNCH_MODE is true (it renders CinematicPlaceholder + a fixed
+ // pair of unrelated partial-reveal images instead) — but this array is
+ // exactly what goes live the moment PRELAUNCH_MODE flips off, so index 3
+ // MUST be fixed before that happens.
  lookbookFull: [
   {
     index: 1,
@@ -103,6 +110,13 @@ export const assetManifest = {
   },
   {
     index: 3,
+    // TODO(LUNARO — blocking): void.png depicts a model in a football
+    // jersey (visible back number), not a LUNARO oversized T-shirt. It is
+    // a temporary/dormant placeholder only — MUST be replaced with a
+    // dedicated "AFTER DARK EDIT" asset (dark/monochrome/nighttime,
+    // oversized LUNARO T-shirt only, no sports/jersey styling) before
+    // PRELAUNCH_MODE is ever set to false. Do not launch with this asset
+    // still in place.
     desktopPath: 'images/lookbook/void.png',
     mobilePath: 'images/lookbook/void.png',
     caption: 'LOOK 03 — VOID',

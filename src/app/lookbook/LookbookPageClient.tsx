@@ -18,8 +18,10 @@ const partialRevealImages = [
 ];
 
 // Looks 03 and 04 point to /shop rather than their themed collections —
-// Football Edit and Bottoms/trackpants are currently empty Shopify
-// collections, so "Shop This Look" must not dead-end there.
+// After Dark Edit has no dedicated Shopify collection (it's a general
+// oversized-tee editorial concept, not a real collection) and
+// Bottoms/trackpants is currently an empty Shopify collection, so
+// "Shop This Look" must not dead-end there.
 const lookDetails = [
   {
     caption: 'LOOK 01 — NEW DROP EDIT',
@@ -30,7 +32,7 @@ const lookDetails = [
     shopHref: '/collections/graphic-tees',
   },
   {
-    caption: 'LOOK 03 — FOOTBALL EDIT',
+    caption: 'LOOK 03 — AFTER DARK EDIT',
     shopHref: '/shop',
   },
   {
