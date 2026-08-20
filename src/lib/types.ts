@@ -97,25 +97,6 @@ export type CartLine = {
   };
 };
 
-export type TransmissionSummary = {
-  id: string;
-  handle: string;
-  title: string;
-  excerpt: string;
-  publishedAt: string;
-  image: ShopifyImage | null;
-};
-
-export type TransmissionArticle = {
-  id: string;
-  handle: string;
-  title: string;
-  contentHtml: string;
-  publishedAt: string;
-  image: ShopifyImage | null;
-  seo: { title: string | null; description: string | null };
-};
-
 export type Cart = {
   id: string;
   checkoutUrl: string;

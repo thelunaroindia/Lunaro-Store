@@ -103,7 +103,6 @@ export const nav = {
       title: 'LUNARO',
       links: [
         { label: 'About', href: '/about' },
-        { label: 'Transmissions', href: '/transmissions' },
         { label: 'Contact', href: '/contact' },
         { label: 'FAQ', href: '/faq' },
       ],
@@ -288,7 +287,7 @@ export const faqs = [
   },
   {
     q: 'Do you ship internationally?',
-    a: 'LUNARO currently ships within India. International shipping will be announced on Transmissions if it becomes available.',
+    a: 'LUNARO currently ships within India. International shipping will be announced if it becomes available.',
   },
   {
     q: 'How do limited drops work?',

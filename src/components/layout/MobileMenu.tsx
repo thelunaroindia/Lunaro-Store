@@ -6,10 +6,6 @@ import { nav, contact, PRELAUNCH_MODE } from '@/lib/config';
 
 const prelaunchNavigation = [
   {
-    label: 'Transmissions',
-    href: '/transmissions',
-  },
-  {
     label: 'Lookbook',
     href: '/lookbook',
   },

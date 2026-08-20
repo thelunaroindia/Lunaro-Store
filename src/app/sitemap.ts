@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { site, PRELAUNCH_MODE } from '@/lib/config';
-import { getProducts, getCollections, getTransmissions, isShopifyConfigured } from '@/lib/shopify';
+import { getProducts, getCollections, isShopifyConfigured } from '@/lib/shopify';
 
 const staticRoutes = [
   '',
@@ -9,7 +9,6 @@ const staticRoutes = [
   '/collections',
   '/lookbook',
   '/about',
-  '/transmissions',
   '/contact',
   '/faq',
   '/size-guide',
@@ -39,12 +38,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // is the internal, non-customer-facing `test` handle, already filtered
   // out by getProducts()), but this stops it from silently leaking once
   // real inventory is added in a later phase while still in prelaunch.
-  // Transmissions (editorial) stay listed regardless — genuinely public
-  // during prelaunch per the Early Access design.
-  const [products, collections, transmissions] = await Promise.all([
+  const [products, collections] = await Promise.all([
     PRELAUNCH_MODE ? Promise.resolve([]) : getProducts({ first: 250 }).catch(() => []),
     PRELAUNCH_MODE ? Promise.resolve([]) : getCollections(250).catch(() => []),
-    getTransmissions(250).catch(() => []),
   ]);
 
   for (const p of products) {
@@ -52,14 +48,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   for (const c of collections) {
     entries.push({ url: `${site.url}/collections/${c.handle}`, changeFrequency: 'weekly', priority: 0.7 });
-  }
-  for (const t of transmissions) {
-    entries.push({
-      url: `${site.url}/transmissions/${t.handle}`,
-      lastModified: new Date(t.publishedAt),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    });
   }
 
   return entries;

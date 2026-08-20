@@ -15,6 +15,21 @@ const nextConfig = {
       // https://www.lunaro.in. Keep this file for path-level redirects
       // only, e.g. legacy URLs once real product/collection handles are
       // finalised.
+
+      // The Transmissions editorial section was removed entirely. Anyone
+      // hitting an old /transmissions link (bookmark, external link, old
+      // sitemap entry still cached by a crawler) lands on the homepage
+      // instead of a 404.
+      {
+        source: '/transmissions',
+        destination: '/',
+        permanent: false,
+      },
+      {
+        source: '/transmissions/:slug',
+        destination: '/',
+        permanent: false,
+      },
     ];
   },
   async headers() {

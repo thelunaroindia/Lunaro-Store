@@ -146,39 +146,7 @@ const CART_FIELDS = `
   }
 `;
 
-export const GET_ARTICLES = `#graphql
-  query GetArticles($blogHandle: String!, $first: Int!) {
-    blog(handle: $blogHandle) {
-      articles(first: $first, sortKey: PUBLISHED_AT, reverse: true) {
-        nodes {
-          id
-          handle
-          title
-          excerpt
-          publishedAt
-          image { ${IMAGE_FIELDS} }
-        }
-      }
-    }
-  }
-`;
-
-export const GET_ARTICLE_BY_HANDLE = `#graphql
-  query GetArticle($blogHandle: String!, $articleHandle: String!) {
-    blog(handle: $blogHandle) {
-      articleByHandle(handle: $articleHandle) {
-        id
-        handle
-        title
-        contentHtml
-        publishedAt
-        image { ${IMAGE_FIELDS} }
-        seo { title description }
-      }
-    }
-  }
-`;
-export const CREATE_CART = `#graphql  
+export const CREATE_CART = `#graphql
 mutation CartCreate($lines: [CartLineInput!]) {
     cartCreate(input: { lines: $lines }) {
       cart { ${CART_FIELDS} }

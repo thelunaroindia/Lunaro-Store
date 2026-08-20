@@ -7,8 +7,6 @@ import {
   GET_PRODUCT_BY_HANDLE,
   GET_COLLECTIONS,
   GET_COLLECTION_BY_HANDLE,
-  GET_ARTICLES,
-  GET_ARTICLE_BY_HANDLE,
   CREATE_CART,
   GET_CART,
   CART_LINES_ADD,
@@ -22,8 +20,6 @@ import type {
   Collection,
   Product,
   ProductCardData,
-  TransmissionArticle,
-  TransmissionSummary,
 } from './types';
 
 // ── Configuration ─────────────────────────────────────────────────────
@@ -317,82 +313,6 @@ export async function getCollectionByHandle(
     products: (
       data.collection.products.nodes ?? []
     ).map(normaliseProductCard).filter(isCustomerFacing),
-  };
-}
-
-// ── Transmissions (Shopify Blog) ─────────────────────────────────────
-
-const TRANSMISSIONS_BLOG_HANDLE = 'transmissions';
-
-export async function getTransmissions(
-  first = 12
-): Promise<TransmissionSummary[]> {
-  const data = await shopifyFetch<{
-    blog: {
-      articles: {
-        nodes: any[];
-      };
-    } | null;
-  }>(
-    GET_ARTICLES,
-    {
-      blogHandle: TRANSMISSIONS_BLOG_HANDLE,
-      first,
-    },
-    {
-      revalidate: 300,
-      tags: ['transmissions'],
-    }
-  );
-
-  return (data.blog?.articles.nodes ?? []).map(
-    (article) => ({
-      id: article.id,
-      handle: article.handle,
-      title: article.title,
-      excerpt: article.excerpt,
-      publishedAt: article.publishedAt,
-      image: article.image ?? null,
-    })
-  );
-}
-
-export async function getTransmissionByHandle(
-  handle: string
-): Promise<TransmissionArticle | null> {
-  const data = await shopifyFetch<{
-    blog: {
-      articleByHandle: any | null;
-    } | null;
-  }>(
-    GET_ARTICLE_BY_HANDLE,
-    {
-      blogHandle: TRANSMISSIONS_BLOG_HANDLE,
-      articleHandle: handle,
-    },
-    {
-      revalidate: 300,
-      tags: [`transmission:${handle}`],
-    }
-  );
-
-  const article = data.blog?.articleByHandle;
-
-  if (!article) {
-    return null;
-  }
-
-  return {
-    id: article.id,
-    handle: article.handle,
-    title: article.title,
-    contentHtml: article.contentHtml,
-    publishedAt: article.publishedAt,
-    image: article.image ?? null,
-    seo: article.seo ?? {
-      title: null,
-      description: null,
-    },
   };
 }
 
