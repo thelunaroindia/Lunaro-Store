@@ -162,7 +162,7 @@ export default async function ProductPage({
             DROP 001 — IN TRANSMISSION
           </p>
 
-          <h1 className="mt-6 font-display text-6xl leading-[0.9] text-lunar md:text-8xl">
+          <h1 className="mt-6 font-display text-[clamp(2rem,10vw,6rem)] leading-[0.9] text-lunar">
             GARMENT
             <br />
             CONCEALED

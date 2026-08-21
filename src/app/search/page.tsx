@@ -28,7 +28,7 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
           <div className="w-full max-w-3xl text-center">
             <p className="eyebrow text-silver">DROP 001 — IN TRANSMISSION</p>
 
-            <h1 className="mt-6 font-display text-6xl leading-[0.9] text-lunar md:text-8xl">
+            <h1 className="mt-6 font-display text-[clamp(2rem,10vw,6rem)] leading-[0.9] text-lunar">
               SEARCH
               <br />
               CONCEALED
