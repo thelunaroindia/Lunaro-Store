@@ -54,9 +54,15 @@ Vercel automatically provisions and renews a Let's Encrypt SSL certificate for b
 3. Set `CONTACT_FORM_TO_EMAIL` to where messages should land (defaults to the contact email in `src/lib/config.ts` if unset).
 4. If you'd rather use a different provider (SendGrid, Postmark), swap the fetch call in `src/app/api/contact/route.ts` — the rest of the form is provider-agnostic.
 
-## 8. Newsletter provider
+## 8. Newsletter signup
 
-`src/app/api/newsletter/route.ts` is a stub until you pick a provider. Klaviyo is the most common choice for Shopify DTC brands and has a native Shopify integration; Shopify Email is a simpler built-in alternative. Once chosen, set `NEWSLETTER_PROVIDER` and fill in the subscribe call in that route.
+`src/app/api/newsletter/route.ts` is fully implemented — there is no `NEWSLETTER_PROVIDER` env var and no separate ESP to configure. The flow is:
+
+Homepage newsletter form (`NewsletterForm.tsx`, rendered via `JoinOrbit.tsx`) → `POST /api/newsletter` → Shopify Admin API (`src/lib/shopifyAdmin.ts`) → a real Shopify Customer is created (or, if the email already exists, looked up and repaired) → tagged `early-access` → email marketing consent set to `SUBSCRIBED` / `SINGLE_OPT_IN`.
+
+This reuses the same Admin API app as `/api/track-order` (see step 3 in `docs/SHOPIFY_SETUP.md`), with `write_customers` and `read_customers` scopes added on top of `read_orders`. Set `SHOPIFY_ADMIN_CLIENT_ID` / `SHOPIFY_ADMIN_CLIENT_SECRET` as usual — no additional env vars are needed for this feature.
+
+**Welcome email is not configured.** A successful signup here only creates/updates the Shopify customer record — it does not send any email. If you want new signups to receive an automatic welcome email, set that up separately in Shopify Admin: either a **Shopify Flow** workflow (trigger: customer tagged `early-access`, or customer created → action: send email) or a **Shopify Email** automation targeting the `early-access` tag/segment. Nothing in this repo needs to change to add that — it's Admin-side configuration only.
 
 ## 9. Test production checkout end-to-end
 

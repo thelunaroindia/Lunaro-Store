@@ -96,10 +96,21 @@ async function getAccessToken(): Promise<string> {
   return pendingTokenRequest;
 }
 
-export async function shopifyAdminFetch<T>(
+export type ShopifyAdminGraphQLError = {
+  message: string;
+  path?: (string | number)[];
+  extensions?: Record<string, unknown>;
+};
+
+// Core request, shared by shopifyAdminFetch (below) and
+// shopifyAdminFetchRaw (below). Returns the raw data/errors pair without
+// deciding what a field-level error means — that judgment call is the
+// caller's, because it differs per query (see shopifyAdminFetchRaw's doc
+// comment for why some callers need it).
+async function doGraphQLRequest<T>(
   query: string,
   variables?: Record<string, unknown>
-): Promise<T> {
+): Promise<{ data: T; errors: ShopifyAdminGraphQLError[] }> {
   if (!isShopifyAdminConfigured()) {
     throw new Error(
       'Shopify Admin API is not configured. Set SHOPIFY_ADMIN_CLIENT_ID and SHOPIFY_ADMIN_CLIENT_SECRET — see docs/SHOPIFY_SETUP.md.'
@@ -136,19 +147,25 @@ export async function shopifyAdminFetch<T>(
   }
 
   const json = await res.json();
+  const errors: ShopifyAdminGraphQLError[] = Array.isArray(json.errors) ? json.errors : [];
 
-  if (json.errors) {
-    const messages = Array.isArray(json.errors)
-      ? json.errors.map((e: { message: string }) => e.message).join(', ')
-      : String(json.errors);
+  if (errors.length > 0 && json.data == null) {
+    // No usable data at all — the query itself failed outright (bad
+    // syntax, fully denied access, etc.). Nothing for any caller to work
+    // with, so this is unconditionally fatal.
+    throw new Error(errors.map((e) => e.message).join(', '));
+  }
 
-    if (json.data == null) {
-      // No usable data at all — the query itself failed outright (bad
-      // syntax, fully denied access, etc.). Nothing for the caller to
-      // work with, so this is unconditionally fatal.
-      throw new Error(messages);
-    }
+  return { data: json.data as T, errors };
+}
 
+export async function shopifyAdminFetch<T>(
+  query: string,
+  variables?: Record<string, unknown>
+): Promise<T> {
+  const { data, errors } = await doGraphQLRequest<T>(query, variables);
+
+  if (errors.length > 0) {
     // Partial response: some field(s) errored (e.g. out-of-scope access to
     // a field we shouldn't have requested), but Shopify still returned
     // data for everything else in the same query. Log it for visibility —
@@ -156,10 +173,27 @@ export async function shopifyAdminFetch<T>(
     // usable data just because an unrelated field failed. Each caller is
     // responsible for checking that the specific fields it depends on are
     // actually present before trusting them.
-    console.warn('[shopifyAdmin] Partial GraphQL response with field errors:', messages);
+    console.warn(
+      '[shopifyAdmin] Partial GraphQL response with field errors:',
+      errors.map((e) => e.message).join(', ')
+    );
   }
 
-  return json.data as T;
+  return data;
+}
+
+// Same request as shopifyAdminFetch, but also hands back the raw error list
+// instead of only logging it. Needed by callers where a null field is
+// ambiguous on its own — e.g. a nullable "look up this customer" field
+// returns null both when the customer genuinely doesn't exist AND when the
+// field was access-denied for a missing scope, and those two cases must be
+// handled differently (a real 404-equivalent vs. a config problem). Callers
+// that don't need this distinction should keep using shopifyAdminFetch.
+export async function shopifyAdminFetchRaw<T>(
+  query: string,
+  variables?: Record<string, unknown>
+): Promise<{ data: T; errors: ShopifyAdminGraphQLError[] }> {
+  return doGraphQLRequest<T>(query, variables);
 }
 
 export function lastTenDigits(value: string): string {
