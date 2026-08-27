@@ -7,6 +7,7 @@ import { site, seoDefaults } from '@/lib/config';
 import { getOrCreateCart } from '@/actions/cart';
 import { CartUIProvider } from '@/context/CartUIContext';
 import { WishlistProvider } from '@/context/WishlistContext';
+import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/cart/CartDrawer';
@@ -81,6 +82,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             >
               Skip to content
             </a>
+            <AnnouncementBar />
             <Header customerAccountsEnabled={customerAccountsEnabled} />
             <main id="main-content">{children}</main>
             <Footer />

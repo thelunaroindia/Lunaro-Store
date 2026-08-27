@@ -204,7 +204,7 @@ export default async function ProductPage({
     <main className="pb-24 pt-28 md:pt-32">
       <ProductDetail product={product} />
 
-      <RelatedProducts excludeHandle={product.handle} />
+      <RelatedProducts product={product} />
     </main>
   );
 }

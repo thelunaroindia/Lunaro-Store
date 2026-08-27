@@ -129,6 +129,8 @@ function normaliseProduct(product: any): Product {
       title: null,
       description: null,
     },
+    collections: product.collections?.nodes ?? [],
+    modelSizing: product.modelSizingMetafield?.value ?? null,
   };
 }
 
@@ -145,6 +147,7 @@ function normaliseProductCard(product: any): ProductCardData {
     filterOptions: product.options ?? [],
     filterVariants: (product.variants?.nodes ?? []).map(
       (variant: any) => ({
+        id: variant.id,
         availableForSale: variant.availableForSale,
         selectedOptions: variant.selectedOptions ?? [],
       })

@@ -35,6 +35,7 @@ const BODY_CLASSNAME = 'text-[15px] leading-[1.75] text-mist';
 export default function ProductAccordion({ product }: { product: Product }) {
   const trackpant = isTrackpant(product.productType);
   const hasDescription = product.description.trim().length > 0;
+  const modelSizing = product.modelSizing?.trim();
 
   return (
     <div className="mt-10">
@@ -73,6 +74,10 @@ export default function ProductAccordion({ product }: { product: Product }) {
         ) : (
           <p>Oversized fit. True to size in the shoulder, roomy through the body. Machine wash cold, inside out. Do not iron over print.</p>
         )}
+        {/* Sourced from a Shopify metafield (namespace "custom", key
+            "model_sizing") when configured — see src/lib/shopify.ts. Never
+            shown as an invented measurement; simply absent otherwise. */}
+        {modelSizing && <p className="mt-3">{modelSizing}</p>}
       </AccordionItem>
       <AccordionItem
         title="Shipping & Returns"

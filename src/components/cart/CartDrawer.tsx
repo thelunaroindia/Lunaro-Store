@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useCartUI } from '@/context/CartUIContext';
 import { formatMoney } from '@/lib/utils';
-import { payments, prepaidIncentive } from '@/lib/config';
+import { payments, prepaidIncentive, PRELAUNCH_MODE } from '@/lib/config';
 import { LinkButton } from '@/components/ui/Button';
 import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
 import { trackEvent, cartEventParams } from '@/lib/analytics';
@@ -109,6 +109,14 @@ export default function CartDrawer() {
               <span>{formatMoney(cart.cost.subtotalAmount)}</span>
             </div>
             <p className="mt-2 text-xs text-mist">Taxes and shipping calculated at checkout.</p>
+            {/* Genuinely flat/free shipping (no threshold config exists) —
+                see src/lib/config.ts. Gated defensively for consistency
+                with the rest of the launch-mode surfaces, even though this
+                drawer is already unreachable while PRELAUNCH_MODE is true
+                (the Cart button itself is hidden until then). */}
+            {!PRELAUNCH_MODE && (
+              <p className="mt-1 text-xs text-silver">Free Standard Shipping</p>
+            )}
             <button
               type="button"
               onClick={handleCheckout}

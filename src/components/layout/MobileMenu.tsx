@@ -32,10 +32,12 @@ export default function MobileMenu({
 
   // No commerce during prelaunch for anyone — the mobile menu shows only
   // the editorial/brand items until PRELAUNCH_MODE is genuinely false.
-  // There is no Early Access grant that changes this anymore.
+  // There is no Early Access grant that changes this anymore. Launch mode
+  // uses nav.launch (not nav.main) so desktop and mobile show the exact
+  // same primary navigation — see Header.tsx.
   const primaryNavigation = PRELAUNCH_MODE
     ? prelaunchNavigation
-    : nav.main;
+    : nav.launch;
 
   useEffect(() => {
     if (open) {

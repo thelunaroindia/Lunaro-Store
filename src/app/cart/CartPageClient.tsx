@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { formatMoney } from '@/lib/utils';
-import { payments, prepaidIncentive } from '@/lib/config';
+import { payments, prepaidIncentive, PRELAUNCH_MODE } from '@/lib/config';
 import { applyDiscount } from '@/actions/cart';
 import { Button } from '@/components/ui/Button';
 import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
@@ -90,7 +90,7 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
           </div>
           <div className="flex justify-between text-mist">
             <span>Shipping</span>
-            <span>Calculated at checkout</span>
+            <span>{PRELAUNCH_MODE ? 'Calculated at checkout' : 'Free'}</span>
           </div>
           <div className="flex justify-between border-t border-graphite pt-2 text-lunar">
             <span>Total</span>

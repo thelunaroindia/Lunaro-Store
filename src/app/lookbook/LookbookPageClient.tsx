@@ -79,6 +79,14 @@ export default function LookbookPageClient() {
 
   const isAvailable = !PRELAUNCH_MODE;
 
+  // Prefer a direct PDP link when this look has a confirmed product
+  // mapping (assetManifest.ts → lookbookFull[].productHandle); otherwise
+  // fall back to the existing collection/shop route. Never fabricated —
+  // every look's productHandle is null until a real mapping is set.
+  const shopHref = look.productHandle
+    ? `/products/${look.productHandle}`
+    : currentLookDetails.shopHref;
+
   const displayCaption = currentLookDetails.caption;
 
   const transmissionStatus =
@@ -195,7 +203,7 @@ export default function LookbookPageClient() {
 
         {isAvailable ? (
           <Link
-            href={currentLookDetails.shopHref}
+            href={shopHref}
             className="mt-4 w-fit text-eyebrow uppercase tracking-wider2 text-lunar link-underline"
           >
             Shop This Look

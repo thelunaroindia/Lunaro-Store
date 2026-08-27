@@ -68,7 +68,13 @@ export const brandLines = {
 export const contact = {
   brandName: 'LUNARO',
   contactPerson: 'Mayank Yadav',
-  email: 'thelunaroindia@gmail.com',
+  // The single, real customer-facing support address — standardized here
+  // per explicit direction so /contact, /shipping-returns, the Footer, and
+  // the contact form's delivery fallback (see src/app/api/contact/route.ts)
+  // all resolve from one place. Applies in both PRELAUNCH_MODE states,
+  // since /contact is already live during prelaunch and must show the real
+  // current support identity, not a retired address.
+  email: 'care@lunaro.in',
   phone: '+91 98118 31900',
   whatsapp: '+91 98118 31900',
   instagram: '@lunarohq',
@@ -82,6 +88,19 @@ export const nav = {
     { label: 'Shop', href: '/shop' },
     { label: 'New Drop', href: '/new-drop' },
     { label: 'Collections', href: '/collections' },
+    { label: 'World', href: '/about' },
+  ],
+  // Launch-mode-only primary navigation — reconciles desktop (Header.tsx)
+  // and mobile (MobileMenu.tsx) onto one identical list once PRELAUNCH_MODE
+  // is false. Kept separate from `main` (which today's live prelaunch
+  // desktop header already renders unconditionally) so this never touches
+  // current prelaunch nav. Adds Lookbook, which `main` doesn't have. No
+  // `/t-shirts` route exists, so Collections stands in for it.
+  launch: [
+    { label: 'Shop', href: '/shop' },
+    { label: 'New Drop', href: '/new-drop' },
+    { label: 'Collections', href: '/collections' },
+    { label: 'Lookbook', href: '/lookbook' },
     { label: 'World', href: '/about' },
   ],
   utility: [

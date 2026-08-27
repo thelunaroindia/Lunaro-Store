@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { SectionHeading } from '@/components/ui/Eyebrow';
 import { LinkButton } from '@/components/ui/Button';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
@@ -123,20 +124,17 @@ export default function LookbookPreview() {
             <div className="mt-14 flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {assetManifest.lookbookPreview.map((asset, index) => {
                 const ready = hasPublicAsset(asset.desktopPath);
+                const caption = liveCaptions[index] ?? 'LUNARO lookbook';
+                const tileClassName =
+                  'group relative aspect-[3/4] w-[82vw] shrink-0 snap-start media-rounded bg-charcoal sm:w-[46vw] lg:w-[28vw] lg:max-w-[420px]';
 
-                return (
-                  <div
-                    key={asset.desktopPath}
-                    className="group relative aspect-[3/4] w-[82vw] shrink-0 snap-start media-rounded bg-charcoal sm:w-[46vw] lg:w-[28vw] lg:max-w-[420px]"
-                  >
+                const tileContent = (
+                  <>
                     <div className="h-full w-full transition-transform duration-[1200ms] ease-lunar group-hover:scale-[1.04]">
                       {ready ? (
                         <Image
                           src={`/${asset.desktopPath}`}
-                          alt={
-                            liveCaptions[index] ??
-                            'LUNARO lookbook'
-                          }
+                          alt={caption}
                           fill
                           sizes="(min-width: 1024px) 28vw, (min-width: 640px) 46vw, 82vw"
                           className="object-cover"
@@ -150,9 +148,41 @@ export default function LookbookPreview() {
                     </div>
 
                     <p className="absolute bottom-3 left-3 text-xs uppercase tracking-wider2 text-lunar">
-                      {liveCaptions[index]}
+                      {caption}
                     </p>
-                  </div>
+
+                    {/* Only rendered when this tile has a confirmed
+                        product mapping (assetManifest.ts →
+                        lookbookPreview[].productHandle) — never a
+                        fabricated destination. Null today for every tile,
+                        so this CTA doesn't appear yet. */}
+                    {asset.productHandle && (
+                      <p className="absolute bottom-3 right-3 text-[10px] uppercase tracking-wider2 text-mist link-underline">
+                        Shop This Look
+                      </p>
+                    )}
+                  </>
+                );
+
+                // No product mapping yet — retain today's exact behavior
+                // (a plain, unlinked tile) rather than inventing a fallback
+                // destination for a homepage teaser tile.
+                if (!asset.productHandle) {
+                  return (
+                    <div key={asset.desktopPath} className={tileClassName}>
+                      {tileContent}
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={asset.desktopPath}
+                    href={`/products/${asset.productHandle}`}
+                    className={tileClassName}
+                  >
+                    {tileContent}
+                  </Link>
                 );
               })}
             </div>

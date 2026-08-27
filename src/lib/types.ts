@@ -23,6 +23,7 @@ export type ProductVariant = {
   title: string;
   availableForSale: boolean;
   quantityAvailable: number | null;
+  sku?: string | null;
   price: Money;
   compareAtPrice: Money | null;
   selectedOptions: { name: string; value: string }[];
@@ -43,6 +44,15 @@ export type Product = {
   images: ShopifyImage[];
   variants: ProductVariant[];
   seo: { title: string | null; description: string | null };
+
+  // Additive fields for launch-mode features — always default to an empty
+  // array / null when Shopify has nothing configured, never fabricated.
+  collections?: { handle: string; title: string }[];
+  // Sourced from a Shopify metafield (namespace "custom", key
+  // "model_sizing") if one is ever configured on a product. No product has
+  // this set today, so it's always null until Shopify Admin data exists —
+  // never an invented measurement.
+  modelSizing?: string | null;
 };
 
 export type ProductCardData = Pick<
@@ -67,6 +77,7 @@ export type ProductCardData = Pick<
   filterOptions?: ProductOption[];
 
   filterVariants?: {
+    id: string;
     availableForSale: boolean;
     selectedOptions: {
       name: string;

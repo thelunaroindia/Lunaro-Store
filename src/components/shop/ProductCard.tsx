@@ -1,10 +1,21 @@
 'use client';
 
+import { useMemo, useState, useTransition } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/utils';
 import { cleanProductTitle } from '@/lib/productTitle';
 import { useWishlist } from '@/context/WishlistContext';
+import { useCartUI } from '@/context/CartUIContext';
+import { addToCart } from '@/actions/cart';
+import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
+import {
+  findMatchingVariant,
+  getInitialQuickAddSelection,
+  isRealOption,
+  isValueAvailable,
+  singlePurchasableVariant,
+} from '@/lib/variantMatch';
 import { CinematicPlaceholder } from '@/components/ui/CinematicPlaceholder';
 import type { ProductCardData } from '@/lib/types';
 
@@ -12,12 +23,86 @@ export default function ProductCard({
   product,
   priority = false,
   size = 'default',
+  showQuickAdd = false,
 }: {
   product: ProductCardData;
   priority?: boolean;
   size?: 'default' | 'large';
+  // Launch-mode-only conversion feature — see src/lib/variantMatch.ts.
+  // Defaults to false so every existing call site (RelatedProducts,
+  // /shop, /collections, /new-drop grids) renders exactly as before.
+  showQuickAdd?: boolean;
 }) {
   const { has, toggle } = useWishlist();
+  const { setCart, open: openCart } = useCartUI();
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [selected, setSelected] = useState<Record<string, string>>({});
+  const [feedback, setFeedback] = useState<'idle' | 'success' | 'error'>('idle');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [isPending, startTransition] = useTransition();
+
+  const filterVariants = useMemo(
+    () => product.filterVariants ?? [],
+    [product.filterVariants]
+  );
+  const visibleOptions = (product.filterOptions ?? []).filter(isRealOption);
+  const anyPurchasable = filterVariants.some((v) => v.availableForSale);
+  const singleVariant = singlePurchasableVariant(filterVariants);
+
+  const activeVariant = useMemo(
+    () => findMatchingVariant(filterVariants, selected),
+    [filterVariants, selected]
+  );
+
+  function runAdd(variantId: string) {
+    if (isPending) return;
+    setFeedback('idle');
+
+    startTransition(async () => {
+      const result = await addToCart(variantId, 1);
+
+      if (result.ok) {
+        trackEvent('add_to_cart', {
+          product_id: product.id,
+          product_handle: product.handle,
+          variant_id: variantId,
+          currency: sellingPrice.currencyCode,
+          value: Number(sellingPrice.amount),
+          quantity: 1,
+          internal_test: isInternalTestProduct(product.handle),
+        });
+        setCart(result.cart);
+        openCart();
+        setFeedback('success');
+        setQuickAddOpen(false);
+      } else {
+        setFeedbackMessage(result.error);
+        setFeedback('error');
+      }
+    });
+  }
+
+  function handleQuickAddClick() {
+    if (isPending) return;
+
+    if (singleVariant) {
+      runAdd(singleVariant.id);
+      return;
+    }
+
+    if (!quickAddOpen) {
+      setSelected(getInitialQuickAddSelection(visibleOptions, filterVariants));
+      setFeedback('idle');
+      setQuickAddOpen(true);
+    } else {
+      setQuickAddOpen(false);
+    }
+  }
+
+  function handleConfirmAdd() {
+    if (isPending || !activeVariant || !activeVariant.availableForSale) return;
+    runAdd(activeVariant.id);
+  }
 
   const wishlisted = has(product.handle);
   const [front, back] = product.images;
@@ -158,6 +243,103 @@ export default function ProductCard({
           )}
         </div>
       </div>
+
+      {showQuickAdd && !isSoldOut && anyPurchasable && (
+        <div className="mt-2">
+          {!quickAddOpen && (
+            <button
+              type="button"
+              onClick={handleQuickAddClick}
+              disabled={isPending}
+              aria-label={`Quick add ${displayTitle} to cart`}
+              className="w-full border border-graphite py-2 text-[10px] uppercase tracking-wider2 text-lunar transition-colors duration-300 hover:border-lunar disabled:opacity-50"
+            >
+              {isPending
+                ? 'Adding…'
+                : feedback === 'success'
+                  ? 'Added ✓'
+                  : 'Quick Add'}
+            </button>
+          )}
+
+          {quickAddOpen && (
+            <div className="border border-graphite p-3">
+              {visibleOptions.map((option) => (
+                <fieldset key={option.name} className="mb-2 last:mb-0">
+                  <legend className="text-[9px] uppercase tracking-wider2 text-mist">
+                    {option.name}
+                  </legend>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {option.values.map((value) => {
+                      const isSelected = selected[option.name] === value;
+                      const unavailable = !isValueAvailable(
+                        filterVariants,
+                        selected,
+                        option.name,
+                        value
+                      );
+
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={isSelected}
+                          disabled={unavailable}
+                          onClick={() =>
+                            setSelected((current) => ({
+                              ...current,
+                              [option.name]: value,
+                            }))
+                          }
+                          className={`border px-2.5 py-1 text-[10px] transition-all duration-200 ${
+                            isSelected
+                              ? 'border-lunar text-lunar'
+                              : 'border-graphite text-mist hover:border-mist'
+                          } ${
+                            unavailable
+                              ? 'cursor-not-allowed opacity-30 line-through'
+                              : ''
+                          }`}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              ))}
+
+              <button
+                type="button"
+                onClick={handleConfirmAdd}
+                disabled={
+                  isPending ||
+                  !activeVariant ||
+                  !activeVariant.availableForSale
+                }
+                className="mt-1 w-full bg-lunar py-2 text-[10px] uppercase tracking-wider2 text-obsidian transition-opacity disabled:opacity-40"
+              >
+                {isPending ? 'Adding…' : 'Add to Bag'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQuickAddOpen(false)}
+                aria-label="Close quick add"
+                className="mt-2 w-full text-center text-[9px] uppercase tracking-wider2 text-mist link-underline"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {feedback === 'error' && (
+            <p className="mt-1.5 text-[10px] text-silver" role="alert">
+              {feedbackMessage}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

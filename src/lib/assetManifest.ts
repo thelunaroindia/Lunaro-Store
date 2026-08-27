@@ -65,7 +65,9 @@ export const assetManifest = {
   },
   fabricMacro: {
     purpose: 'Fabric weave/construction macro texture, no garment graphic',
-   desktopPath: 'images/fabric-macro.png',
+    // Re-exported from the original 8.0MB PNG to a ~1.1MB q88 JPEG —
+    // same dimensions/composition, launch-blocker performance fix only.
+   desktopPath: 'images/fabric-macro.jpg',
     aspectRatio: '1:1',
     fallback: 'fabric',
     placement: 'Homepage — GarmentDetails.tsx, right column',
@@ -73,16 +75,21 @@ export const assetManifest = {
   },
   aboutManifesto: {
     purpose: 'Distant silhouette / scale composition for the About manifesto',
-    desktopPath: 'images/about-manifesto.png',
+    // Re-exported from the original 4.2MB PNG to a ~0.4MB q88 JPEG — same
+    // dimensions/composition, launch-blocker performance fix only.
+    desktopPath: 'images/about-manifesto.jpg',
     aspectRatio: '4:5',
     fallback: 'manifesto',
     placement: 'About page — left column',
     replacementStatus: 'campaign',
   },
+ // `productHandle` supports per-tile "Shop This Look" PDP linking on the
+ // homepage teaser (LookbookPreview.tsx), mirroring lookbookFull below —
+ // null until a real look↔product mapping is confirmed, never fabricated.
  lookbookPreview: [
-  { index: 1, desktopPath: 'images/lookbook/arrival.png' },
-  { index: 2, desktopPath: 'images/lookbook/presence.png' },
-  { index: 3, desktopPath: 'images/lookbook/quiet-weight.png' },
+  { index: 1, desktopPath: 'images/lookbook/arrival.png', productHandle: null as string | null },
+  { index: 2, desktopPath: 'images/lookbook/presence.png', productHandle: null as string | null },
+  { index: 3, desktopPath: 'images/lookbook/quiet-weight.png', productHandle: null as string | null },
 ],
  // NOTE on index 3 (below): its image asset is a known-bad placeholder —
  // see the TODO directly on that entry. It cannot reach a customer today
@@ -91,6 +98,10 @@ export const assetManifest = {
  // pair of unrelated partial-reveal images instead) — but this array is
  // exactly what goes live the moment PRELAUNCH_MODE flips off, so index 3
  // MUST be fixed before that happens.
+ // `productHandle` supports per-look "Shop This Look" PDP linking
+ // (LookbookPageClient.tsx) — null until a real look↔product mapping is
+ // confirmed. Never fabricated: a null here means the CTA falls back to
+ // the look's collection/shop route instead of a specific product.
  lookbookFull: [
   {
     index: 1,
@@ -98,6 +109,7 @@ export const assetManifest = {
     mobilePath: 'images/lookbook/orbit.png',
     caption: 'LOOK 01 — ORBIT',
     collectionHandle: 'orbit',
+    productHandle: null as string | null,
     status: 'available',
   },
   {
@@ -106,6 +118,7 @@ export const assetManifest = {
     mobilePath: 'images/lookbook/eclipse.png',
     caption: 'LOOK 02 — ECLIPSE',
     collectionHandle: 'eclipse',
+    productHandle: null as string | null,
     status: 'available',
   },
   {
@@ -116,11 +129,14 @@ export const assetManifest = {
     // dedicated "AFTER DARK EDIT" asset (dark/monochrome/nighttime,
     // oversized LUNARO T-shirt only, no sports/jersey styling) before
     // PRELAUNCH_MODE is ever set to false. Do not launch with this asset
-    // still in place.
+    // still in place. Checked every other image already in the repo (incl.
+    // football-edit.jpg, activewear.png) — none is a valid substitute, so
+    // none was substituted here.
     desktopPath: 'images/lookbook/void.png',
     mobilePath: 'images/lookbook/void.png',
     caption: 'LOOK 03 — VOID',
     collectionHandle: 'void',
+    productHandle: null as string | null,
     status: 'available',
   },
   {
@@ -129,6 +145,7 @@ export const assetManifest = {
     mobilePath: 'images/lookbook/activewear.png',
     caption: 'LOOK 04 — ACTIVEWEAR',
     collectionHandle: 'activewear',
+    productHandle: null as string | null,
     status: 'available',
   },
 ],

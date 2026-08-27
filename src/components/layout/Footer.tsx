@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { nav, contact, site } from '@/lib/config';
-
+import { nav, contact, site, PRELAUNCH_MODE } from '@/lib/config';
 
 export default function Footer() {
   return (
@@ -9,7 +8,27 @@ export default function Footer() {
         <div>
           <p className="font-display text-3xl tracking-wider2 text-lunar">{site.name}</p>
           <p className="mt-4 max-w-xs text-sm text-mist">{site.tagline}</p>
-          
+
+          {/* Launch-mode-only — the footer itself never showed contact
+              details before this upgrade (prelaunch stays exactly as it
+              was), but once shown, it's the same real contact.email/
+              WhatsApp used on /contact — no separate identity. */}
+          {!PRELAUNCH_MODE && (
+            <div className="mt-6 space-y-2 text-sm">
+              <a
+                href={`mailto:${contact.email}`}
+                className="block text-mist link-underline"
+              >
+                {contact.email}
+              </a>
+              <a
+                href={`https://wa.me/${contact.whatsapp.replace(/\D/g, '')}`}
+                className="block text-mist link-underline"
+              >
+                WhatsApp — {contact.whatsapp}
+              </a>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">

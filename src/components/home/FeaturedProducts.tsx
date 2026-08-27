@@ -117,8 +117,8 @@ export default function FeaturedProducts({
     <section className="border-t border-graphite pt-28 pb-24 md:pt-32 md:pb-32">
       <div className="container-lunaro">
         <Reveal className="flex flex-wrap items-end justify-between gap-6">
-          <SectionHeading eyebrow="The Collection">
-            FORM IN FOCUS
+          <SectionHeading eyebrow="Drop 001">
+            LATEST DROP
           </SectionHeading>
 
           <LinkButton href="/shop" variant="underline">
@@ -129,7 +129,7 @@ export default function FeaturedProducts({
         <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-4 lg:gap-x-8">
           {products.map((product, index) => (
             <Reveal key={product.id} delay={0.05 + index * 0.06}>
-              <ProductCard product={product} priority={index === 0} />
+              <ProductCard product={product} priority={index === 0} showQuickAdd />
             </Reveal>
           ))}
         </div>

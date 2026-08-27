@@ -32,7 +32,7 @@ const PRODUCT_CARD_FIELDS = `
   }
   options { name values }
   variants(first: 50) {
-    nodes { availableForSale selectedOptions { name value } }
+    nodes { id availableForSale selectedOptions { name value } }
   }
 `;
 
@@ -59,11 +59,18 @@ export const PRODUCT_FULL_FIELDS = `
       id
       title
       availableForSale
+      sku
       price { ${MONEY_FIELDS} }
       compareAtPrice { ${MONEY_FIELDS} }
       selectedOptions { name value }
       image { ${IMAGE_FIELDS} }
     }
+  }
+  collections(first: 5) {
+    nodes { handle title }
+  }
+  modelSizingMetafield: metafield(namespace: "custom", key: "model_sizing") {
+    value
   }
 `;
 

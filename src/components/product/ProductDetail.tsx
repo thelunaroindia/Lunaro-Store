@@ -8,6 +8,7 @@ import ProductOptions, {
   getInitialSelectedOptions,
 } from './ProductOptions';
 import ProductAccordion from './ProductAccordion';
+import ProductJsonLd from './ProductJsonLd';
 import { cleanProductTitle } from '@/lib/productTitle';
 import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
 import type { Product } from '@/lib/types';
@@ -63,6 +64,8 @@ export default function ProductDetail({ product }: { product: Product }) {
 
   return (
     <div className="container-lunaro grid gap-12 lg:grid-cols-2">
+      <ProductJsonLd product={product} />
+
       <ProductGallery
         images={product.images}
         title={product.title}

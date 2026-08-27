@@ -29,7 +29,9 @@ export default function Header({
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+        className={`fixed inset-x-0 z-50 transition-all duration-500 ${
+          PRELAUNCH_MODE ? 'top-0' : 'top-9'
+        } ${
           scrolled
             ? 'border-b border-graphite bg-obsidian/95 shadow-[0_8px_30px_rgba(0,0,0,0.18)] backdrop-blur-xl'
             : 'border-b border-transparent bg-obsidian/20 backdrop-blur-[2px] md:bg-transparent md:backdrop-blur-none'
@@ -48,7 +50,7 @@ export default function Header({
             className="hidden items-center gap-10 md:flex"
             aria-label="Primary navigation"
           >
-            {nav.main.map((item) => (
+            {(PRELAUNCH_MODE ? nav.main : nav.launch).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
