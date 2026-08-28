@@ -111,7 +111,6 @@ export default async function HomePage() {
       <CollectionCarousel />
       <TrustStrip />
       <GarmentDetails />
-      <LookbookPreview />
       <JoinOrbit />
     </>
   );
