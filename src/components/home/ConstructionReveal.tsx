@@ -78,6 +78,20 @@ function useCalloutMotion(
   };
 }
 
+// Mobile-only phase text: unlike the desktop callouts, each phase fully
+// clears (opacity 0) before the next begins — no lingering dim state, no
+// overlapping windows — and moves only vertically (a small settle, never
+// sideways or scaled), per the mobile redesign brief.
+function useMobilePhaseText(scrollYProgress: MotionValue<number>, start: number, end: number) {
+  const opacity = useTransform(
+    scrollYProgress,
+    [start, start + 0.02, end - 0.02, end],
+    [0, 1, 1, 0]
+  );
+  const y = useTransform(scrollYProgress, [start, start + 0.02, end - 0.02, end], [14, 0, 0, -14]);
+  return { opacity, y };
+}
+
 function ConnectorLine({
   side,
   progress,
@@ -192,6 +206,54 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
 
   const finalOpacity = useTransform(scrollYProgress, [0.88, 0.95, 1], [0, 1, 1]);
 
+  // ── Mobile-only choreography ──────────────────────────────────────────
+  // A dedicated, simpler sequence (not a shrunk copy of desktop) — real-
+  // device testing showed the desktop left/right callout composition
+  // overlapping and feeling unstable on phones. Same phase order and same
+  // shared scrollYProgress/pin, but: non-overlapping phase windows, one
+  // fixed text zone below the garment, a smaller rotateY/scale range, and
+  // no measurement-line clutter. Mobile phase ranges (fractions of the
+  // mobile-height section, which is itself shorter than desktop's):
+  // 0–0.14 entry · 0.14–0.32 GSM · 0.32–0.50 Cotton · 0.50–0.68 Rib ·
+  // 0.68–0.86 Fit · 0.86–1.00 Built to Last.
+  const mRotateY = useTransform(
+    scrollYProgress,
+    [0, 0.14, 0.32, 0.5, 0.68, 0.86, 0.95, 1],
+    [0, 0, 15, 165, 170, 175, 355, 360]
+  );
+  const mScale = useTransform(
+    scrollYProgress,
+    [0, 0.14, 0.39, 0.41, 0.43, 1],
+    [0.92, 1, 1, 1.05, 1, 1]
+  );
+  const mFrontFaceOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.39, 0.41, 0.895, 0.915, 1],
+    [1, 1, 0, 0, 1, 1]
+  );
+  const mBackFaceOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.39, 0.41, 0.895, 0.915, 1],
+    [0, 0, 1, 1, 0, 0]
+  );
+  // Tighter crossfade windows than desktop (0.02 vs desktop's ~0.03/0.005)
+  // so the edge-on/thin silhouette moment reads as quick, not lingering.
+  const mSweepOpacity = useTransform(
+    scrollYProgress,
+    [0.37, 0.4, 0.43, 0.885, 0.905, 0.925],
+    [0, 1, 0, 0, 1, 0]
+  );
+  const mMacroOpacity = useTransform(scrollYProgress, [0.47, 0.5, 0.68, 0.71], [0, 1, 1, 0]);
+  const mMacroScale = useTransform(scrollYProgress, [0.47, 0.5, 0.68, 0.71], [0.1, 1, 1, 0.1]);
+
+  const mEntry = useMobilePhaseText(scrollYProgress, 0, 0.14);
+  const mGsm = useMobilePhaseText(scrollYProgress, 0.14, 0.32);
+  const mCotton = useMobilePhaseText(scrollYProgress, 0.32, 0.5);
+  const mRib = useMobilePhaseText(scrollYProgress, 0.5, 0.68);
+  const mFit = useMobilePhaseText(scrollYProgress, 0.68, 0.86);
+  const mFinalOpacity = useTransform(scrollYProgress, [0.86, 0.89, 1], [0, 1, 1]);
+  const mFinalY = useTransform(scrollYProgress, [0.86, 0.89], [14, 0]);
+
   // No `backface-visibility` here on purpose: which face shows is fully
   // decided by frontFaceOpacity/backFaceOpacity above. In testing,
   // `backface-visibility: hidden` on these images — nested one level
@@ -208,7 +270,7 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[300vh] border-t border-graphite lg:h-[400vh]"
+      className="relative h-[230vh] border-t border-graphite lg:h-[400vh]"
     >
       <div
         aria-hidden="true"
@@ -223,6 +285,7 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
           <CinematicPlaceholder variant={fallbackVariant} className="absolute inset-0" />
         )}
 
+      <div className="hidden lg:block">
         {/* Top copy */}
         <motion.div
           style={{ opacity: eyebrowMotion.opacity }}
@@ -380,6 +443,136 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
           <h3 className="font-display text-3xl text-lunar sm:text-4xl">Built to Last.</h3>
           <p className="mt-3 text-sm text-lunar">Fewer pieces. Greater intention.</p>
         </motion.div>
+      </div>
+
+        {/* ── Mobile-only tree — dedicated layout, not a shrunk desktop
+            copy. The tee stays large and centered throughout; exactly one
+            spec lives in a single fixed text zone below it. */}
+        <div className="lg:hidden">
+          {/* Entry heading — its own beat, fully clears before GSM begins */}
+          <motion.div
+            style={{ opacity: mEntry.opacity, y: mEntry.y }}
+            className="absolute inset-x-5 top-12 flex flex-col items-center text-center"
+          >
+            <p className={EYEBROW_CLASS}>Construction / 001</p>
+            <h2 className="mt-3 font-display text-2xl text-lunar">The Turntable</h2>
+          </motion.div>
+
+          {garmentReady && (
+            <div
+              style={{ perspective: '1200px' }}
+              className="absolute left-1/2 top-[42%] aspect-[1122/1402] h-[36vh] -translate-x-1/2 -translate-y-1/2"
+            >
+              <motion.div
+                style={{
+                  opacity: entryOpacity,
+                  clipPath: entryClip,
+                  rotateX: entryTiltX,
+                  rotateY: mRotateY,
+                  scale: mScale,
+                  transformStyle: 'preserve-3d',
+                  filter: 'drop-shadow(0 20px 26px rgba(0,0,0,0.55))',
+                }}
+                className="relative h-full w-full"
+              >
+                <motion.div style={{ opacity: mFrontFaceOpacity }} className="absolute inset-0">
+                  <Image
+                    src={FRONT_SRC}
+                    alt="LUNARO oversized tee — front"
+                    fill
+                    sizes="70vw"
+                    style={frontFaceStyle}
+                    className="object-contain"
+                  />
+                </motion.div>
+                <motion.div style={{ opacity: mBackFaceOpacity }} className="absolute inset-0">
+                  <Image
+                    src={BACK_SRC}
+                    alt="LUNARO oversized tee — back"
+                    fill
+                    sizes="70vw"
+                    style={backFaceStyle}
+                    className="object-contain"
+                  />
+                </motion.div>
+              </motion.div>
+
+              <motion.div
+                style={{
+                  opacity: mSweepOpacity,
+                  background:
+                    'linear-gradient(100deg, transparent 42%, rgba(255,255,255,0.30) 50%, transparent 58%)',
+                }}
+                className="pointer-events-none absolute inset-0"
+              />
+
+              {/* Collar macro — capped size, sits above the collar with a
+                  clear gap so it never collides with the fabric or the
+                  fixed text zone below. */}
+              {ready && (
+                <motion.div
+                  style={{ opacity: mMacroOpacity, scale: mMacroScale }}
+                  className="pointer-events-none absolute left-1/2 top-[-14%] h-20 w-20 -translate-x-1/2 overflow-hidden rounded-full border border-lunar/25 shadow-[0_0_0_5px_rgba(5,5,5,0.6)]"
+                >
+                  <div
+                    style={{
+                      backgroundImage: "url('/images/fabric-macro.jpg')",
+                      backgroundSize: '250% 250%',
+                      backgroundPosition: RIB_MACRO_POSITION,
+                      filter: 'brightness(1.7) contrast(1.25)',
+                    }}
+                    className="h-full w-full"
+                  />
+                </motion.div>
+              )}
+            </div>
+          )}
+
+          {/* Fixed safe text zone — every phase (GSM/Cotton/Rib/Fit/Last)
+              renders in this exact spot via CSS Grid stacking (all children
+              share one grid cell), so there is never any drift or overlap
+              between phases, and the zone's height is set by whichever
+              phase's content is tallest. Measurement-line guides are
+              intentionally omitted on mobile — the silhouette and copy
+              communicate the fit without added clutter. */}
+          <div className="absolute inset-x-5 bottom-[9%] mx-auto grid max-w-[280px] justify-items-center text-center">
+            <motion.div
+              style={{ opacity: mGsm.opacity, y: mGsm.y }}
+              className="col-start-1 row-start-1"
+            >
+              <p className="font-display text-2xl text-lunar">260 GSM</p>
+              <p className={DETAIL_CLASS}>Heavyweight structure</p>
+            </motion.div>
+            <motion.div
+              style={{ opacity: mCotton.opacity, y: mCotton.y }}
+              className="col-start-1 row-start-1"
+            >
+              <p className="font-display text-2xl text-lunar">100% Cotton</p>
+              <p className={DETAIL_CLASS}>Dense, breathable hand-feel</p>
+            </motion.div>
+            <motion.div
+              style={{ opacity: mRib.opacity, y: mRib.y }}
+              className="col-start-1 row-start-1"
+            >
+              <p className="font-display text-2xl text-lunar">2×1 Lycra Rib</p>
+              <p className={DETAIL_CLASS}>Built for shape retention</p>
+            </motion.div>
+            <motion.div
+              style={{ opacity: mFit.opacity, y: mFit.y }}
+              className="col-start-1 row-start-1"
+            >
+              <p className="font-display text-2xl text-lunar">Oversized Fit</p>
+              <p className={DETAIL_CLASS}>Relaxed drop-shoulder proportion</p>
+            </motion.div>
+            <motion.div
+              style={{ opacity: mFinalOpacity, y: mFinalY }}
+              className="col-start-1 row-start-1"
+            >
+              <h3 className="font-display text-2xl text-lunar">Built to Last.</h3>
+              <p className="mt-2 text-sm text-lunar">Fewer pieces. Greater intention.</p>
+            </motion.div>
+          </div>
+        </div>
       </div>
 
       {/* Screen-reader / no-JS content parity — the choreographed stage
