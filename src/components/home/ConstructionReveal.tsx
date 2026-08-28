@@ -270,7 +270,7 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
   return (
     <section
       ref={sectionRef}
-      className="relative h-[230vh] border-t border-graphite lg:h-[400vh]"
+      className="relative h-[185vh] border-t border-graphite lg:h-[330vh]"
     >
       <div
         aria-hidden="true"
