@@ -19,6 +19,7 @@ const PRODUCT_CARD_FIELDS = `
   title
   availableForSale
   tags
+  productType
   priceRange {
     minVariantPrice { ${MONEY_FIELDS} }
     maxVariantPrice { ${MONEY_FIELDS} }

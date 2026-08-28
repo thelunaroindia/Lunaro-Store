@@ -31,6 +31,7 @@ function fallbackProducts(): ProductCardData[] {
     title: p.title,
     availableForSale: true,
     tags: i === 0 ? ['limited'] : [],
+    productType: '',
     priceRange: {
       minVariantPrice: { amount: String(p.price), currencyCode: 'INR' },
       maxVariantPrice: { amount: String(p.price), currencyCode: 'INR' },
@@ -67,18 +68,17 @@ export default async function HomePage() {
   // Transmission → Collections → Trust Strip → Garment Details → Lookbook
   // → Newsletter. AnnouncementBar renders sitewide from layout.tsx, above
   // Header, so it isn't listed here.
-  let products: ProductCardData[] = [];
+  let realProducts: ProductCardData[] = [];
 
   if (isShopifyConfigured()) {
-    products = await getProducts({ first: 8, query: 'tag:drop-001' }).catch(() => []);
+    realProducts = await getProducts({ first: 8, query: 'tag:drop-001' }).catch(() => []);
 
-    if (products.length === 0) {
-      products = await getProducts({ first: 8 }).catch(() => []);
+    if (realProducts.length === 0) {
+      realProducts = await getProducts({ first: 8 }).catch(() => []);
     }
   }
-  if (products.length === 0) {
-    products = fallbackProducts();
-  }
+
+  const products = realProducts.length > 0 ? realProducts : fallbackProducts();
 
   const featured = products.slice(0, 4);
   const shownHandles = new Set(featured.map((p) => p.handle));
@@ -92,13 +92,22 @@ export default async function HomePage() {
   // (MostWanted returns null on empty) rather than forcing duplicates.
   bestSellers = bestSellers.filter((p) => !shownHandles.has(p.handle)).slice(0, 4);
 
+  // FirstTransmission's featured-spotlight product: first available real
+  // product from Latest Drop, else first available real product from Most
+  // Wanted, else none. `realProducts` (never the synthetic fallback catalogue)
+  // and `bestSellers` (always real — MostWanted never gets fallback data) are
+  // the only candidates, so the spotlight either shows a genuine Shopify
+  // product or the section hides itself — it never fabricates one.
+  const spotlightProduct =
+    [...realProducts, ...bestSellers].find((p) => p.availableForSale) ?? null;
+
   return (
     <>
       <PageIntro />
       <Hero />
       <FeaturedProducts products={featured} />
       <MostWanted products={bestSellers} />
-      <FirstTransmission featured={products[0] ?? null} />
+      <FirstTransmission featured={spotlightProduct} />
       <CollectionCarousel />
       <TrustStrip />
       <GarmentDetails />

@@ -57,7 +57,7 @@ export type Product = {
 
 export type ProductCardData = Pick<
   Product,
-  'id' | 'handle' | 'title' | 'availableForSale' | 'priceRange' | 'images'
+  'id' | 'handle' | 'title' | 'availableForSale' | 'priceRange' | 'images' | 'productType'
 > & {
   tags: string[];
 

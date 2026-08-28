@@ -19,6 +19,7 @@ function fallbackProducts(): ProductCardData[] {
     title: product.title,
     availableForSale: true,
     tags: [],
+    productType: '',
     priceRange: {
       minVariantPrice: {
         amount: String(product.price),
