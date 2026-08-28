@@ -33,6 +33,12 @@ const prelaunchConstructionFacts: ConstructionFact[] = [
 export default function GarmentDetails() {
   const asset = assetManifest.fabricMacro;
   const ready = hasPublicAsset(asset.desktopPath);
+  // Separate readiness check for the Turntable's hero garment cutouts —
+  // decoupled from `ready` (which only reflects fabric-macro.jpg) so a
+  // missing garment asset can never render a broken image, and vice versa.
+  const garmentReady =
+    hasPublicAsset('images/lunaro-front-transparent.png') &&
+    hasPublicAsset('images/lunaro-back-transparent.png');
 
   if (PRELAUNCH_MODE) {
     return (
@@ -93,6 +99,7 @@ export default function GarmentDetails() {
   return (
     <ConstructionReveal
       ready={ready}
+      garmentReady={garmentReady}
       desktopPath={asset.desktopPath}
       fallbackVariant={asset.fallback}
     />

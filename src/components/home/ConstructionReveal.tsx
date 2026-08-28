@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
+import Image from 'next/image';
 import clsx from 'clsx';
 import {
   motion,
@@ -15,157 +16,199 @@ import type { AssetEntry } from '@/lib/assetManifest';
 
 type Props = {
   ready: boolean;
+  garmentReady: boolean;
   desktopPath: string;
   fallbackVariant: AssetEntry['fallback'];
 };
 
-// How far (as a fraction of the whole section's scroll progress) adjacent
-// phases overlap so one visibly crosses through the other, instead of a
-// hard cut. Kept small and constant for both breakpoints — the "no
-// simultaneous cross-depth layers" simplification on mobile comes from the
-// layout (centered/stacked vs. off-axis) below, not from this timing value.
-const OVERLAP = 0.035;
+const FRONT_SRC = '/images/lunaro-front-transparent.png';
+const BACK_SRC = '/images/lunaro-back-transparent.png';
 
-// Real, confirmed facts only — see lib/config.ts → fabricDetails (260 GSM,
-// 100% Cotton, 2×1 Lycra Rib, Oversized Fit) and the pre-existing "Built to
-// Last" / "Fewer pieces. Greater intention." brand statements already used
-// site-wide. `detail` lines describe those same facts, not new claims.
+// The real rib-seam crop of fabric-macro.jpg, empirically chosen (visually
+// confirmed to land on the bright seam highlight, not a plain weave patch).
+const RIB_MACRO_POSITION = '45% 12%';
+
+// Real, confirmed facts only — lib/config.ts → fabricDetails (260 GSM, 100%
+// Cotton, 2×1 Lycra Rib, Oversized Fit) plus the pre-existing "Built to
+// Last" / "Fewer pieces. Greater intention." brand statements.
 const STATIC_FACTS = [
-  { value: '260 GSM', detail: 'Heavyweight structure', fabricPosition: '30% 20%' },
-  { value: '100% Cotton', detail: 'Dense, breathable hand-feel', fabricPosition: '70% 60%' },
-  { value: '2×1 Lycra Rib', detail: 'Built for shape retention', fabricPosition: '45% 12%' },
-  { value: 'Oversized Fit', detail: 'Relaxed drop-shoulder proportion', fabricPosition: '15% 80%' },
-  { value: 'Built to Last', detail: null, fabricPosition: '' },
+  { value: '260 GSM', detail: 'Heavyweight structure' },
+  { value: '100% Cotton', detail: 'Dense, breathable hand-feel' },
+  { value: '2×1 Lycra Rib', detail: 'Built for shape retention' },
+  { value: 'Oversized Fit', detail: 'Relaxed drop-shoulder proportion' },
 ] as const;
 
-// Fabric-clipped typography: the real macro image (or, if it's ever missing,
-// a plain solid fill — never a fabricated texture) becomes the glyph fill
-// itself via `background-clip: text`. The only thing animated per frame is
-// `scale` (a transform, GPU-compositable); `backgroundPosition` is a fixed
-// per-phase crop chosen once, never animated, per the performance direction
-// to avoid animating background-position on scroll.
-function fabricFillStyle(ready: boolean, fabricPosition: string): CSSProperties {
-  if (!ready) return {};
+const EYEBROW_CLASS = 'text-[11px] uppercase tracking-[0.4em] text-mist';
+const DETAIL_CLASS = 'mt-2 text-xs uppercase tracking-[0.3em] text-mist sm:text-sm';
+
+// One custom hook, called a fixed number of times at the top level (never
+// inside a loop/callback) — rules-of-hooks safe. `direct` skips the
+// "recede to a dim, still-present state" step (used for the last active
+// callout, which should clear straight to nothing as the section resolves
+// rather than lingering dim with nothing after it).
+function useCalloutMotion(
+  scrollYProgress: MotionValue<number>,
+  start: number,
+  end: number,
+  direct = false
+) {
+  // Both variants are always computed (fixed hook-call order/count,
+  // rules-of-hooks safe) — only the returned reference is picked by
+  // `direct`, never which hook runs.
+  const opacityRecede = useTransform(
+    scrollYProgress,
+    [start - 0.03, start, end, end + 0.03, 0.85, 0.9],
+    [0, 1, 1, 0.28, 0.28, 0]
+  );
+  const opacityDirect = useTransform(
+    scrollYProgress,
+    [start - 0.03, start, end, 0.9],
+    [0, 1, 1, 0]
+  );
+  const scaleRecede = useTransform(
+    scrollYProgress,
+    [start - 0.03, start, end + 0.03],
+    [0.94, 1, 0.94]
+  );
+  const scaleDirect = useTransform(scrollYProgress, [start - 0.03, start, end], [0.94, 1, 1]);
+
   return {
-    backgroundImage: "url('/images/fabric-macro.jpg')",
-    backgroundSize: '220% 220%',
-    backgroundPosition: fabricPosition,
-    WebkitTextFillColor: 'transparent',
-    // The source photo is a genuinely dark charcoal/black fabric — a static
-    // (not animated, so still compositor-cheap) brightness/contrast lift so
-    // the weave reads clearly as texture at glyph size instead of near-black
-    // on near-black. Never alters which pixels are shown, just their levels.
-    filter: 'brightness(1.85) contrast(1.3)',
+    opacity: direct ? opacityDirect : opacityRecede,
+    scale: direct ? scaleDirect : scaleRecede,
   };
 }
 
-function FabricGlyph({
-  children,
-  scale,
-  fabricPosition,
-  ready,
-  className,
+function ConnectorLine({
+  side,
+  progress,
 }: {
-  children: ReactNode;
-  scale: MotionValue<number>;
-  fabricPosition: string;
-  ready: boolean;
-  className?: string;
+  side: 'left' | 'right';
+  progress: MotionValue<number>;
 }) {
   return (
-    <motion.span
-      style={{ scale, ...fabricFillStyle(ready, fabricPosition) }}
-      className={clsx(
-        'inline-block font-display leading-[0.86]',
-        ready ? 'bg-clip-text text-transparent' : 'text-lunar',
-        className
-      )}
-    >
-      {children}
-    </motion.span>
+    <motion.div
+      style={{ scaleX: progress, transformOrigin: side === 'left' ? 'left' : 'right' }}
+      className="h-px w-10 bg-mist/50 lg:w-14"
+    />
   );
 }
 
-// One custom hook, called a fixed number of times at the top level (never
-// inside a loop/callback) — six explicit call sites below keep this fully
-// rules-of-hooks safe while avoiding six copies of this boilerplate.
-function usePhaseMotion(scrollYProgress: MotionValue<number>, start: number, end: number) {
-  const opacity = useTransform(
-    scrollYProgress,
-    [start - OVERLAP, start, end, end + OVERLAP],
-    [0, 1, 1, 0]
-  );
-  const clipPath = useTransform(
-    scrollYProgress,
-    [start - OVERLAP, start, end, end + OVERLAP],
-    [
-      'inset(0% 0% 0% 100%)',
-      'inset(0% 0% 0% 0%)',
-      'inset(0% 0% 0% 0%)',
-      'inset(0% 100% 0% 0%)',
-    ]
-  );
-  const x = useTransform(
-    scrollYProgress,
-    [start - OVERLAP, start, end, end + OVERLAP],
-    [48, 0, 0, -48]
-  );
-  const scale = useTransform(scrollYProgress, [start, end], [1, 1.05]);
-  return { opacity, clipPath, x, scale };
-}
-
-const EYEBROW_CLASS = 'text-[11px] uppercase tracking-[0.4em] text-mist';
-const DETAIL_CLASS = 'mt-6 text-xs uppercase tracking-[0.3em] text-mist sm:text-sm';
-
-function ConstructionSequence({ ready, fallbackVariant }: Props) {
+function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start start', 'end end'],
   });
 
-  // Manual "sticky" instead of CSS `position: sticky`: this site sets
+  // Manual "sticky" instead of CSS `position: sticky` — this site sets
   // `overflow-x: hidden` on both <html> and <body> (globals.css, sitewide
-  // horizontal-scroll guard, not something this section can change) — per
-  // the CSS overflow spec that forces `overflow-y` to compute as `auto` on
-  // both, which breaks native sticky for a container this tall (confirmed
-  // by direct measurement: the sticky child never actually pins, it just
-  // scrolls normally). Deriving an explicit before/during/after state from
-  // the same scrollYProgress and switching position: fixed only while
-  // "during" reproduces sticky's exact visual result without touching any
-  // global CSS.
+  // horizontal-scroll guard, not something this section can change), which
+  // per the CSS overflow spec forces `overflow-y` to compute as `auto` on
+  // both, breaking native sticky for a container this tall (confirmed by
+  // direct measurement in an earlier build of this section). Deriving an
+  // explicit before/during/after state from the same scrollYProgress and
+  // switching position: fixed only while "during" reproduces sticky's
+  // exact visual result without touching any global CSS.
   const [pin, setPin] = useState<'before' | 'during' | 'after'>('before');
   useMotionValueEvent(scrollYProgress, 'change', (v) => {
     const next = v <= 0 ? 'before' : v >= 1 ? 'after' : 'during';
-    // Functional form so the setState call itself is a no-op (same
-    // reference in, same reference out) on every scroll frame except the
-    // two that actually cross a boundary — not just relying on React's
-    // own bail-out, an explicit guarantee against per-frame re-renders.
     setPin((prev) => (prev === next ? prev : next));
   });
 
   // Scroll-range map (fraction of total section scroll):
-  // 0.00–0.14 intro · 0.14–0.32 260 GSM · 0.32–0.50 100% Cotton ·
-  // 0.50–0.68 2×1 Lycra Rib · 0.68–0.85 Oversized Fit · 0.85–1.00 Built to Last.
-  const intro = usePhaseMotion(scrollYProgress, 0, 0.14);
-  const gsm = usePhaseMotion(scrollYProgress, 0.14, 0.32);
-  const cotton = usePhaseMotion(scrollYProgress, 0.32, 0.5);
-  const rib = usePhaseMotion(scrollYProgress, 0.5, 0.68);
-  const fit = usePhaseMotion(scrollYProgress, 0.68, 0.85);
-  const last = usePhaseMotion(scrollYProgress, 0.85, 1);
+  // 0.00–0.12 entry · 0.12–0.30 260 GSM · 0.30–0.48 100% Cotton (front→back
+  // turn) · 0.48–0.66 2×1 Lycra Rib · 0.66–0.85 Oversized Fit ·
+  // 0.85–1.00 Built to Last.
 
-  // Restrained single scan-line, active only through the rib/seam phase.
-  const scanTop = useTransform(scrollYProgress, [0.5, 0.68], ['0%', '100%']);
-  const scanOpacity = useTransform(
+  // Entry reveal: masked/scaled arrival out of darkness, plus a slight
+  // settling tilt (rotateX only during this window).
+  const entryOpacity = useTransform(scrollYProgress, [0, 0.1], [0, 1]);
+  const entryClip = useTransform(
     scrollYProgress,
-    [0.5 - OVERLAP, 0.5, 0.68, 0.68 + OVERLAP],
-    [0, 1, 1, 0]
+    [0, 0.12],
+    ['inset(18% 18% 18% 18%)', 'inset(0% 0% 0% 0%)']
   );
+  const entryTiltX = useTransform(scrollYProgress, [0, 0.12], [8, 0]);
+
+  // The turntable: one continuous rotateY across the whole sequence.
+  // 0→20° idle drift through GSM, 20°→180° is the front→back turn during
+  // Cotton (crossing 90° = edge-on, where the backface-hidden faces swap
+  // which one is visible), holds ~180-200° through Rib/Fit, then
+  // 200°→360° returns to a front-equivalent orientation for the calm
+  // final frame — one direction throughout, like a real turntable, never
+  // reversing.
+  const rotateY = useTransform(
+    scrollYProgress,
+    [0, 0.12, 0.3, 0.48, 0.66, 0.85, 0.95, 1],
+    [0, 0, 20, 180, 190, 200, 360, 360]
+  );
+  const garmentScale = useTransform(
+    scrollYProgress,
+    [0, 0.12, 0.3, 0.39, 0.48, 0.66, 0.85, 0.95, 1],
+    [0.85, 1, 1, 1.12, 1.05, 1.05, 0.92, 1, 1]
+  );
+  const pedestalScale = useTransform(garmentScale, [0.85, 1.12], [0.85, 1.1]);
+
+  // Which face is actually showing: computed explicitly from the same
+  // scrollYProgress driving rotateY, rather than relied on CSS
+  // backface-visibility alone (which proved unreliable in testing for a
+  // flat, transparent-PNG "face" with no real depth) — this crossfade is
+  // the true source of truth for which image is visible; the static
+  // backface-visibility/rotateY(180deg) styling below is kept only as a
+  // harmless defensive fallback. Timed to the exact scroll fraction where
+  // rotateY crosses 90°/270° (edge-on) given the keyframes above.
+  const frontFaceOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.36, 0.39, 0.89, 0.895, 1],
+    [1, 1, 0, 0, 1, 1]
+  );
+  const backFaceOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.36, 0.39, 0.89, 0.895, 1],
+    [0, 0, 1, 1, 0, 0]
+  );
+
+  // A single soft highlight sweep, appearing only at the two moments the
+  // garment is edge-on to the viewer (the front→back turn, then the
+  // return turn near the end) — sells "light catching the fabric as it
+  // turns" rather than a flat card-flip.
+  const sweepOpacity = useTransform(
+    scrollYProgress,
+    [0.34, 0.39, 0.44, 0.86, 0.9, 0.94],
+    [0, 1, 0, 0, 1, 0]
+  );
+
+  const eyebrowMotion = useCalloutMotion(scrollYProgress, 0, 0.12);
+  const gsm = useCalloutMotion(scrollYProgress, 0.12, 0.3);
+  const cotton = useCalloutMotion(scrollYProgress, 0.3, 0.48);
+  const rib = useCalloutMotion(scrollYProgress, 0.48, 0.66);
+  const fit = useCalloutMotion(scrollYProgress, 0.66, 0.85, true);
+
+  const macroScale = useTransform(scrollYProgress, [0.45, 0.48, 0.66, 0.69], [0.1, 1, 1, 0.1]);
+  const macroOpacity = useTransform(scrollYProgress, [0.45, 0.48, 0.66, 0.69], [0, 1, 1, 0]);
+
+  const measureScale = useTransform(scrollYProgress, [0.66, 0.71, 0.85, 0.88], [0, 1, 1, 0]);
+  const measureOpacity = useTransform(scrollYProgress, [0.66, 0.71, 0.85, 0.88], [0, 1, 1, 0]);
+
+  const finalOpacity = useTransform(scrollYProgress, [0.88, 0.95, 1], [0, 1, 1]);
+
+  // No `backface-visibility` here on purpose: which face shows is fully
+  // decided by frontFaceOpacity/backFaceOpacity above. In testing,
+  // `backface-visibility: hidden` on these images — nested one level
+  // inside the opacity wrapper — unpredictably suppressed paint of the
+  // face that opacity said should be visible (a real Chrome 3D-context
+  // quirk with intermediate untransformed elements, not spec behavior).
+  // The static rotateY(180deg) below is still required so the back
+  // image's content reads right-side-up rather than mirrored once shown.
+  const frontFaceStyle: CSSProperties = {};
+  const backFaceStyle: CSSProperties = {
+    transform: 'rotateY(180deg)',
+  };
 
   return (
     <section
       ref={sectionRef}
-      className="relative h-[380vh] border-t border-graphite lg:h-[560vh]"
+      className="relative h-[300vh] border-t border-graphite lg:h-[400vh]"
     >
       <div
         aria-hidden="true"
@@ -176,205 +219,249 @@ function ConstructionSequence({ ready, fallbackVariant }: Props) {
           pin === 'after' && 'absolute bottom-0'
         )}
       >
-        {!ready && (
+        {!garmentReady && (
           <CinematicPlaceholder variant={fallbackVariant} className="absolute inset-0" />
         )}
 
-        {/* Intro */}
+        {/* Top copy */}
         <motion.div
-          style={{ opacity: intro.opacity, clipPath: intro.clipPath, x: intro.x }}
-          className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center lg:items-start lg:px-20 lg:text-left"
+          style={{ opacity: eyebrowMotion.opacity }}
+          className="absolute inset-x-0 top-14 flex flex-col items-center text-center lg:top-20"
         >
           <p className={EYEBROW_CLASS}>Construction / 001</p>
-          <h2 className="mt-5 max-w-3xl font-display text-4xl leading-[0.95] text-lunar sm:text-6xl lg:text-7xl">
-            Built from the fabric up.
+          <h2 className="mt-3 font-display text-3xl text-lunar sm:text-4xl">
+            The Turntable
           </h2>
         </motion.div>
 
-        {/* Phase 01 — 260 GSM */}
+        {/* Pedestal — a soft ambient glow, never a literal disc */}
         <motion.div
-          style={{ opacity: gsm.opacity, clipPath: gsm.clipPath, x: gsm.x }}
-          className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center lg:items-start lg:px-20 lg:text-left"
+          style={{ scale: pedestalScale }}
+          className="absolute left-1/2 top-[68%] h-16 w-56 -translate-x-1/2 rounded-[100%] bg-[radial-gradient(ellipse,rgba(255,255,255,0.10),transparent_70%)] blur-md sm:top-[70%] sm:h-20 sm:w-72"
+        />
+
+        {/* Garment stage */}
+        {garmentReady && (
+          <div
+            style={{ perspective: '1600px' }}
+            className="absolute left-1/2 top-1/2 aspect-[1122/1402] h-[52vh] -translate-x-1/2 -translate-y-1/2 sm:h-[58vh] lg:h-[66vh]"
+          >
+            <motion.div
+              style={{
+                opacity: entryOpacity,
+                clipPath: entryClip,
+                rotateX: entryTiltX,
+                rotateY,
+                scale: garmentScale,
+                transformStyle: 'preserve-3d',
+                filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.55))',
+              }}
+              className="relative h-full w-full"
+            >
+              <motion.div style={{ opacity: frontFaceOpacity }} className="absolute inset-0">
+                <Image
+                  src={FRONT_SRC}
+                  alt="LUNARO oversized tee — front"
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 70vw"
+                  style={frontFaceStyle}
+                  className="object-contain"
+                />
+              </motion.div>
+              <motion.div style={{ opacity: backFaceOpacity }} className="absolute inset-0">
+                <Image
+                  src={BACK_SRC}
+                  alt="LUNARO oversized tee — back"
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 70vw"
+                  style={backFaceStyle}
+                  className="object-contain"
+                />
+              </motion.div>
+            </motion.div>
+
+            {/* Light sweep — only visible at the two edge-on turn moments */}
+            <motion.div
+              style={{
+                opacity: sweepOpacity,
+                background:
+                  'linear-gradient(100deg, transparent 42%, rgba(255,255,255,0.30) 50%, transparent 58%)',
+              }}
+              className="pointer-events-none absolute inset-0"
+            />
+
+            {/* Collar macro inspection window — real fabric-macro.jpg, never
+                a digital zoom of the low-res garment PNG. */}
+            {ready && (
+              <motion.div
+                style={{ opacity: macroOpacity, scale: macroScale }}
+                className="pointer-events-none absolute left-[54%] top-[10%] h-28 w-28 -translate-x-1/2 overflow-hidden rounded-full border border-lunar/25 shadow-[0_0_0_6px_rgba(5,5,5,0.6)] lg:h-40 lg:w-40"
+              >
+                <div
+                  style={{
+                    backgroundImage: "url('/images/fabric-macro.jpg')",
+                    backgroundSize: '250% 250%',
+                    backgroundPosition: RIB_MACRO_POSITION,
+                    filter: 'brightness(1.7) contrast(1.25)',
+                  }}
+                  className="h-full w-full"
+                />
+              </motion.div>
+            )}
+
+            {/* Measurement guides — Oversized Fit only, three hairlines max */}
+            <motion.div
+              style={{ opacity: measureOpacity }}
+              className="pointer-events-none absolute inset-0"
+            >
+              <motion.div
+                style={{ scaleX: measureScale }}
+                className="absolute inset-x-[8%] top-[16%] h-px bg-mist/40"
+              />
+              <motion.div
+                style={{ scaleX: measureScale }}
+                className="absolute inset-x-[-2%] top-[34%] h-px bg-mist/30"
+              />
+              <motion.div
+                style={{ scaleX: measureScale }}
+                className="absolute inset-x-[4%] bottom-[6%] h-px bg-mist/40"
+              />
+            </motion.div>
+          </div>
+        )}
+
+        {/* 260 GSM — left */}
+        <motion.div
+          style={{ opacity: gsm.opacity, scale: gsm.scale }}
+          className="absolute inset-x-6 bottom-[26%] flex flex-col items-center text-center lg:inset-x-auto lg:left-10 lg:top-[38%] lg:items-start lg:text-left xl:left-20"
         >
-          <span className={EYEBROW_CLASS}>01</span>
-          <FabricGlyph
-            scale={gsm.scale}
-            fabricPosition="30% 20%"
-            ready={ready}
-            className="mt-2 text-[4.5rem] sm:text-[7rem] lg:text-[11rem]"
-          >
-            260
-          </FabricGlyph>
-          <FabricGlyph
-            scale={gsm.scale}
-            fabricPosition="30% 20%"
-            ready={ready}
-            className="text-[2.75rem] sm:text-[4.5rem] lg:text-[7rem]"
-          >
-            GSM
-          </FabricGlyph>
+          <p className="font-display text-2xl text-lunar sm:text-3xl">260 GSM</p>
           <p className={DETAIL_CLASS}>Heavyweight structure</p>
+          <div className="mt-3 hidden lg:block">
+            <ConnectorLine side="left" progress={gsm.opacity} />
+          </div>
         </motion.div>
 
-        {/* Phase 02 — 100% Cotton */}
+        {/* 100% Cotton — right */}
         <motion.div
-          style={{ opacity: cotton.opacity, clipPath: cotton.clipPath, x: cotton.x }}
-          className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center lg:items-end lg:px-20 lg:text-right"
+          style={{ opacity: cotton.opacity, scale: cotton.scale }}
+          className="absolute inset-x-6 bottom-[21%] flex flex-col items-center text-center lg:inset-x-auto lg:right-10 lg:top-[52%] lg:items-end lg:text-right xl:right-20"
         >
-          <span className={EYEBROW_CLASS}>02</span>
-          <FabricGlyph
-            scale={cotton.scale}
-            fabricPosition="70% 60%"
-            ready={ready}
-            className="mt-2 text-[3.75rem] sm:text-[6rem] lg:text-[9rem]"
-          >
-            100%
-          </FabricGlyph>
-          <FabricGlyph
-            scale={cotton.scale}
-            fabricPosition="70% 60%"
-            ready={ready}
-            className="text-[3.25rem] sm:text-[5rem] lg:text-[7.5rem]"
-          >
-            COTTON
-          </FabricGlyph>
+          <p className="font-display text-2xl text-lunar sm:text-3xl">100% Cotton</p>
           <p className={DETAIL_CLASS}>Dense, breathable hand-feel</p>
+          <div className="mt-3 hidden lg:block">
+            <ConnectorLine side="right" progress={cotton.opacity} />
+          </div>
         </motion.div>
 
-        {/* Phase 03 — 2×1 Lycra Rib (technical / scan) */}
+        {/* 2×1 Lycra Rib — left, near the macro window */}
         <motion.div
-          style={{ opacity: rib.opacity, clipPath: rib.clipPath, x: rib.x }}
-          className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center lg:items-start lg:px-20 lg:text-left"
+          style={{ opacity: rib.opacity, scale: rib.scale }}
+          className="absolute inset-x-6 bottom-[16%] flex flex-col items-center text-center lg:inset-x-auto lg:left-10 lg:top-[16%] lg:items-start lg:text-left xl:left-20"
         >
-          <span className={EYEBROW_CLASS}>03</span>
-          <FabricGlyph
-            scale={rib.scale}
-            fabricPosition="45% 12%"
-            ready={ready}
-            className="mt-2 text-[3.75rem] sm:text-[5.5rem] lg:text-[8.5rem]"
-          >
-            2×1
-          </FabricGlyph>
-          <FabricGlyph
-            scale={rib.scale}
-            fabricPosition="45% 12%"
-            ready={ready}
-            className="text-[2.5rem] sm:text-[4rem] lg:text-[6.5rem]"
-          >
-            LYCRA RIB
-          </FabricGlyph>
+          <p className="font-display text-2xl text-lunar sm:text-3xl">2×1 Lycra Rib</p>
           <p className={DETAIL_CLASS}>Built for shape retention</p>
         </motion.div>
 
+        {/* Oversized Fit — right */}
         <motion.div
-          aria-hidden="true"
-          style={{ top: scanTop, opacity: scanOpacity }}
-          className="pointer-events-none absolute inset-x-10 h-px bg-lunar/30 lg:inset-x-20 lg:bg-lunar/50"
-        />
-
-        {/* Phase 04 — Oversized Fit (architectural / spatial) */}
-        <motion.div
-          style={{ opacity: fit.opacity, clipPath: fit.clipPath, x: fit.x }}
-          className="absolute inset-0 flex flex-col items-center justify-center gap-6 px-6 text-center lg:block lg:px-20"
+          style={{ opacity: fit.opacity, scale: fit.scale }}
+          className="absolute inset-x-6 bottom-[11%] flex flex-col items-center text-center lg:inset-x-auto lg:right-10 lg:top-[24%] lg:items-end lg:text-right xl:right-20"
         >
-          <div className="lg:absolute lg:right-20 lg:top-20 lg:text-right">
-            <span className={EYEBROW_CLASS}>04</span>
-            <FabricGlyph
-              scale={fit.scale}
-              fabricPosition="15% 80%"
-              ready={ready}
-              className="mt-2 block text-[2.75rem] sm:text-[4rem] lg:text-[5.5rem]"
-            >
-              OVERSIZED
-            </FabricGlyph>
-          </div>
-          <div className="lg:absolute lg:bottom-20 lg:left-20">
-            <FabricGlyph
-              scale={fit.scale}
-              fabricPosition="15% 80%"
-              ready={ready}
-              className="text-[4.5rem] sm:text-[6.5rem] lg:text-[12rem]"
-            >
-              FIT
-            </FabricGlyph>
-            <p className={clsx(DETAIL_CLASS, 'lg:mt-4')}>
-              Relaxed drop-shoulder proportion
-            </p>
-          </div>
+          <p className="font-display text-2xl text-lunar sm:text-3xl">Oversized Fit</p>
+          <p className={DETAIL_CLASS}>Relaxed drop-shoulder proportion</p>
         </motion.div>
 
-        {/* Phase 05 — Built to Last (calm resolution, no fabric fill) */}
+        {/* Built to Last — calm resolution */}
         <motion.div
-          style={{ opacity: last.opacity, clipPath: last.clipPath, x: last.x }}
-          className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
+          style={{ opacity: finalOpacity }}
+          className="absolute inset-x-0 bottom-10 flex flex-col items-center text-center lg:bottom-14"
         >
-          <span className={EYEBROW_CLASS}>05</span>
-          <h3 className="mt-5 font-display text-[3rem] leading-[0.92] text-lunar sm:text-[4.5rem] lg:text-[6.5rem]">
-            Built
-            <br />
-            to
-            <br />
-            Last.
-          </h3>
-          <p className="mt-8 text-sm text-lunar">Fewer pieces. Greater intention.</p>
+          <h3 className="font-display text-3xl text-lunar sm:text-4xl">Built to Last.</h3>
+          <p className="mt-3 text-sm text-lunar">Fewer pieces. Greater intention.</p>
         </motion.div>
       </div>
 
-      {/* Screen-reader / no-JS content parity — the choreographed stage above
-          is decorative motion, aria-hidden; this carries the same real
-          copy in plain reading order so nothing is lost outside the visual
-          experience. */}
+      {/* Screen-reader / no-JS content parity — the choreographed stage
+          above is decorative motion, aria-hidden; this carries the same
+          real copy in plain reading order. */}
       <div className="sr-only">
-        <h2>Construction / 001. Built from the fabric up.</h2>
+        <h2>Construction / 001. The Turntable.</h2>
         {STATIC_FACTS.map((fact) => (
           <p key={fact.value}>
-            {fact.value}
-            {fact.detail ? ` — ${fact.detail}` : '.'}
+            {fact.value} — {fact.detail}
           </p>
         ))}
-        <p>Fewer pieces. Greater intention.</p>
+        <p>Built to Last. Fewer pieces. Greater intention.</p>
       </div>
     </section>
   );
 }
 
-function ConstructionStatic({ ready, fallbackVariant }: Props) {
+function ConstructionStatic({ ready, garmentReady, fallbackVariant }: Props) {
   return (
     <section className="border-t border-graphite py-16 md:py-24">
       <div className="container-lunaro">
         <p className={EYEBROW_CLASS}>Construction / 001</p>
-        <h2 className="mt-5 max-w-2xl font-display text-4xl leading-[0.95] text-lunar sm:text-5xl">
-          Built from the fabric up.
-        </h2>
+        <h2 className="mt-3 font-display text-4xl text-lunar sm:text-5xl">The Turntable</h2>
 
-        {!ready && (
+        {garmentReady ? (
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:max-w-md">
+            <div className="relative aspect-[1122/1402] w-full">
+              <Image
+                src={FRONT_SRC}
+                alt="LUNARO oversized tee — front"
+                fill
+                sizes="(min-width: 640px) 224px, 45vw"
+                className="object-contain"
+              />
+            </div>
+            <div className="relative aspect-[1122/1402] w-full">
+              <Image
+                src={BACK_SRC}
+                alt="LUNARO oversized tee — back"
+                fill
+                sizes="(min-width: 640px) 224px, 45vw"
+                className="object-contain"
+              />
+            </div>
+          </div>
+        ) : (
           <div className="relative mt-10 aspect-[4/3] w-full max-w-sm overflow-hidden media-rounded bg-charcoal">
             <CinematicPlaceholder variant={fallbackVariant} className="h-full w-full" />
           </div>
         )}
 
-        <div className="mt-10 flex flex-col gap-8">
+        {ready && (
+          <div className="mt-8 flex items-center gap-4">
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-graphite">
+              <div
+                style={{
+                  backgroundImage: "url('/images/fabric-macro.jpg')",
+                  backgroundSize: '250% 250%',
+                  backgroundPosition: RIB_MACRO_POSITION,
+                  filter: 'brightness(1.7) contrast(1.25)',
+                }}
+                className="h-full w-full"
+              />
+            </div>
+            <p className="text-xs uppercase tracking-[0.3em] text-mist">
+              2×1 Lycra Rib — construction detail
+            </p>
+          </div>
+        )}
+
+        <div className="mt-10 flex flex-col gap-6">
           {STATIC_FACTS.map((fact) => (
             <div key={fact.value} className="border-t border-graphite pt-4">
-              <p
-                style={fabricFillStyle(ready, fact.fabricPosition)}
-                className={clsx(
-                  'font-display text-3xl leading-[0.92] sm:text-4xl',
-                  ready ? 'bg-clip-text text-transparent' : 'text-lunar'
-                )}
-              >
-                {fact.value}
-              </p>
-              {fact.detail && (
-                <p className="mt-1.5 text-xs uppercase tracking-[0.3em] text-mist sm:text-sm">
-                  {fact.detail}
-                </p>
-              )}
+              <p className="font-display text-2xl text-lunar sm:text-3xl">{fact.value}</p>
+              <p className={DETAIL_CLASS}>{fact.detail}</p>
             </div>
           ))}
         </div>
 
-        <p className="mt-10 text-sm text-lunar">Fewer pieces. Greater intention.</p>
+        <p className="mt-10 font-display text-2xl text-lunar">Built to Last.</p>
+        <p className="mt-2 text-sm text-lunar">Fewer pieces. Greater intention.</p>
       </div>
     </section>
   );
