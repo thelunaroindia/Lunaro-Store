@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import {
   motion,
   useScroll,
+  useSpring,
   useTransform,
   useReducedMotion,
   useMotionValueEvent,
@@ -114,6 +115,22 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
     offset: ['start start', 'end end'],
   });
 
+  // Spring-smoothed progress — feeds ONLY the garment rotation/scale/
+  // crossfade/sweep below, never phase logic, pin state, or any text
+  // timing (those all stay on raw `scrollYProgress` so copy sync and the
+  // pin transition are unaffected). Raw scroll delta on a touch device is
+  // noisy frame-to-frame; driving `rotateY` straight from it is what read
+  // as micro-jitter/stutter on real devices. Restrained, no-bounce spring
+  // (damping high relative to stiffness — critically/over-damped, so it
+  // never overshoots or feels floaty) that still tracks scroll closely
+  // enough not to read as delayed.
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 300,
+    damping: 40,
+    mass: 0.4,
+    restDelta: 0.0005,
+  });
+
   // Manual "sticky" instead of CSS `position: sticky` — this site sets
   // `overflow-x: hidden` on both <html> and <body> (globals.css, sitewide
   // horizontal-scroll guard, not something this section can change), which
@@ -152,12 +169,12 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
   // final frame — one direction throughout, like a real turntable, never
   // reversing.
   const rotateY = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0, 0.12, 0.3, 0.48, 0.66, 0.85, 0.95, 1],
     [0, 0, 20, 180, 190, 200, 360, 360]
   );
   const garmentScale = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0, 0.12, 0.3, 0.39, 0.48, 0.66, 0.85, 0.95, 1],
     [0.85, 1, 1, 1.12, 1.05, 1.05, 0.92, 1, 1]
   );
@@ -172,12 +189,12 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
   // harmless defensive fallback. Timed to the exact scroll fraction where
   // rotateY crosses 90°/270° (edge-on) given the keyframes above.
   const frontFaceOpacity = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0, 0.36, 0.39, 0.89, 0.895, 1],
     [1, 1, 0, 0, 1, 1]
   );
   const backFaceOpacity = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0, 0.36, 0.39, 0.89, 0.895, 1],
     [0, 0, 1, 1, 0, 0]
   );
@@ -187,7 +204,7 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
   // return turn near the end) — sells "light catching the fabric as it
   // turns" rather than a flat card-flip.
   const sweepOpacity = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0.34, 0.39, 0.44, 0.86, 0.9, 0.94],
     [0, 1, 0, 0, 1, 0]
   );
@@ -217,29 +234,29 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
   // 0–0.14 entry · 0.14–0.32 GSM · 0.32–0.50 Cotton · 0.50–0.68 Rib ·
   // 0.68–0.86 Fit · 0.86–1.00 Built to Last.
   const mRotateY = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0, 0.14, 0.32, 0.5, 0.68, 0.86, 0.95, 1],
     [0, 0, 15, 165, 170, 175, 355, 360]
   );
   const mScale = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0, 0.14, 0.39, 0.41, 0.43, 1],
     [0.92, 1, 1, 1.05, 1, 1]
   );
   const mFrontFaceOpacity = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0, 0.39, 0.41, 0.895, 0.915, 1],
     [1, 1, 0, 0, 1, 1]
   );
   const mBackFaceOpacity = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0, 0.39, 0.41, 0.895, 0.915, 1],
     [0, 0, 1, 1, 0, 0]
   );
   // Tighter crossfade windows than desktop (0.02 vs desktop's ~0.03/0.005)
   // so the edge-on/thin silhouette moment reads as quick, not lingering.
   const mSweepOpacity = useTransform(
-    scrollYProgress,
+    smoothProgress,
     [0.37, 0.4, 0.43, 0.885, 0.905, 0.925],
     [0, 1, 0, 0, 1, 0]
   );
@@ -309,6 +326,21 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
             style={{ perspective: '1600px' }}
             className="absolute left-1/2 top-1/2 aspect-[1122/1402] h-[52vh] -translate-x-1/2 -translate-y-1/2 sm:h-[58vh] lg:h-[66vh]"
           >
+            {/* Contact shadow — deliberately NOT on the rotating layer.
+                An animated `filter: drop-shadow()` on an element that's
+                also doing rotateY/scale every frame forces the browser to
+                re-rasterize the blur on every frame instead of just
+                re-compositing a transform, which is what read as stutter
+                on real devices (especially iOS Safari). This is a static
+                blurred shape rasterized once; only its opacity/scale
+                (tied to the same entry/garment motion values, so it still
+                breathes with the tee) are animated, both cheap
+                compositor-only properties. */}
+            <motion.div
+              aria-hidden="true"
+              style={{ opacity: entryOpacity, scale: garmentScale }}
+              className="pointer-events-none absolute inset-x-[12%] top-[56%] h-[28%] rounded-[100%] bg-black/55 blur-2xl"
+            />
             <motion.div
               style={{
                 opacity: entryOpacity,
@@ -316,8 +348,9 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
                 rotateX: entryTiltX,
                 rotateY,
                 scale: garmentScale,
+                z: 0,
                 transformStyle: 'preserve-3d',
-                filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.55))',
+                willChange: 'transform',
               }}
               className="relative h-full w-full"
             >
@@ -326,6 +359,7 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
                   src={FRONT_SRC}
                   alt="LUNARO oversized tee — front"
                   fill
+                  priority
                   sizes="(min-width: 1024px) 40vw, 70vw"
                   style={frontFaceStyle}
                   className="object-contain"
@@ -336,6 +370,7 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
                   src={BACK_SRC}
                   alt="LUNARO oversized tee — back"
                   fill
+                  priority
                   sizes="(min-width: 1024px) 40vw, 70vw"
                   style={backFaceStyle}
                   className="object-contain"
@@ -463,6 +498,15 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
               style={{ perspective: '1200px' }}
               className="absolute left-1/2 top-[42%] aspect-[1122/1402] h-[36vh] -translate-x-1/2 -translate-y-1/2"
             >
+              {/* Contact shadow — same reasoning as desktop: kept off the
+                  rotating layer so the blur is rasterized once, not
+                  recomputed every rotation frame (the costliest part on
+                  mobile Safari in particular). */}
+              <motion.div
+                aria-hidden="true"
+                style={{ opacity: entryOpacity, scale: mScale }}
+                className="pointer-events-none absolute inset-x-[14%] top-[54%] h-[26%] rounded-[100%] bg-black/55 blur-xl"
+              />
               <motion.div
                 style={{
                   opacity: entryOpacity,
@@ -470,8 +514,9 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
                   rotateX: entryTiltX,
                   rotateY: mRotateY,
                   scale: mScale,
+                  z: 0,
                   transformStyle: 'preserve-3d',
-                  filter: 'drop-shadow(0 20px 26px rgba(0,0,0,0.55))',
+                  willChange: 'transform',
                 }}
                 className="relative h-full w-full"
               >
@@ -480,6 +525,7 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
                     src={FRONT_SRC}
                     alt="LUNARO oversized tee — front"
                     fill
+                    priority
                     sizes="70vw"
                     style={frontFaceStyle}
                     className="object-contain"
@@ -490,6 +536,7 @@ function ConstructionSequence({ ready, garmentReady, fallbackVariant }: Props) {
                     src={BACK_SRC}
                     alt="LUNARO oversized tee — back"
                     fill
+                    priority
                     sizes="70vw"
                     style={backFaceStyle}
                     className="object-contain"
