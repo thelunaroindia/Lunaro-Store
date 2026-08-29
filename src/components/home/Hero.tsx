@@ -73,15 +73,7 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className={
-        PRELAUNCH_MODE
-          ? 'relative flex h-[100svh] min-h-[640px] w-full items-end overflow-hidden bg-obsidian'
-          : // Commerce-first launch hero: real products need to be reachable
-            // within roughly one screen, so this no longer claims the full
-            // viewport — background/parallax/gradient treatment below is
-            // unchanged, only the section's own height shrinks.
-            'relative flex h-[62svh] min-h-[520px] w-full items-end overflow-hidden bg-obsidian md:h-[68vh] lg:h-[72vh]'
-      }
+      className="relative flex h-[100svh] min-h-[640px] w-full items-end overflow-hidden bg-obsidian"
     >
       <ParallaxLayer
         targetRef={sectionRef}
