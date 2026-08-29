@@ -251,14 +251,20 @@ export default function ProductCard({
               type="button"
               onClick={handleQuickAddClick}
               disabled={isPending}
-              aria-label={`Quick add ${displayTitle} to cart`}
-              className="w-full border border-graphite py-2 text-[10px] uppercase tracking-wider2 text-lunar transition-colors duration-300 hover:border-lunar disabled:opacity-50"
+              aria-label={
+                singleVariant
+                  ? `Add ${displayTitle} to cart`
+                  : `Select size for ${displayTitle}`
+              }
+              className="w-full bg-lunar py-2 text-[10px] uppercase tracking-wider2 text-obsidian transition-opacity duration-300 hover:opacity-90 disabled:opacity-40"
             >
               {isPending
                 ? 'Adding…'
                 : feedback === 'success'
                   ? 'Added ✓'
-                  : 'Quick Add'}
+                  : singleVariant
+                    ? 'Add to Cart'
+                    : 'Select Size'}
             </button>
           )}
 

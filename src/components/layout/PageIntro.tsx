@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { brandLines } from '@/lib/config';
+import { brandLines, PRELAUNCH_MODE } from '@/lib/config';
 
 const SEEN_KEY = 'lunaro_intro_seen';
 
@@ -29,6 +29,13 @@ export default function PageIntro() {
   const [dismissing, setDismissing] = useState(false);
 
   useEffect(() => {
+    // Launch-mode homepage is commerce-first — a forced first-visit splash
+    // delays every visitor from reaching real products for no reason once
+    // there's an actual store to shop. Prelaunch keeps the splash exactly
+    // as before (it's the brand's only "front door" while there's nothing
+    // to sell yet).
+    if (!PRELAUNCH_MODE) return;
+
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (prefersReducedMotion || hasSeenIntro()) {

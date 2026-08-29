@@ -73,7 +73,15 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative flex h-[100svh] min-h-[640px] w-full items-end overflow-hidden bg-obsidian"
+      className={
+        PRELAUNCH_MODE
+          ? 'relative flex h-[100svh] min-h-[640px] w-full items-end overflow-hidden bg-obsidian'
+          : // Commerce-first launch hero: real products need to be reachable
+            // within roughly one screen, so this no longer claims the full
+            // viewport — background/parallax/gradient treatment below is
+            // unchanged, only the section's own height shrinks.
+            'relative flex h-[62svh] min-h-[520px] w-full items-end overflow-hidden bg-obsidian md:h-[68vh] lg:h-[72vh]'
+      }
     >
       <ParallaxLayer
         targetRef={sectionRef}
@@ -133,7 +141,13 @@ export default function Hero() {
         <div className="h-full w-full bg-gradient-to-t from-obsidian via-obsidian/25 to-transparent" />
       </ParallaxLayer>
 
-      <div className="container-lunaro relative z-20 pb-24 pt-40 md:pb-28">
+      <div
+        className={
+          PRELAUNCH_MODE
+            ? 'container-lunaro relative z-20 pb-24 pt-40 md:pb-28'
+            : 'container-lunaro relative z-20 pb-16 pt-16 md:pb-20'
+        }
+      >
         <RevealLine
           delay={0.1}
           reduced={!!prefersReducedMotion}
@@ -142,18 +156,29 @@ export default function Hero() {
           {PRELAUNCH_MODE ? 'DROP 001' : 'DROP 001 — NOW LIVE'}
         </RevealLine>
 
-        <RevealLine
-          delay={0.22}
-          reduced={!!prefersReducedMotion}
-          className="mt-5 max-w-3xl font-display text-display-xl text-lunar"
-        >
-          LUNARO
-        </RevealLine>
+        {/* Launch mode drops the giant wordmark here entirely — the header
+            already carries the LUNARO name, and repeating it at this size
+            was costing the hero its only screen with zero product signal.
+            Prelaunch keeps this exactly as it was; it's the brand's whole
+            moment while there's nothing to sell yet. */}
+        {PRELAUNCH_MODE && (
+          <RevealLine
+            delay={0.22}
+            reduced={!!prefersReducedMotion}
+            className="mt-5 max-w-3xl font-display text-display-xl text-lunar"
+          >
+            LUNARO
+          </RevealLine>
+        )}
 
         <RevealLine
           delay={0.4}
           reduced={!!prefersReducedMotion}
-          className="mt-3 font-display text-2xl italic text-editorial md:text-3xl"
+          className={
+            PRELAUNCH_MODE
+              ? 'mt-3 font-display text-2xl italic text-editorial md:text-3xl'
+              : 'mt-5 font-display text-2xl italic text-editorial md:text-3xl'
+          }
         >
           {brandLines.primary}
         </RevealLine>
@@ -200,7 +225,10 @@ export default function Hero() {
         >
           <LinkButton
             href={PRELAUNCH_MODE ? '#notify' : '/shop'}
-            variant="ghost"
+            // Launch mode: filled/high-contrast primary CTA — a retail
+            // "Shop the Drop" moment shouldn't read as a soft ghost-outline
+            // link. Prelaunch keeps its existing ghost treatment unchanged.
+            variant={PRELAUNCH_MODE ? 'ghost' : 'primary'}
           >
             {PRELAUNCH_MODE ? 'Join the List' : 'Shop the Drop'}
           </LinkButton>

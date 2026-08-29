@@ -17,7 +17,10 @@ export default function MostWanted({
   if (products.length === 0) return null;
 
   return (
-    <section className="border-t border-graphite py-16 md:py-24">
+    // id targeted by the homepage Category Chips' "Best Sellers" chip
+    // (/#most-wanted) — a real in-page destination rather than a route that
+    // doesn't exist.
+    <section id="most-wanted" className="border-t border-graphite py-16 md:py-24">
       <div className="container-lunaro">
         <Reveal>
           <SectionHeading eyebrow="Customer Favourites">

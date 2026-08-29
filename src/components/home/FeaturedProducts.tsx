@@ -114,7 +114,10 @@ export default function FeaturedProducts({
   if (products.length === 0) return null;
 
   return (
-    <section className="border-t border-graphite pt-28 pb-24 md:pt-32 md:pb-32">
+    // Top padding intentionally much tighter than the prelaunch treatment
+    // above — this section (and Category Chips right above it) needs to put
+    // real products within roughly one screen of the Hero, not roughly two.
+    <section className="border-t border-graphite pt-8 pb-24 md:pt-10 md:pb-32">
       <div className="container-lunaro">
         <Reveal className="flex flex-wrap items-end justify-between gap-6">
           <SectionHeading eyebrow="Drop 001">
@@ -126,7 +129,7 @@ export default function FeaturedProducts({
           </LinkButton>
         </Reveal>
 
-        <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-4 lg:gap-x-8">
+        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:mt-10 lg:grid-cols-4 lg:gap-x-8">
           {products.map((product, index) => (
             <Reveal key={product.id} delay={0.05 + index * 0.06}>
               <ProductCard product={product} priority={index === 0} showQuickAdd />

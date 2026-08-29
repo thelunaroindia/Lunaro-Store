@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 import PageIntro from '@/components/layout/PageIntro';
 import Hero from '@/components/home/Hero';
+import CategoryChips from '@/components/home/CategoryChips';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 import MostWanted from '@/components/home/MostWanted';
 import FirstTransmission from '@/components/home/FirstTransmission';
@@ -64,10 +65,10 @@ export default async function HomePage() {
     );
   }
 
-  // Launch-mode homepage order: Hero → Latest Drop → Most Wanted → First
-  // Transmission → Collections → Trust Strip → Garment Details → Lookbook
-  // → Newsletter. AnnouncementBar renders sitewide from layout.tsx, above
-  // Header, so it isn't listed here.
+  // Launch-mode homepage order: Hero → Category Chips → Latest Drop → Most
+  // Wanted → First Transmission → Collections → Trust Strip → Garment
+  // Details → Lookbook → Newsletter. AnnouncementBar renders sitewide from
+  // layout.tsx, above Header, so it isn't listed here.
   let realProducts: ProductCardData[] = [];
 
   if (isShopifyConfigured()) {
@@ -105,6 +106,7 @@ export default async function HomePage() {
     <>
       <PageIntro />
       <Hero />
+      <CategoryChips />
       <FeaturedProducts products={featured} />
       <MostWanted products={bestSellers} />
       <FirstTransmission featured={spotlightProduct} />
