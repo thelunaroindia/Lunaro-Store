@@ -239,11 +239,16 @@ export const bottomsSizeGuide = {
   ],
 } as const;
 
-// Confirmed by LUNARO directly against the live Fastr dashboard config —
-// keep this as the one place that states the rate so PDP copy never drifts
-// from what Fastr actually applies at checkout. Fastr remains the source
-// of truth for the final payable amount; this is messaging only.
-export const prepaidIncentive = '5% off on prepaid orders.' as const;
+// Neutralized pending manual verification against the live Fastr merchant
+// dashboard and Shopify Admin → Settings → Payments (see the launch
+// checklist) — no code here reads back Fastr's actual configured rate, so
+// asserting a specific percentage or COD availability without confirming
+// it against those dashboards risks the customer seeing one discount here
+// and a different (or no) discount inside Fastr's checkout. Restore the
+// real, confirmed rate/condition once checked there — never a guessed
+// value. Fastr remains the source of truth for the final payable amount;
+// this is messaging only, never something this app calculates or enforces.
+export const prepaidIncentive = 'Shipping and payment options are shown at checkout.' as const;
 
 export const payments = {
   // "Pay Online" is whatever methods are enabled in Shopify Admin →
@@ -317,8 +322,12 @@ export const faqs = [
     a: 'Use the Track Order page with your order number and phone number, or the tracking link sent to you once your order ships.',
   },
   {
+    // This page isn't gated by PRELAUNCH_MODE — it's reachable right now,
+    // so this answer must never assert a specific COD/prepaid state ahead
+    // of manually confirming it in Fastr/Shopify Admin (see the launch
+    // checklist). Restore a specific, confirmed answer once verified there.
     q: 'Do you offer Cash on Delivery?',
-    a: `Cash on Delivery is available where eligible, alongside ${payments.methods.join(', ')}. ${prepaidIncentive}`,
+    a: prepaidIncentive,
   },
   {
     q: 'What is your returns policy?',

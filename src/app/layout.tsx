@@ -55,9 +55,13 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-// Fastr / Shiprocket Checkout "seller domain" — not yet supplied by Fastr,
-// so this is intentionally blank rather than a guessed value. Get the exact
-// value from Fastr and set NEXT_PUBLIC_FASTR_SELLER_DOMAIN before launch.
+// Fastr / Shiprocket Checkout "seller domain" — set via
+// NEXT_PUBLIC_FASTR_SELLER_DOMAIN (confirmed present in Vercel Production
+// and Preview). Public by design — rendered into a hidden form field on
+// every page, same as Fastr's own integration snippet. If checkout ever
+// misbehaves, verify the *value* itself still matches what Fastr's
+// dashboard issues, not just that the env var exists — an empty fallback
+// here would silently misconfigure the checkout rather than error loudly.
 const fastrSellerDomain = process.env.NEXT_PUBLIC_FASTR_SELLER_DOMAIN ?? '';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

@@ -50,9 +50,10 @@ Home, Shop All, New Drop, Collections (index + `[handle]`), Product (`[handle]`)
 
 ## Payment experience
 
-- **Pay Online** — the only checkout route for launch. Real, live the moment Shopify Payments/your gateway is configured. No frontend work needed as you add or remove methods.
-- Cash on delivery and any deposit/partial-payment option are deliberately not offered at launch — see `docs/SHOPIFY_SETUP.md` § 10 for the honest reasoning and the path to add a deposit flow later if wanted.
-- **Guest checkout** — enabled by default on Shopify's hosted checkout; nothing to configure unless you deliberately want to force account creation (not recommended, and not done here).
+- **Fastr / Fastrr Boost (Shiprocket Checkout)** is the only checkout route for launch — not Shopify's own hosted checkout. See `docs/SHOPIFY_SETUP.md` § 10 for the corrected description.
+- **Normal, full Cash on Delivery** and **prepaid** are both possible through Fastr, but whether they're actually enabled/eligible, and what the real prepaid discount is, has not been verified against the live Fastr merchant dashboard or Shopify Admin → Settings → Payments — do that before launch (see the launch checklist doc for the full list of dashboard items to confirm). Site copy referencing COD/prepaid/shipping specifics has been temporarily neutralized pending that verification.
+- **Partial COD (percentage online + remainder on delivery) is not implemented and is not planned for this launch** — evaluated and cancelled; Fastr has no native support for it in this integration, and the custom alternative would require a Razorpay integration, a wider Shopify Admin scope, and a payment-persistence layer this app doesn't have.
+- **Guest checkout** — Fastr's checkout does not require account creation; nothing to configure.
 
 ## What's genuinely done vs. what needs your input before go-live
 

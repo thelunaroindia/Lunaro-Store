@@ -15,7 +15,7 @@
 - [ ] Sold-out variant shows "Sold Out" and disables Add to Cart
 - [ ] Low-stock variant (≤5 units) shows the "Only N left" message
 - [ ] Add to Cart opens the cart drawer with the correct variant, quantity 1
-- [ ] Buy Now redirects straight to Shopify checkout with the item in cart
+- [ ] Buy Now opens the Fastr checkout overlay with the item in cart (not a redirect to Shopify's own checkout — that path is not used)
 - [ ] Mobile sticky add-to-cart bar appears on scroll and mirrors the same state as the main button
 - [ ] Related products exclude the current product
 
@@ -25,7 +25,7 @@
 - [ ] A valid discount code applies and shows in the summary
 - [ ] An invalid/expired discount code shows a clear error, doesn't crash the cart
 - [ ] Empty cart shows the empty state with a link to `/shop`
-- [ ] Checkout button lands on Shopify's real checkout with the correct cart contents
+- [ ] Checkout button opens the Fastr checkout overlay with the correct cart contents, including any applied discount code
 
 ## Wishlist
 - [ ] Adding/removing from a product card persists across a page reload (localStorage)

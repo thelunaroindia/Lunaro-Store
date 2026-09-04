@@ -13,7 +13,7 @@ import { formatMoney } from '@/lib/utils';
 import { addToCart } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
 import { Button } from '@/components/ui/Button';
-import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
+import { activeFastrCouponCode, cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
 import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
 import StickyAddToCart from './StickyAddToCart';
 import SizeGuideDrawer from './SizeGuideDrawer';
@@ -32,6 +32,14 @@ function isTrackpant(productType: string): boolean {
     productType.trim().toLowerCase()
   );
 }
+
+// Matches the same bounded safety-net re-enable CartDrawer.tsx/
+// CartPageClient.tsx already use for their Checkout buttons — Fastr's SDK
+// exposes no close/cancel/error callback, so this is the only guard
+// available against a rapid double-tap re-opening the checkout overlay
+// (or re-adding a second unit to the cart) before the first tap's overlay
+// has actually appeared.
+const CHECKOUT_REENABLE_MS = 2500;
 
 // Shopify gives every product at least one option. Products with no real
 // customer choice (no colour/size set up in Admin) still carry a single
@@ -128,6 +136,7 @@ export default function ProductOptions({
 }) {
   const { setCart, open } = useCartUI();
   const [isPending, startTransition] = useTransition();
+  const [checkingOut, setCheckingOut] = useState(false);
   const [error, setError] = useState('');
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [showSizePrompt, setShowSizePrompt] = useState(false);
@@ -214,7 +223,7 @@ export default function ProductOptions({
   }
 
   function handleBuyNow() {
-    if (isPending) return;
+    if (isPending || checkingOut) return;
 
     if (needsSizeSelection) {
       focusSizeSelector();
@@ -240,11 +249,26 @@ export default function ProductOptions({
         };
         trackEvent('buy_now', eventParams);
         setCart(result.cart);
-        openFastrCheckout(cartToFastrProducts(result.cart));
+
+        setCheckingOut(true);
+        const opened = openFastrCheckout(
+          cartToFastrProducts(result.cart),
+          activeFastrCouponCode(result.cart)
+        );
+
+        if (!opened) {
+          // Nothing actually opened — restore the button immediately
+          // rather than holding it disabled for a checkout attempt that
+          // never happened. No success or failure state is shown here.
+          setCheckingOut(false);
+          return;
+        }
+
         // Buy Now opens the identical Fastr checkout overlay the cart's
         // Checkout button does — counted as a genuine checkout attempt so
         // abandonment can be measured across both entry points, not just one.
         trackEvent('begin_checkout', eventParams);
+        setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
       } else {
         setError(result.error);
       }
@@ -253,7 +277,11 @@ export default function ProductOptions({
 
   const buyNowLabel = needsSizeSelection
     ? 'Select a Size'
-    : 'Buy Now';
+    : checkingOut
+      ? 'Opening Checkout…'
+      : isPending
+        ? 'Adding…'
+        : 'Buy Now';
 
   const addToCartLabel = needsSizeSelection
     ? 'Select a Size'
@@ -393,7 +421,7 @@ export default function ProductOptions({
           <>
             <Button
               onClick={handleBuyNow}
-              disabled={isPending}
+              disabled={isPending || checkingOut}
               className="w-full"
             >
               {buyNowLabel}
@@ -444,7 +472,7 @@ export default function ProductOptions({
         priceLabel={priceLabel}
         disabled={isSoldOut}
         needsSizeSelection={needsSizeSelection}
-        isPending={isPending}
+        isPending={isPending || checkingOut}
         onAdd={handleBuyNow}
       />
 

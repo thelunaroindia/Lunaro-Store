@@ -11,9 +11,12 @@ type PaymentType = 'prepaid' | 'cod' | 'unknown';
 // Per docs/SHIPROCKET_SETUP.md's own description of this store's setup:
 // COD orders are placed against a manual payment method literally named
 // "Cash on Delivery" in Shopify Admin → Settings → Payments; every other
-// order goes through the real gateway (Razorpay). paymentGatewayNames is a
-// standard Order field already covered by this app's existing read_orders
-// scope — no broader Shopify permission requested for this.
+// order goes through whichever real gateway is actually configured there
+// (not asserted as a specific provider here — that's a Shopify Admin/Fastr
+// dashboard fact, not something this code can or should assume).
+// paymentGatewayNames is a standard Order field already covered by this
+// app's existing read_orders scope — no broader Shopify permission
+// requested for this.
 function derivePaymentType(gatewayNames: string[]): PaymentType {
   if (gatewayNames.length === 0) return 'unknown';
 

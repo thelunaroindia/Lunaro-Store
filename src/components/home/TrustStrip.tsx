@@ -2,13 +2,17 @@ import Link from 'next/link';
 
 // Launch-mode-only trust/conversion strip. Every line is sourced from real
 // store facts — no invented return windows, no generic shield-icon spam.
-// "COD" is worded "where eligible" to match the same caveat already stated
-// in the FAQ (src/lib/config.ts → faqs), not an unconditional promise.
+// The COD/prepaid/shipping specifics this strip used to state ("COD Where
+// Eligible" / "5% Off Prepaid" / "Free Shipping") are neutralized pending
+// manual verification against the live Fastr merchant dashboard and
+// Shopify Admin → Settings → Payments (see the launch checklist) — restore
+// specific claims only once confirmed there, matching src/lib/config.ts →
+// prepaidIncentive's same neutralization. "Exchange & Returns" is left
+// as-is: it links to the real, already-published policy page, not an
+// unverified payment/shipping claim.
 // Text renders uppercase via CSS below, so copy is written in normal case.
 const items = [
-  { label: 'COD Where Eligible' },
-  { label: '5% Off Prepaid' },
-  { label: 'Free Shipping' },
+  { label: 'Shipping and payment options are shown at checkout' },
   { label: 'Exchange & Returns', href: '/shipping-returns' },
 ];
 

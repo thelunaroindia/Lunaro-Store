@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { formatMoney } from '@/lib/utils';
-import { payments, prepaidIncentive, PRELAUNCH_MODE } from '@/lib/config';
+import { payments, prepaidIncentive } from '@/lib/config';
 import { applyDiscount } from '@/actions/cart';
 import { Button } from '@/components/ui/Button';
-import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
+import { activeFastrCouponCode, cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
 import { trackEvent, cartEventParams } from '@/lib/analytics';
 import CartLineItem from '@/components/cart/CartLineItem';
 import type { Cart } from '@/lib/types';
@@ -32,8 +32,22 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
   function handleCheckout() {
     if (checkingOut) return;
     setCheckingOut(true);
+
+    const opened = openFastrCheckout(
+      cartToFastrProducts(cart),
+      activeFastrCouponCode(cart)
+    );
+
+    if (!opened) {
+      // Nothing actually opened — restore the button immediately rather
+      // than making the customer wait out the full re-enable window for a
+      // checkout attempt that never happened. No success or failure state
+      // is shown here; this is purely "the overlay didn't open."
+      setCheckingOut(false);
+      return;
+    }
+
     trackEvent('begin_checkout', cartEventParams(cart));
-    openFastrCheckout(cartToFastrProducts(cart));
     setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
   }
 
@@ -90,7 +104,7 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
           </div>
           <div className="flex justify-between text-mist">
             <span>Shipping</span>
-            <span>{PRELAUNCH_MODE ? 'Calculated at checkout' : 'Free'}</span>
+            <span>Calculated at checkout</span>
           </div>
           <div className="flex justify-between border-t border-graphite pt-2 text-lunar">
             <span>Total</span>

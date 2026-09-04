@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useCartUI } from '@/context/CartUIContext';
 import { formatMoney } from '@/lib/utils';
-import { payments, prepaidIncentive, PRELAUNCH_MODE } from '@/lib/config';
+import { payments, prepaidIncentive } from '@/lib/config';
 import { LinkButton } from '@/components/ui/Button';
-import { cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
+import { activeFastrCouponCode, cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
 import { trackEvent, cartEventParams } from '@/lib/analytics';
 import CartLineItem from './CartLineItem';
 
@@ -36,8 +36,22 @@ export default function CartDrawer() {
   function handleCheckout() {
     if (checkingOut || !cart) return;
     setCheckingOut(true);
+
+    const opened = openFastrCheckout(
+      cartToFastrProducts(cart),
+      activeFastrCouponCode(cart)
+    );
+
+    if (!opened) {
+      // Nothing actually opened — restore the button immediately rather
+      // than making the customer wait out the full re-enable window for a
+      // checkout attempt that never happened. No success or failure state
+      // is shown here; this is purely "the overlay didn't open."
+      setCheckingOut(false);
+      return;
+    }
+
     trackEvent('begin_checkout', cartEventParams(cart));
-    openFastrCheckout(cartToFastrProducts(cart));
     setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
   }
 
@@ -109,14 +123,6 @@ export default function CartDrawer() {
               <span>{formatMoney(cart.cost.subtotalAmount)}</span>
             </div>
             <p className="mt-2 text-xs text-mist">Taxes and shipping calculated at checkout.</p>
-            {/* Genuinely flat/free shipping (no threshold config exists) —
-                see src/lib/config.ts. Gated defensively for consistency
-                with the rest of the launch-mode surfaces, even though this
-                drawer is already unreachable while PRELAUNCH_MODE is true
-                (the Cart button itself is hidden until then). */}
-            {!PRELAUNCH_MODE && (
-              <p className="mt-1 text-xs text-silver">Free Standard Shipping</p>
-            )}
             <button
               type="button"
               onClick={handleCheckout}
