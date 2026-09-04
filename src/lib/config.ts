@@ -239,16 +239,13 @@ export const bottomsSizeGuide = {
   ],
 } as const;
 
-// Neutralized pending manual verification against the live Fastr merchant
-// dashboard and Shopify Admin → Settings → Payments (see the launch
-// checklist) — no code here reads back Fastr's actual configured rate, so
-// asserting a specific percentage or COD availability without confirming
-// it against those dashboards risks the customer seeing one discount here
-// and a different (or no) discount inside Fastr's checkout. Restore the
-// real, confirmed rate/condition once checked there — never a guessed
-// value. Fastr remains the source of truth for the final payable amount;
-// this is messaging only, never something this app calculates or enforces.
-export const prepaidIncentive = 'Shipping and payment options are shown at checkout.' as const;
+// Confirmed via live Fastr checkout testing — keep this as the one place
+// that states the rate so PDP/cart copy never drifts from what Fastr
+// actually applies at checkout. Fastr remains the source of truth for the
+// final payable amount; this is messaging only, never something this app
+// calculates or enforces. If the rate ever changes in Fastr's dashboard,
+// update it here to match — never let this drift from what's actually live.
+export const prepaidIncentive = '5% off on prepaid orders.' as const;
 
 export const payments = {
   // "Pay Online" is whatever methods are enabled in Shopify Admin →
@@ -263,8 +260,10 @@ export const policies = {
     heading: 'Shipping & Returns',
     intro:
       'LUNARO ships across India. Shipping and fulfilment are handled through Shiprocket, connected directly to our Shopify backend.',
-    // TODO: confirm final rates, timelines and courier partners before launch.
+    // Rates confirmed via live Fastr checkout testing.
+    // TODO: confirm courier partners and exact dispatch timelines before launch.
     points: [
+      'Standard Shipping — Free. Express Shipping — ₹129. Rush Shipping — ₹249.',
       'Dispatch timelines are confirmed on the order confirmation page and in your confirmation email.',
       'Tracking details are sent once your order is picked up by our courier partner.',
       'Returns and exchanges are accepted within the window stated at checkout, subject to the garment being unworn and in original packaging.',
@@ -322,16 +321,16 @@ export const faqs = [
     a: 'Use the Track Order page with your order number and phone number, or the tracking link sent to you once your order ships.',
   },
   {
-    // This page isn't gated by PRELAUNCH_MODE — it's reachable right now,
-    // so this answer must never assert a specific COD/prepaid state ahead
-    // of manually confirming it in Fastr/Shopify Admin (see the launch
-    // checklist). Restore a specific, confirmed answer once verified there.
+    // This page isn't gated by PRELAUNCH_MODE — it's reachable right now.
+    // Confirmed via live Fastr checkout testing — COD stays worded "where
+    // eligible" (not an unconditional "available") since serviceability
+    // can still vary by pincode/courier.
     q: 'Do you offer Cash on Delivery?',
-    a: prepaidIncentive,
+    a: 'Cash on Delivery is available where eligible. You can also pay using UPI, Credit & Debit Cards, Net Banking, or Wallets. Get 5% off on prepaid orders.',
   },
   {
     q: 'What is your returns policy?',
-    a: policies.shipping.points[2],
+    a: policies.shipping.points[3],
   },
 ] as const;
 

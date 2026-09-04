@@ -104,7 +104,7 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
           </div>
           <div className="flex justify-between text-mist">
             <span>Shipping</span>
-            <span>Calculated at checkout</span>
+            <span>Free</span>
           </div>
           <div className="flex justify-between border-t border-graphite pt-2 text-lunar">
             <span>Total</span>

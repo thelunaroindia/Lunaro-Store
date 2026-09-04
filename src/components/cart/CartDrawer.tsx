@@ -122,7 +122,7 @@ export default function CartDrawer() {
               <span>Subtotal</span>
               <span>{formatMoney(cart.cost.subtotalAmount)}</span>
             </div>
-            <p className="mt-2 text-xs text-mist">Taxes and shipping calculated at checkout.</p>
+            <p className="mt-2 text-xs text-mist">Standard Shipping — Free. Taxes calculated at checkout.</p>
             <button
               type="button"
               onClick={handleCheckout}
