@@ -107,28 +107,55 @@ export default function SizeGuideDrawer({
             </>
           ) : (
             <>
-              <p className="text-sm text-mist">{sizeGuide.note}</p>
+              <p className="eyebrow text-silver">{sizeGuide.subheading}</p>
+              <p className="mt-4 text-sm text-mist">{sizeGuide.intro}</p>
 
-              <div className="mt-8 overflow-x-auto">
+              <div className="mt-4 space-y-2 border-t border-graphite pt-4">
+                {sizeGuide.fitNote.map((line) => (
+                  <p key={line} className="text-xs leading-relaxed text-mist">
+                    {line}
+                  </p>
+                ))}
+              </div>
+
+              <div className="mt-6 overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-graphite text-left text-mist">
-                      <th className="py-3 font-normal uppercase tracking-wider2">Size</th>
-                      <th className="py-3 font-normal uppercase tracking-wider2">Chest (in)</th>
-                      <th className="py-3 font-normal uppercase tracking-wider2">Length (in)</th>
+                      <th className="py-3 pr-4 font-normal uppercase tracking-wider2">Size</th>
+                      <th className="py-3 pr-4 font-normal uppercase tracking-wider2">Chest</th>
+                      <th className="py-3 pr-4 font-normal uppercase tracking-wider2">Shoulder</th>
+                      <th className="py-3 pr-4 font-normal uppercase tracking-wider2">Length</th>
+                      <th className="py-3 font-normal uppercase tracking-wider2">Sleeve</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sizeGuide.chart.map((row) => (
                       <tr key={row.size} className="border-b border-graphite text-lunar">
-                        <td className="py-3">{row.size}</td>
-                        <td className="py-3 text-mist">{row.chest}</td>
-                        <td className="py-3 text-mist">{row.length}</td>
+                        <td className="py-3 pr-4">{row.size}</td>
+                        <td className="py-3 pr-4 text-mist">{row.chest}</td>
+                        <td className="py-3 pr-4 text-mist">{row.shoulder}</td>
+                        <td className="py-3 pr-4 text-mist">{row.length}</td>
+                        <td className="py-3 text-mist">{row.sleeve}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              <div className="mt-8 border-t border-graphite pt-6">
+                <h3 className="eyebrow text-lunar">How to Measure</h3>
+                <dl className="mt-4 space-y-4">
+                  {sizeGuide.howToMeasure.map((item) => (
+                    <div key={item.label}>
+                      <dt className="text-xs uppercase tracking-wider2 text-lunar">{item.label}</dt>
+                      <dd className="mt-1 text-xs leading-relaxed text-mist">{item.description}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+
+              <p className="mt-6 text-[11px] text-mist">{sizeGuide.productionNote}</p>
             </>
           )}
         </div>

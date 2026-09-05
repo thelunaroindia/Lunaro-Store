@@ -210,20 +210,48 @@ export const trackpantFitAndCare = [
   'Do not bleach',
 ] as const;
 
-// Sourced from the manufacturer's own "Oversized Classic T-Shirt" size-chart
-// image, uploaded to the tee products' Shopify media. The source chart has
-// no sleeve measurement — only chest and length are populated.
+// LUNARO-approved oversized tee size guide. Deliberately limited to four
+// measurements (Chest, Shoulder, Length, Sleeve) — no armhole, sleeve
+// opening, neck width/drop, or shoulder drop, and no weight/height
+// recommendation table. Single source of truth for both /size-guide and
+// the PDP's SizeGuideDrawer — never a second, hand-authored chart. Chart
+// values are strings (not numbers) since several carry a fractional inch
+// (e.g. "27¼") that a number type can't represent.
 export const sizeGuide = {
-  note:
-    'LUNARO garments are cut oversized by design. If you prefer a closer fit, we recommend sizing down.',
-  chart: [
-    { size: 'XS', chest: 39, length: 27 },
-    { size: 'S', chest: 41, length: 28 },
-    { size: 'M', chest: 43, length: 29 },
-    { size: 'L', chest: 45, length: 30 },
-    { size: 'XL', chest: 47, length: 31 },
-    { size: '2XL', chest: 49, length: 32 },
+  subheading: 'Oversized Tee',
+  intro: 'All measurements are in inches and taken on the garment laid flat.',
+  fitNote: [
+    'Designed with a relaxed body, dropped shoulders and a wider silhouette.',
+    'Choose your usual size for the intended oversized fit.',
+    'Size down for a slightly less oversized fit.',
   ],
+  chart: [
+    { size: 'S', chest: '21', shoulder: '20', length: '27¼', sleeve: '8¾' },
+    { size: 'M', chest: '22', shoulder: '21', length: '28¼', sleeve: '9¼' },
+    { size: 'L', chest: '23', shoulder: '22', length: '29¼', sleeve: '9¾' },
+    { size: 'XL', chest: '24', shoulder: '23', length: '30¼', sleeve: '10¼' },
+    { size: 'XXL', chest: '25', shoulder: '24', length: '31¼', sleeve: '10¾' },
+  ],
+  howToMeasure: [
+    {
+      label: 'Chest',
+      description: 'Measure straight across the garment from one underarm seam to the other.',
+    },
+    {
+      label: 'Shoulder',
+      description: 'Measure straight across from one shoulder seam to the other.',
+    },
+    {
+      label: 'Length',
+      description: 'Measure from the highest point of the shoulder down to the bottom hem.',
+    },
+    {
+      label: 'Sleeve',
+      description: 'Measure from the shoulder seam to the end of the sleeve.',
+    },
+  ],
+  productionNote:
+    'Measurements may vary by approximately ±0.5 inch due to garment production and finishing.',
 } as const;
 
 // Sourced from the manufacturer's own sweatpants size-chart image, uploaded
