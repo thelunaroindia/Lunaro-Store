@@ -24,6 +24,7 @@ export default function ProductCard({
   priority = false,
   size = 'default',
   showQuickAdd = false,
+  quickAddStyle = 'button',
 }: {
   product: ProductCardData;
   priority?: boolean;
@@ -32,6 +33,12 @@ export default function ProductCard({
   // Defaults to false so every existing call site (RelatedProducts,
   // /shop, /collections, /new-drop grids) renders exactly as before.
   showQuickAdd?: boolean;
+  // 'button' (default) is the existing full-width pill — untouched, still
+  // used by MostWanted/cart/etc. 'icon' is a minimal "+" trigger aligned
+  // next to the price, used only by the homepage Latest Drop showcase.
+  // Same handleQuickAddClick/runAdd flow either way — only the trigger's
+  // appearance differs, never the add-to-cart/size-selection/sold-out logic.
+  quickAddStyle?: 'button' | 'icon';
 }) {
   const { has, toggle } = useWishlist();
   const { setCart, open: openCart } = useCartUI();
@@ -120,6 +127,84 @@ export default function ProductCard({
       Number(sellingPrice.amount);
 
   const displayTitle = cleanProductTitle(product.title);
+
+  // Identical size-selection panel for both quickAddStyle variants — only
+  // ever rendered once quickAddOpen is true, i.e. after the trigger
+  // (pill button or "+" icon) has already been clicked. Never changes the
+  // add-to-cart/availability logic above, only avoids duplicating this
+  // markup between the two trigger styles.
+  function renderVariantPanel() {
+    return (
+      <div className="border border-graphite p-3">
+        {visibleOptions.map((option) => (
+          <fieldset key={option.name} className="mb-2 last:mb-0">
+            <legend className="text-[9px] uppercase tracking-wider2 text-mist">
+              {option.name}
+            </legend>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {option.values.map((value) => {
+                const isSelected = selected[option.name] === value;
+                const unavailable = !isValueAvailable(
+                  filterVariants,
+                  selected,
+                  option.name,
+                  value
+                );
+
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={isSelected}
+                    disabled={unavailable}
+                    onClick={() =>
+                      setSelected((current) => ({
+                        ...current,
+                        [option.name]: value,
+                      }))
+                    }
+                    className={`border px-2.5 py-1 text-[10px] transition-all duration-200 ${
+                      isSelected
+                        ? 'border-lunar text-lunar'
+                        : 'border-graphite text-mist hover:border-mist'
+                    } ${
+                      unavailable
+                        ? 'cursor-not-allowed opacity-30 line-through'
+                        : ''
+                    }`}
+                  >
+                    {value}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        ))}
+
+        <button
+          type="button"
+          onClick={handleConfirmAdd}
+          disabled={
+            isPending ||
+            !activeVariant ||
+            !activeVariant.availableForSale
+          }
+          className="mt-1 w-full bg-lunar py-2 text-[10px] uppercase tracking-wider2 text-obsidian transition-opacity disabled:opacity-40"
+        >
+          {isPending ? 'Adding…' : 'Add to Bag'}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setQuickAddOpen(false)}
+          aria-label="Close quick add"
+          className="mt-2 w-full text-center text-[9px] uppercase tracking-wider2 text-mist link-underline"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
 
   function onToggleWishlist() {
     toggle({
@@ -223,128 +308,124 @@ export default function ProductCard({
         </svg>
       </button>
 
-      <div className="mt-3">
-        <Link
-          href={`/products/${product.handle}`}
-          className="line-clamp-2 text-[12px] font-normal leading-[1.25] tracking-normal text-lunar link-underline sm:text-[13px] lg:text-sm"
-        >
-          {displayTitle}
-        </Link>
-
-        <div className="mt-1 flex items-center gap-2">
-          <span className="whitespace-nowrap text-[12px] font-normal leading-none text-lunar sm:text-[13px] lg:text-sm">
-            {formatMoney(sellingPrice)}
-          </span>
-
-          {isOnSale && compareAtPrice && (
-            <span className="whitespace-nowrap text-[10px] font-normal text-mist/60 line-through sm:text-xs">
-              {formatMoney(compareAtPrice)}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {showQuickAdd && !isSoldOut && anyPurchasable && (
-        <div className="mt-2">
-          {!quickAddOpen && (
-            <button
-              type="button"
-              onClick={handleQuickAddClick}
-              disabled={isPending}
-              aria-label={
-                singleVariant
-                  ? `Add ${displayTitle} to cart`
-                  : `Select size for ${displayTitle}`
-              }
-              className="w-full bg-lunar py-2 text-[10px] uppercase tracking-wider2 text-obsidian transition-opacity duration-300 hover:opacity-90 disabled:opacity-40"
-            >
-              {isPending
-                ? 'Adding…'
-                : feedback === 'success'
-                  ? 'Added ✓'
-                  : singleVariant
-                    ? 'Add to Cart'
-                    : 'Select Size'}
-            </button>
-          )}
-
-          {quickAddOpen && (
-            <div className="border border-graphite p-3">
-              {visibleOptions.map((option) => (
-                <fieldset key={option.name} className="mb-2 last:mb-0">
-                  <legend className="text-[9px] uppercase tracking-wider2 text-mist">
-                    {option.name}
-                  </legend>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {option.values.map((value) => {
-                      const isSelected = selected[option.name] === value;
-                      const unavailable = !isValueAvailable(
-                        filterVariants,
-                        selected,
-                        option.name,
-                        value
-                      );
-
-                      return (
-                        <button
-                          key={value}
-                          type="button"
-                          aria-pressed={isSelected}
-                          disabled={unavailable}
-                          onClick={() =>
-                            setSelected((current) => ({
-                              ...current,
-                              [option.name]: value,
-                            }))
-                          }
-                          className={`border px-2.5 py-1 text-[10px] transition-all duration-200 ${
-                            isSelected
-                              ? 'border-lunar text-lunar'
-                              : 'border-graphite text-mist hover:border-mist'
-                          } ${
-                            unavailable
-                              ? 'cursor-not-allowed opacity-30 line-through'
-                              : ''
-                          }`}
-                        >
-                          {value}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-              ))}
-
-              <button
-                type="button"
-                onClick={handleConfirmAdd}
-                disabled={
-                  isPending ||
-                  !activeVariant ||
-                  !activeVariant.availableForSale
-                }
-                className="mt-1 w-full bg-lunar py-2 text-[10px] uppercase tracking-wider2 text-obsidian transition-opacity disabled:opacity-40"
+      {quickAddStyle === 'icon' ? (
+        <>
+          <div className="mt-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <Link
+                href={`/products/${product.handle}`}
+                className="line-clamp-2 text-[12px] font-normal leading-[1.25] tracking-normal text-lunar link-underline sm:text-[13px] lg:text-sm"
               >
-                {isPending ? 'Adding…' : 'Add to Bag'}
-              </button>
+                {displayTitle}
+              </Link>
 
-              <button
-                type="button"
-                onClick={() => setQuickAddOpen(false)}
-                aria-label="Close quick add"
-                className="mt-2 w-full text-center text-[9px] uppercase tracking-wider2 text-mist link-underline"
-              >
-                Cancel
-              </button>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="whitespace-nowrap text-[12px] font-normal leading-none text-lunar sm:text-[13px] lg:text-sm">
+                  {formatMoney(sellingPrice)}
+                </span>
+
+                {isOnSale && compareAtPrice && (
+                  <span className="whitespace-nowrap text-[10px] font-normal text-mist/60 line-through sm:text-xs">
+                    {formatMoney(compareAtPrice)}
+                  </span>
+                )}
+              </div>
             </div>
+
+            {showQuickAdd && !isSoldOut && anyPurchasable && !quickAddOpen && (
+              <button
+                type="button"
+                onClick={handleQuickAddClick}
+                disabled={isPending}
+                aria-label={
+                  singleVariant
+                    ? `Add ${displayTitle} to cart`
+                    : `Select size for ${displayTitle}`
+                }
+                className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center text-lunar transition-opacity duration-200 hover:opacity-60 disabled:opacity-30"
+              >
+                <svg
+                  viewBox="0 0 16 16"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.25}
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M8 2v12M2 8h12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {showQuickAdd && !isSoldOut && anyPurchasable && quickAddOpen && (
+            <div className="mt-3">{renderVariantPanel()}</div>
           )}
 
-          {feedback === 'error' && (
+          {showQuickAdd && feedback === 'error' && (
             <p className="mt-1.5 text-[10px] text-silver" role="alert">
               {feedbackMessage}
             </p>
           )}
-        </div>
+        </>
+      ) : (
+        <>
+          <div className="mt-3">
+            <Link
+              href={`/products/${product.handle}`}
+              className="line-clamp-2 text-[12px] font-normal leading-[1.25] tracking-normal text-lunar link-underline sm:text-[13px] lg:text-sm"
+            >
+              {displayTitle}
+            </Link>
+
+            <div className="mt-1 flex items-center gap-2">
+              <span className="whitespace-nowrap text-[12px] font-normal leading-none text-lunar sm:text-[13px] lg:text-sm">
+                {formatMoney(sellingPrice)}
+              </span>
+
+              {isOnSale && compareAtPrice && (
+                <span className="whitespace-nowrap text-[10px] font-normal text-mist/60 line-through sm:text-xs">
+                  {formatMoney(compareAtPrice)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {showQuickAdd && !isSoldOut && anyPurchasable && (
+            <div className="mt-2">
+              {!quickAddOpen && (
+                <button
+                  type="button"
+                  onClick={handleQuickAddClick}
+                  disabled={isPending}
+                  aria-label={
+                    singleVariant
+                      ? `Add ${displayTitle} to cart`
+                      : `Select size for ${displayTitle}`
+                  }
+                  className="w-full bg-lunar py-2 text-[10px] uppercase tracking-wider2 text-obsidian transition-opacity duration-300 hover:opacity-90 disabled:opacity-40"
+                >
+                  {isPending
+                    ? 'Adding…'
+                    : feedback === 'success'
+                      ? 'Added ✓'
+                      : singleVariant
+                        ? 'Add to Cart'
+                        : 'Select Size'}
+                </button>
+              )}
+
+              {quickAddOpen && renderVariantPanel()}
+
+              {feedback === 'error' && (
+                <p className="mt-1.5 text-[10px] text-silver" role="alert">
+                  {feedbackMessage}
+                </p>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

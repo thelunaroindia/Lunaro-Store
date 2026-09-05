@@ -117,22 +117,33 @@ export default function FeaturedProducts({
     // Top padding intentionally much tighter than the prelaunch treatment
     // above — this section (and Category Chips right above it) needs to put
     // real products within roughly one screen of the Hero, not roughly two.
-    <section className="border-t border-graphite pt-8 pb-24 md:pt-10 md:pb-32">
-      <div className="container-lunaro">
+    // Bottom padding is deliberately tighter too (vs. the old pb-24/pb-32)
+    // so the section reads as compact and merchandise-heavy, not padded
+    // out with empty black space beneath the grid.
+    <section className="border-t border-graphite pt-8 pb-16 md:pt-10 md:pb-20">
+      {/* Deliberately wider than the shared .container-lunaro (max-w-1440,
+          used sitewide) — this section alone gets a near-edge-to-edge
+          retail showcase width. Every other section keeps container-lunaro
+          untouched. */}
+      <div className="mx-auto w-full max-w-[1680px] px-4 sm:px-6 lg:px-8">
         <Reveal className="flex flex-wrap items-end justify-between gap-6">
-          <SectionHeading eyebrow="Drop 001">
-            LATEST DROP
-          </SectionHeading>
+          <SectionHeading>LATEST DROP</SectionHeading>
 
           <LinkButton href="/shop" variant="underline">
             View All
           </LinkButton>
         </Reveal>
 
-        <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:mt-10 lg:grid-cols-4 lg:gap-x-8">
+        <div className="mt-8 grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:mt-10 lg:grid-cols-4 lg:gap-x-6">
           {products.map((product, index) => (
             <Reveal key={product.id} delay={0.05 + index * 0.06}>
-              <ProductCard product={product} priority={index === 0} showQuickAdd />
+              <ProductCard
+                product={product}
+                priority={index === 0}
+                size="large"
+                showQuickAdd
+                quickAddStyle="icon"
+              />
             </Reveal>
           ))}
         </div>
