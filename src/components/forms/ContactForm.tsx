@@ -5,10 +5,13 @@ import { Button } from '@/components/ui/Button';
 
 type State = 'idle' | 'loading' | 'success' | 'error';
 
+// "Exchange Requests" (not "Returns & Exchanges") matches the current
+// no-returns, exchange-only policy — see src/lib/config.ts →
+// policies.shipping/refund.
 const ENQUIRY_TYPES = [
   'Order Support',
   'Product & Size Enquiries',
-  'Returns & Exchanges',
+  'Exchange Requests',
   'General Enquiries',
   'Collaborations & Creators',
   'Wholesale & Business Enquiries',

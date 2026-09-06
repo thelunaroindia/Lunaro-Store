@@ -80,13 +80,13 @@ export default function ProductAccordion({ product }: { product: Product }) {
         {modelSizing && <p className="mt-3">{modelSizing}</p>}
       </AccordionItem>
       <AccordionItem
-        title="Shipping & Returns"
+        title="Shipping & Exchanges"
         headingClassName={HEADING_CLASSNAME}
         bodyClassName={BODY_CLASSNAME}
       >
         <p>{policies.shipping.points[0]}</p>
         <Link href="/shipping-returns" className="link-underline mt-3 inline-block text-lunar">
-          Read the full Shipping &amp; Returns policy
+          Read the full Shipping &amp; Exchanges policy
         </Link>
       </AccordionItem>
     </div>

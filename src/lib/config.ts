@@ -131,7 +131,7 @@ export const nav = {
       links: [
         { label: 'Size Guide', href: '/size-guide' },
         { label: 'Track Order', href: '/track-order' },
-        { label: 'Shipping & Returns', href: '/shipping-returns' },
+        { label: 'Shipping & Exchanges', href: '/shipping-returns' },
         { label: 'Refund Policy', href: '/refund-policy' },
       ],
     },
@@ -285,25 +285,32 @@ export const payments = {
 
 export const policies = {
   shipping: {
-    heading: 'Shipping & Returns',
+    heading: 'Shipping & Exchanges',
     intro:
       'LUNARO ships across India. Shipping and fulfilment are handled through Shiprocket, connected directly to our Shopify backend.',
     // Rates confirmed via live Fastr checkout testing.
     // TODO: confirm courier partners and exact dispatch timelines before launch.
+    //
+    // No-returns policy (current direction): LUNARO does not accept returns.
+    // Exchanges only, for eligible size issues or manufacturing defects,
+    // requested within 7 days of delivery — confirmed as the policy figure;
+    // this is the single source of truth for that number sitewide.
     points: [
       'Standard Shipping — Free. Express Shipping — ₹129. Rush Shipping — ₹249.',
       'Dispatch timelines are confirmed on the order confirmation page and in your confirmation email.',
       'Tracking details are sent once your order is picked up by our courier partner.',
-      'Returns and exchanges are accepted within the window stated at checkout, subject to the garment being unworn and in original packaging.',
+      'No returns are accepted, and no refund is issued for a change of mind.',
+      'Exchanges are accepted only for eligible size issues or manufacturing defects, subject to our exchange policy. Exchange requests must be raised within 7 days of delivery, and the item must be unworn, unused, unwashed, with all tags and original packaging intact.',
     ],
   },
   refund: {
     heading: 'Refund Policy',
-    intro: 'Refunds are processed to the original payment method once a returned item is received and inspected.',
+    intro:
+      'LUNARO does not offer returns or refunds for a change of mind. A refund is issued only where legally required, or where an approved exchange under our exchange policy cannot be fulfilled — for example, if a replacement size or item is unavailable.',
     points: [
-      'Refund processing time depends on your bank or payment provider once approved.',
-      'Cash-on-delivery orders are refunded via bank transfer or store credit, as selected at the time of return.',
-      'Items marked final sale or part of a limited drop may not be eligible for return — this is stated on the product page where applicable.',
+      'Where a refund is approved, it is credited to your original payment method; processing time depends on your bank or payment provider.',
+      'For an approved Cash-on-delivery refund, the amount is refunded via bank transfer or store credit, as confirmed with our support team.',
+      'Items marked final sale or part of a limited drop are not eligible for exchange or refund — this is stated on the product page where applicable.',
     ],
   },
   privacy: {
@@ -357,8 +364,12 @@ export const faqs = [
     a: 'Cash on Delivery is available where eligible. You can also pay using UPI, Credit & Debit Cards, Net Banking, or Wallets. Get 5% off on prepaid orders.',
   },
   {
-    q: 'What is your returns policy?',
-    a: policies.shipping.points[3],
+    // No-returns policy — see policies.shipping/policies.refund above for
+    // the fuller statement. A literal string here, not an index into
+    // policies.shipping.points, so this never silently breaks if that
+    // array's order changes again.
+    q: 'What is your return & exchange policy?',
+    a: 'We do not accept returns. Exchanges are available only for eligible size issues or manufacturing defects, subject to our exchange policy. Exchange requests must be raised within 7 days of delivery, and items must meet all eligibility conditions.',
   },
 ] as const;
 

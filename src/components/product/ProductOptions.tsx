@@ -462,9 +462,9 @@ export default function ProductOptions({
 
       <p className="mt-3 text-[11px] text-mist">
         <Link href="/shipping-returns" className="link-underline text-lunar">
-          Easy Returns &amp; Exchange
+          Exchange Policy
         </Link>
-        {' — see policy for details.'}
+        {' — no returns; eligible exchanges only.'}
       </p>
 
       <StickyAddToCart

@@ -5,7 +5,7 @@ import { PolicyLayout } from '@/components/ui/PolicyLayout';
 
 export const metadata: Metadata = {
   title: 'Refund Policy',
-  description: 'How refunds are processed for returned LUNARO orders.',
+  description: 'When and how LUNARO issues a refund.',
   alternates: { canonical: canonicalUrl('/refund-policy') },
 };
 

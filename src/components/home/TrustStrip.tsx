@@ -5,13 +5,15 @@ import Link from 'next/link';
 // return windows, no generic shield-icon spam. "COD Where Eligible" (not
 // an unconditional "COD Available") deliberately keeps the caveat, since
 // COD serviceability can still vary by pincode/courier even though the
-// COD payment method itself is confirmed working.
+// COD payment method itself is confirmed working. "Eligible Exchanges
+// Only" (not "Easy Exchange & Returns") matches the current no-returns,
+// exchange-only policy — see src/lib/config.ts → policies.shipping/refund.
 // Text renders uppercase via CSS below, so copy is written in normal case.
 const items = [
   { label: 'Free Standard Shipping' },
   { label: '5% Off Prepaid' },
   { label: 'COD Where Eligible' },
-  { label: 'Easy Exchange & Returns', href: '/shipping-returns' },
+  { label: 'Eligible Exchanges Only', href: '/shipping-returns' },
 ];
 
 export default function TrustStrip() {

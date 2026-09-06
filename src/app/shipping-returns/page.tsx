@@ -4,8 +4,8 @@ import { canonicalUrl } from '@/lib/canonical';
 import { PolicyLayout } from '@/components/ui/PolicyLayout';
 
 export const metadata: Metadata = {
-  title: 'Shipping & Returns',
-  description: 'Dispatch timelines, tracking and return terms for LUNARO orders.',
+  title: 'Shipping & Exchanges',
+  description: 'Dispatch timelines, tracking and exchange terms for LUNARO orders.',
   alternates: { canonical: canonicalUrl('/shipping-returns') },
 };
 
