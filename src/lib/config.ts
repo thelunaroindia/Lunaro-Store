@@ -214,9 +214,15 @@ export const trackpantFitAndCare = [
 // measurements (Chest, Shoulder, Length, Sleeve) — no armhole, sleeve
 // opening, neck width/drop, or shoulder drop, and no weight/height
 // recommendation table. Single source of truth for both /size-guide and
-// the PDP's SizeGuideDrawer — never a second, hand-authored chart. Chart
-// values are strings (not numbers) since several carry a fractional inch
-// (e.g. "27¼") that a number type can't represent.
+// the PDP's SizeGuideDrawer (via the shared SizeGuideChart component) —
+// never a second, hand-authored chart. Chart values are strings (not
+// numbers) purely for consistent rendering; CM equivalents are always
+// derived from these IN values at display time (src/lib/sizeGuide.ts),
+// never hand-typed separately.
+//
+// Chest is FULL GARMENT CIRCUMFERENCE (confirmed final data) — not the
+// flat-lay half-chest width an earlier version of this chart used. See
+// chestNote below, shown directly under the table on both surfaces.
 export const sizeGuide = {
   subheading: 'Oversized Tee',
   intro: 'All measurements are in inches and taken on the garment laid flat.',
@@ -226,16 +232,24 @@ export const sizeGuide = {
     'Size down for a slightly less oversized fit.',
   ],
   chart: [
-    { size: 'S', chest: '21', shoulder: '20', length: '27¼', sleeve: '8¾' },
-    { size: 'M', chest: '22', shoulder: '21', length: '28¼', sleeve: '9¼' },
-    { size: 'L', chest: '23', shoulder: '22', length: '29¼', sleeve: '9¾' },
-    { size: 'XL', chest: '24', shoulder: '23', length: '30¼', sleeve: '10¼' },
-    { size: 'XXL', chest: '25', shoulder: '24', length: '31¼', sleeve: '10¾' },
+    { size: 'S', chest: '42', shoulder: '20', length: '27.75', sleeve: '8.75' },
+    { size: 'M', chest: '44', shoulder: '21', length: '28.25', sleeve: '9.25' },
+    { size: 'L', chest: '46', shoulder: '22', length: '29.25', sleeve: '9.75' },
+    { size: 'XL', chest: '48', shoulder: '23', length: '30.25', sleeve: '10.25' },
+    { size: 'XXL', chest: '50', shoulder: '24', length: '31.25', sleeve: '10.75' },
   ],
+  // Shown directly under the table on both /size-guide and the PDP drawer —
+  // the whole reason this exists is that "Chest" here is the full garment
+  // circumference, not a flat half-width, and that's easy to misread.
+  chestNote: 'Chest represents the full garment circumference.',
   howToMeasure: [
     {
       label: 'Chest',
-      description: 'Measure straight across the garment from one underarm seam to the other.',
+      // Garment-flat-lay technique (consistent with Shoulder/Length/Sleeve
+      // below) explicitly doubled, since the chart value is the full
+      // circumference, not the flat measurement alone.
+      description:
+        'Lay the garment flat and measure straight across from one underarm seam to the other, then double that figure for the full chest circumference shown in the chart.',
     },
     {
       label: 'Shoulder',

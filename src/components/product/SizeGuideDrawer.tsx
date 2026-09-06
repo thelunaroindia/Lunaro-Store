@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { sizeGuide, bottomsSizeGuide } from '@/lib/config';
+import { bottomsSizeGuide } from '@/lib/config';
+import SizeGuideChart from './SizeGuideChart';
 
 type Category = 'tops' | 'bottoms';
 
-// Renders the same sizeGuide/bottomsSizeGuide data as /size-guide — never a
-// second, hand-authored chart that could drift out of sync — in a drawer so
-// a visitor can check sizing without losing their colour/size selection on
-// the PDP.
+// Tees render the shared SizeGuideChart — the same component /size-guide
+// uses — so the IN/CM toggle, table treatment, and data can never drift
+// apart between the two surfaces. Bottoms (trackpants) keep their own
+// simpler table here since they're out of scope for this redesign.
 export default function SizeGuideDrawer({
   open,
   onClose,
@@ -106,57 +107,7 @@ export default function SizeGuideDrawer({
               </div>
             </>
           ) : (
-            <>
-              <p className="eyebrow text-silver">{sizeGuide.subheading}</p>
-              <p className="mt-4 text-sm text-mist">{sizeGuide.intro}</p>
-
-              <div className="mt-4 space-y-2 border-t border-graphite pt-4">
-                {sizeGuide.fitNote.map((line) => (
-                  <p key={line} className="text-xs leading-relaxed text-mist">
-                    {line}
-                  </p>
-                ))}
-              </div>
-
-              <div className="mt-6 overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-graphite text-left text-mist">
-                      <th className="py-3 pr-4 font-normal uppercase tracking-wider2">Size</th>
-                      <th className="py-3 pr-4 font-normal uppercase tracking-wider2">Chest</th>
-                      <th className="py-3 pr-4 font-normal uppercase tracking-wider2">Shoulder</th>
-                      <th className="py-3 pr-4 font-normal uppercase tracking-wider2">Length</th>
-                      <th className="py-3 font-normal uppercase tracking-wider2">Sleeve</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sizeGuide.chart.map((row) => (
-                      <tr key={row.size} className="border-b border-graphite text-lunar">
-                        <td className="py-3 pr-4">{row.size}</td>
-                        <td className="py-3 pr-4 text-mist">{row.chest}</td>
-                        <td className="py-3 pr-4 text-mist">{row.shoulder}</td>
-                        <td className="py-3 pr-4 text-mist">{row.length}</td>
-                        <td className="py-3 text-mist">{row.sleeve}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="mt-8 border-t border-graphite pt-6">
-                <h3 className="eyebrow text-lunar">How to Measure</h3>
-                <dl className="mt-4 space-y-4">
-                  {sizeGuide.howToMeasure.map((item) => (
-                    <div key={item.label}>
-                      <dt className="text-xs uppercase tracking-wider2 text-lunar">{item.label}</dt>
-                      <dd className="mt-1 text-xs leading-relaxed text-mist">{item.description}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-
-              <p className="mt-6 text-[11px] text-mist">{sizeGuide.productionNote}</p>
-            </>
+            <SizeGuideChart spacing="compact" />
           )}
         </div>
       </div>
