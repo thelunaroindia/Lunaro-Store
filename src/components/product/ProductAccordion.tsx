@@ -46,7 +46,13 @@ export default function ProductAccordion({ product }: { product: Product }) {
           headingClassName={HEADING_CLASSNAME}
           bodyClassName={BODY_CLASSNAME}
         >
-          <p>{normalizeDescription(product.description)}</p>
+          {/* whitespace-pre-line: the approved spec-card copy (LUNARO
+              Embroidery / fabric / fit, one line each) relies on the
+              description field's own line breaks rendering as line breaks —
+              default <p> white-space would collapse them into one run-on
+              line. Scoped to this <p> only; Fit & Care / Shipping below stay
+              normal-wrapping prose. */}
+          <p className="whitespace-pre-line">{normalizeDescription(product.description)}</p>
         </AccordionItem>
       )}
       <AccordionItem

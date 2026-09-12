@@ -221,16 +221,14 @@ export const trackpantFitAndCare = [
 // never hand-typed separately.
 //
 // Chest is FULL GARMENT CIRCUMFERENCE (confirmed final data) — not the
-// flat-lay half-chest width an earlier version of this chart used. See
-// chestNote below, shown directly under the table on both surfaces.
+// flat-lay half-chest width an earlier version of this chart used. The
+// explanatory copy that used to accompany this (intro line, fit note,
+// chest-circumference note, How to Measure, production-tolerance note) was
+// deliberately removed from SizeGuideChart.tsx for a table-only display —
+// heading + IN/CM toggle + table, nothing else — so only `subheading` and
+// `chart` remain here.
 export const sizeGuide = {
   subheading: 'Oversized Tee',
-  intro: 'All measurements are in inches and taken on the garment laid flat.',
-  fitNote: [
-    'Designed with a relaxed body, dropped shoulders and a wider silhouette.',
-    'Choose your usual size for the intended oversized fit.',
-    'Size down for a slightly less oversized fit.',
-  ],
   chart: [
     { size: 'S', chest: '42', shoulder: '20', length: '27.75', sleeve: '8.75' },
     { size: 'M', chest: '44', shoulder: '21', length: '28.25', sleeve: '9.25' },
@@ -238,34 +236,6 @@ export const sizeGuide = {
     { size: 'XL', chest: '48', shoulder: '23', length: '30.25', sleeve: '10.25' },
     { size: 'XXL', chest: '50', shoulder: '24', length: '31.25', sleeve: '10.75' },
   ],
-  // Shown directly under the table on both /size-guide and the PDP drawer —
-  // the whole reason this exists is that "Chest" here is the full garment
-  // circumference, not a flat half-width, and that's easy to misread.
-  chestNote: 'Chest represents the full garment circumference.',
-  howToMeasure: [
-    {
-      label: 'Chest',
-      // Garment-flat-lay technique (consistent with Shoulder/Length/Sleeve
-      // below) explicitly doubled, since the chart value is the full
-      // circumference, not the flat measurement alone.
-      description:
-        'Lay the garment flat and measure straight across from one underarm seam to the other, then double that figure for the full chest circumference shown in the chart.',
-    },
-    {
-      label: 'Shoulder',
-      description: 'Measure straight across from one shoulder seam to the other.',
-    },
-    {
-      label: 'Length',
-      description: 'Measure from the highest point of the shoulder down to the bottom hem.',
-    },
-    {
-      label: 'Sleeve',
-      description: 'Measure from the shoulder seam to the end of the sleeve.',
-    },
-  ],
-  productionNote:
-    'Measurements may vary by approximately ±0.5 inch due to garment production and finishing.',
 } as const;
 
 // Sourced from the manufacturer's own sweatpants size-chart image, uploaded

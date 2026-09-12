@@ -51,27 +51,6 @@ export default function SizeGuideChart({
         </div>
       </div>
 
-      <p className={isPage ? 'mt-6 text-mist' : 'mt-4 text-sm text-mist'}>
-        {sizeGuide.intro}
-      </p>
-
-      <div
-        className={
-          isPage
-            ? 'mt-6 space-y-2 border-t border-graphite pt-6'
-            : 'mt-4 space-y-2 border-t border-graphite pt-4'
-        }
-      >
-        {sizeGuide.fitNote.map((line) => (
-          <p
-            key={line}
-            className={isPage ? 'text-sm leading-relaxed text-mist' : 'text-xs leading-relaxed text-mist'}
-          >
-            {line}
-          </p>
-        ))}
-      </div>
-
       <div className={`${isPage ? 'mt-10' : 'mt-6'} overflow-x-auto rounded-2xl border border-graphite`}>
         <table className="w-full min-w-[360px] border-collapse text-sm">
           <thead>
@@ -109,40 +88,6 @@ export default function SizeGuideChart({
           </tbody>
         </table>
       </div>
-
-      <p className="mt-3 text-xs text-mist">{sizeGuide.chestNote}</p>
-
-      <div className={isPage ? 'mt-14 border-t border-graphite pt-10' : 'mt-8 border-t border-graphite pt-6'}>
-        <h3 className="eyebrow text-lunar">How to Measure</h3>
-        <dl className={isPage ? 'mt-6 space-y-6' : 'mt-4 space-y-4'}>
-          {sizeGuide.howToMeasure.map((item) => (
-            <div key={item.label}>
-              <dt
-                className={
-                  isPage
-                    ? 'text-sm uppercase tracking-wider2 text-lunar'
-                    : 'text-xs uppercase tracking-wider2 text-lunar'
-                }
-              >
-                {item.label}
-              </dt>
-              <dd
-                className={
-                  isPage
-                    ? 'mt-1 text-sm leading-relaxed text-mist'
-                    : 'mt-1 text-xs leading-relaxed text-mist'
-                }
-              >
-                {item.description}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      <p className={isPage ? 'mt-10 text-xs text-mist' : 'mt-6 text-[11px] text-mist'}>
-        {sizeGuide.productionNote}
-      </p>
     </>
   );
 }
