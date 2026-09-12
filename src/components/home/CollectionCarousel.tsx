@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { PRELAUNCH_MODE } from '@/lib/config';
 
 type CollectionCard = {
   name: string;
@@ -10,17 +11,25 @@ type CollectionCard = {
 // Bottoms, Football Edit and Archive are intentionally omitted as shoppable
 // tiles — those Shopify collections are currently empty and must not be
 // surfaced to customers. The collections themselves are untouched in
-// Shopify; re-add the tile here once each has real products. (The Archive
-// campaign photo below is reused purely as imagery, not as a link to that
-// collection — its href still points at Graphic Tees.)
+// Shopify; re-add the tile here once each has real products.
 //
-// Images are deliberately distinct from the Look 01/02 cards and the
-// Lookbook teaser above/below this section — new-drop.jpg and
-// graphic-tees.jpg are already used there, so this carousel draws from the
-// rest of the approved editorial library instead of repeating them.
+// The second tile is Oversized Tees, using the real Drop 001 campaign photo
+// (all 5 finished garments worn together) — swapped in only once
+// PRELAUNCH_MODE is off, matching every other homepage section's rule of
+// never showing real garment art before launch. Pre-launch it keeps the
+// original Graphic Tees tile (a generic archive photo, not real product
+// art) unchanged.
+const secondTile: CollectionCard = PRELAUNCH_MODE
+  ? { name: 'GRAPHIC TEES', href: '/collections/graphic-tees', image: '/images/collections/archive.jpg' }
+  : {
+      name: 'OVERSIZED TEES',
+      href: '/collections/oversized-tees',
+      image: '/images/collections/oversized-tees-campaign.png',
+    };
+
 const COLLECTIONS: CollectionCard[] = [
   { name: 'NEW DROP', href: '/new-drop', image: '/images/lookbook/presence.png' },
-  { name: 'GRAPHIC TEES', href: '/collections/graphic-tees', image: '/images/collections/archive.jpg' },
+  secondTile,
 ];
 
 export default function CollectionCarousel() {
