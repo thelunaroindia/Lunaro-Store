@@ -4,9 +4,11 @@ import Link from 'next/link';
 // visitor jump straight into a category without scrolling the whole page.
 // Every href points at a real, already-shoppable destination (never an
 // invented collection): /new-drop and /shop are real pages; oversized-tees
-// is a confirmed live Shopify collection (already linked from CollectionCarousel
-// and /collections); #most-wanted anchors to this same homepage's own Most
-// Wanted section (see MostWanted.tsx's id).
+// is a confirmed live Shopify collection (already linked from /collections).
+// A fourth chip ("Best Sellers", then "Shop All") previously linked here too
+// — first to an in-page anchor (#most-wanted) for the now-removed Most
+// Wanted section, then relabelled to /shop — but that duplicated the "All"
+// chip below, so it was dropped rather than replaced.
 //
 // No colour chips (Black / Off-White) — checked the live Storefront API
 // directly: the only real product currently in the store has a single
@@ -19,7 +21,6 @@ const CHIPS = [
   { label: 'New Drop', href: '/new-drop', active: true },
   { label: 'All', href: '/shop', active: false },
   { label: 'Tees', href: '/collections/oversized-tees', active: false },
-  { label: 'Best Sellers', href: '/#most-wanted', active: false },
 ] as const;
 
 export default function CategoryChips() {
