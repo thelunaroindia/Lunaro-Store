@@ -9,6 +9,7 @@ import {
   PURCHASE_TEST_PRODUCT_HANDLE,
 } from '@/lib/config';
 import { canonicalUrl } from '@/lib/canonical';
+import { sanitizeDescriptionHtml } from '@/lib/sanitizeDescription';
 import type { Product } from '@/lib/types';
 import ProductDetail from '@/components/product/ProductDetail';
 import RelatedProducts from '@/components/product/RelatedProducts';
@@ -200,9 +201,14 @@ export default async function ProductPage({
     notFound();
   }
 
+  // Sanitized once, here, server-side — see src/lib/sanitizeDescription.ts.
+  // Passed down as a plain string prop so sanitize-html itself never has
+  // to be part of ProductDetail/ProductAccordion's client bundle.
+  const descriptionHtml = sanitizeDescriptionHtml(product.descriptionHtml);
+
   return (
     <main className="pb-24 pt-28 md:pt-32">
-      <ProductDetail product={product} />
+      <ProductDetail product={product} descriptionHtml={descriptionHtml} />
 
       <RelatedProducts product={product} />
     </main>

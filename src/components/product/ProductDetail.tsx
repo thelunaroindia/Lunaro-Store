@@ -24,7 +24,18 @@ function eyebrowLabel(product: Product): string {
   return isDrop001 ? 'LUNARO — Drop 001' : 'LUNARO';
 }
 
-export default function ProductDetail({ product }: { product: Product }) {
+export default function ProductDetail({
+  product,
+  descriptionHtml,
+}: {
+  product: Product;
+  // Pre-sanitized server-side by the page (src/app/products/[handle]/page.tsx
+  // via src/lib/sanitizeDescription.ts) and threaded through here purely as
+  // a prop — kept out of this Client Component's own logic so sanitize-html
+  // never has to ship to the browser. Passed straight through to
+  // ProductAccordion, the only thing that renders it.
+  descriptionHtml: string;
+}) {
   const [selected, setSelected] = useState<Record<string, string>>(() =>
     getInitialSelectedOptions(product)
   );
@@ -69,7 +80,7 @@ export default function ProductDetail({ product }: { product: Product }) {
           selected={selected}
           setSelected={setSelected}
         />
-        <ProductAccordion product={product} />
+        <ProductAccordion product={product} descriptionHtml={descriptionHtml} />
       </div>
     </div>
   );

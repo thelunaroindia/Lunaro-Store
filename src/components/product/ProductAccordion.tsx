@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import sanitizeHtml from 'sanitize-html';
 import { AccordionItem } from '@/components/ui/Accordion';
 import {
   fabricDetails,
@@ -22,23 +21,15 @@ function isTrackpant(productType: string): boolean {
   );
 }
 
-// Shopify's rich-text description editor only ever produces this small,
-// known set of tags (paragraphs, line breaks, bold/italic/underline,
-// lists, links) — never scripts, iframes, or embeds. Sanitizing anyway
-// (rather than trusting Admin-authored content outright) is defense in
-// depth, not a guess at what might appear.
-const DESCRIPTION_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
-  allowedTags: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'a'],
-  allowedAttributes: { a: ['href', 'target', 'rel'] },
-};
-
-function sanitizeDescriptionHtml(html: string): string {
-  return sanitizeHtml(html, DESCRIPTION_SANITIZE_OPTIONS).trim();
-}
-
-// True only when sanitized output has real visible text — Shopify can
-// return a shell like "<p></p>" or "<p> </p>" for a technically-non-empty
-// but visually blank field, and that must not render an empty accordion.
+// True only when the (already-sanitized) description has real visible
+// text — Shopify can return a shell like "<p></p>" or "<p> </p>" for a
+// technically-non-empty but visually blank field, and that must not
+// render an empty accordion. Pure string check, no sanitize-html needed
+// here — sanitization already happened server-side (see
+// src/lib/sanitizeDescription.ts, called from
+// src/app/products/[handle]/page.tsx) before this component ever sees
+// the string, specifically so sanitize-html itself never has to be part
+// of this Client Component's bundle.
 function hasVisibleText(sanitizedHtml: string): boolean {
   return sanitizedHtml.replace(/<[^>]*>/g, '').trim().length > 0;
 }
@@ -46,9 +37,16 @@ function hasVisibleText(sanitizedHtml: string): boolean {
 const HEADING_CLASSNAME = 'text-[11px] font-normal uppercase tracking-[0.2em]';
 const BODY_CLASSNAME = 'text-[15px] leading-[1.75] text-mist';
 
-export default function ProductAccordion({ product }: { product: Product }) {
+export default function ProductAccordion({
+  product,
+  descriptionHtml,
+}: {
+  product: Product;
+  // Pre-sanitized by the caller — see sanitizeDescriptionHtml() in
+  // src/lib/sanitizeDescription.ts. Never sanitize raw HTML here.
+  descriptionHtml: string;
+}) {
   const trackpant = isTrackpant(product.productType);
-  const descriptionHtml = sanitizeDescriptionHtml(product.descriptionHtml);
   const hasDescription = hasVisibleText(descriptionHtml);
   const modelSizing = product.modelSizing?.trim();
 
@@ -62,13 +60,14 @@ export default function ProductAccordion({ product }: { product: Product }) {
           bodyClassName={BODY_CLASSNAME}
         >
           {/* Renders Shopify's own paragraph structure natively (real <p>
-              tags, sanitized above) instead of the old plain-text
-              `description` field, which has no line breaks to preserve —
-              its HTML is stripped before it reaches the Storefront API's
-              plain-text field, collapsing every line into one run-on
-              sentence. space-y-1 gives each line its own row; the single
-              blank paragraph Shopify emits between the title block and the
-              spec list (`<p> </p>`) supplies the wider gap between them. */}
+              tags, sanitized server-side before reaching this component)
+              instead of the old plain-text `description` field, which has
+              no line breaks to preserve — its HTML is stripped before it
+              reaches the Storefront API's plain-text field, collapsing
+              every line into one run-on sentence. space-y-1 gives each
+              line its own row; the single blank paragraph Shopify emits
+              between the title block and the spec list (`<p> </p>`)
+              supplies the wider gap between them. */}
           <div className="space-y-1" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
         </AccordionItem>
       )}
