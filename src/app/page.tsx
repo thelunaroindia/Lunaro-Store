@@ -23,6 +23,30 @@ import JoinOrbit from '@/components/home/JoinOrbit';
 // downstream renders identically whether the store is connected or not.
 // Every placeholder image is intentionally left absent so ProductCard shows
 // its on-brand CinematicPlaceholder composition rather than a fake photo.
+// Explicit Latest Drop order — deliberately never relies on Shopify's own
+// product/collection sort order, which the homepage has no control over
+// and which doesn't currently return these four in the desired sequence.
+// Black Standard is intentionally excluded from this list; it stays fully
+// reachable via /new-drop, /shop, /collections/oversized-tees, and its own
+// PDP. Falls back to Shopify's returned order (or the placeholder
+// catalogue, whose handles never match this list) if any of the four
+// expected handles isn't present, rather than showing fewer than 4 cards.
+const HOMEPAGE_FEATURED_ORDER = [
+  'aqua-burn-t-shirt',
+  'blue-inferno-t-shirt',
+  'ghost-hands-t-shirt',
+  'acid-frame-t-shirt',
+];
+
+function orderHomepageFeatured(products: ProductCardData[]): ProductCardData[] {
+  const byHandle = new Map(products.map((p) => [p.handle, p]));
+  const ordered = HOMEPAGE_FEATURED_ORDER.map((handle) => byHandle.get(handle)).filter(
+    (p): p is ProductCardData => Boolean(p)
+  );
+
+  return ordered.length === HOMEPAGE_FEATURED_ORDER.length ? ordered : products.slice(0, 4);
+}
+
 function fallbackProducts(): ProductCardData[] {
   return placeholderProducts.map((p, i) => ({
     id: `placeholder-${i}`,
@@ -78,7 +102,7 @@ export default async function HomePage() {
 
   const products = realProducts.length > 0 ? realProducts : fallbackProducts();
 
-  const featured = products.slice(0, 4);
+  const featured = orderHomepageFeatured(products);
 
   return (
     <>

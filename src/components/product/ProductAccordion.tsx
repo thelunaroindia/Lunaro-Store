@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import sanitizeHtml from 'sanitize-html';
 import { AccordionItem } from '@/components/ui/Accordion';
 import {
   fabricDetails,
@@ -21,12 +22,25 @@ function isTrackpant(productType: string): boolean {
   );
 }
 
-// Display-only: inserts a missing space when a sentence-ending period is
-// immediately followed by a known label (e.g. "slouch.Care:" →
-// "slouch. Care:"). Does not touch already-correctly-spaced text, and
-// never rewrites anything beyond this exact pattern.
-function normalizeDescription(description: string): string {
-  return description.replace(/\.(Care:|Fabric:|Fit:)/g, '. $1');
+// Shopify's rich-text description editor only ever produces this small,
+// known set of tags (paragraphs, line breaks, bold/italic/underline,
+// lists, links) — never scripts, iframes, or embeds. Sanitizing anyway
+// (rather than trusting Admin-authored content outright) is defense in
+// depth, not a guess at what might appear.
+const DESCRIPTION_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
+  allowedTags: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'a'],
+  allowedAttributes: { a: ['href', 'target', 'rel'] },
+};
+
+function sanitizeDescriptionHtml(html: string): string {
+  return sanitizeHtml(html, DESCRIPTION_SANITIZE_OPTIONS).trim();
+}
+
+// True only when sanitized output has real visible text — Shopify can
+// return a shell like "<p></p>" or "<p> </p>" for a technically-non-empty
+// but visually blank field, and that must not render an empty accordion.
+function hasVisibleText(sanitizedHtml: string): boolean {
+  return sanitizedHtml.replace(/<[^>]*>/g, '').trim().length > 0;
 }
 
 const HEADING_CLASSNAME = 'text-[11px] font-normal uppercase tracking-[0.2em]';
@@ -34,7 +48,8 @@ const BODY_CLASSNAME = 'text-[15px] leading-[1.75] text-mist';
 
 export default function ProductAccordion({ product }: { product: Product }) {
   const trackpant = isTrackpant(product.productType);
-  const hasDescription = product.description.trim().length > 0;
+  const descriptionHtml = sanitizeDescriptionHtml(product.descriptionHtml);
+  const hasDescription = hasVisibleText(descriptionHtml);
   const modelSizing = product.modelSizing?.trim();
 
   return (
@@ -46,13 +61,15 @@ export default function ProductAccordion({ product }: { product: Product }) {
           headingClassName={HEADING_CLASSNAME}
           bodyClassName={BODY_CLASSNAME}
         >
-          {/* whitespace-pre-line: the approved spec-card copy (LUNARO
-              Embroidery / fabric / fit, one line each) relies on the
-              description field's own line breaks rendering as line breaks —
-              default <p> white-space would collapse them into one run-on
-              line. Scoped to this <p> only; Fit & Care / Shipping below stay
-              normal-wrapping prose. */}
-          <p className="whitespace-pre-line">{normalizeDescription(product.description)}</p>
+          {/* Renders Shopify's own paragraph structure natively (real <p>
+              tags, sanitized above) instead of the old plain-text
+              `description` field, which has no line breaks to preserve —
+              its HTML is stripped before it reaches the Storefront API's
+              plain-text field, collapsing every line into one run-on
+              sentence. space-y-1 gives each line its own row; the single
+              blank paragraph Shopify emits between the title block and the
+              spec list (`<p> </p>`) supplies the wider gap between them. */}
+          <div className="space-y-1" dangerouslySetInnerHTML={{ __html: descriptionHtml }} />
         </AccordionItem>
       )}
       <AccordionItem
