@@ -4,11 +4,10 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { nav, contact, PRELAUNCH_MODE } from '@/lib/config';
 
+// Lookbook deliberately excluded — hidden from customer-facing nav for
+// now (not deleted: /lookbook still exists and remains directly reachable
+// by URL, just no longer linked from the site UI).
 const prelaunchNavigation = [
-  {
-    label: 'Lookbook',
-    href: '/lookbook',
-  },
   {
     label: 'World',
     href: '/about',

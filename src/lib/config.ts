@@ -94,13 +94,16 @@ export const nav = {
   // and mobile (MobileMenu.tsx) onto one identical list once PRELAUNCH_MODE
   // is false. Kept separate from `main` (which today's live prelaunch
   // desktop header already renders unconditionally) so this never touches
-  // current prelaunch nav. Adds Lookbook, which `main` doesn't have. No
-  // `/t-shirts` route exists, so Collections stands in for it.
+  // current prelaunch nav. No `/t-shirts` route exists, so Collections
+  // stands in for it.
+  //
+  // Lookbook deliberately excluded — hidden from customer-facing nav for
+  // now (not deleted: /lookbook and its components still exist and remain
+  // directly reachable by URL, just no longer linked from the site UI).
   launch: [
     { label: 'Shop', href: '/shop' },
     { label: 'New Drop', href: '/new-drop' },
     { label: 'Collections', href: '/collections' },
-    { label: 'Lookbook', href: '/lookbook' },
     { label: 'World', href: '/about' },
   ],
   utility: [
@@ -115,7 +118,6 @@ export const nav = {
         { label: 'Shop All', href: '/shop' },
         { label: 'New Drop', href: '/new-drop' },
         { label: 'Collections', href: '/collections' },
-        { label: 'Lookbook', href: '/lookbook' },
       ],
     },
     {

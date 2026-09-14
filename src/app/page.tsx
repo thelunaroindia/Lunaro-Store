@@ -16,7 +16,6 @@ import FeaturedProducts from '@/components/home/FeaturedProducts';
 import CollectionCarousel from '@/components/home/CollectionCarousel';
 import TrustStrip from '@/components/home/TrustStrip';
 import GarmentDetails from '@/components/home/GarmentDetails';
-import LookbookPreview from '@/components/home/LookbookPreview';
 import JoinOrbit from '@/components/home/JoinOrbit';
 
 // Placeholder catalogue shaped like real Shopify data so every component
@@ -81,15 +80,16 @@ export default async function HomePage() {
         <FeaturedProducts products={products.slice(0, 4)} />
         <CollectionCarousel />
         <GarmentDetails />
-        <LookbookPreview />
         <JoinOrbit />
       </>
     );
   }
 
   // Launch-mode homepage order: Hero → Category Chips → Latest Drop →
-  // Trust Strip → Garment Details → Lookbook → Newsletter. AnnouncementBar
-  // renders sitewide from layout.tsx, above Header, so it isn't listed here.
+  // Trust Strip → Garment Details → Newsletter. AnnouncementBar renders
+  // sitewide from layout.tsx, above Header, so it isn't listed here.
+  // Lookbook deliberately excluded — hidden from customer-facing discovery
+  // for now (not deleted: /lookbook and LookbookPreview.tsx still exist).
   let realProducts: ProductCardData[] = [];
 
   if (isShopifyConfigured()) {

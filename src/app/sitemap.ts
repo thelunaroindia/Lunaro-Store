@@ -2,12 +2,15 @@ import type { MetadataRoute } from 'next';
 import { site, PRELAUNCH_MODE } from '@/lib/config';
 import { getProducts, getCollections, isShopifyConfigured } from '@/lib/shopify';
 
+// /lookbook deliberately excluded — hidden from customer-facing discovery
+// for now (not deleted: the route still exists and works, it's just no
+// longer promoted for search-engine indexing either). See also its own
+// `robots: { index: false }` in src/app/lookbook/page.tsx.
 const staticRoutes = [
   '',
   '/shop',
   '/new-drop',
   '/collections',
-  '/lookbook',
   '/about',
   '/contact',
   '/faq',
