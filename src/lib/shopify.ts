@@ -231,8 +231,14 @@ export async function getProducts(params?: {
 }
 
 export async function getProductByHandle(
-  handle: string
+  handle: string,
+  options?: { bypassCache?: boolean }
 ): Promise<Product | null> {
+  // bypassCache exists solely for the PURCHASE_TEST_MODE PDP unlock (see
+  // src/app/products/[handle]/page.tsx) — while actively verifying the
+  // live Product → Cart → Fastr → Shopify pipeline, a 60s-stale price
+  // defeats the point of testing against real data. Every other product
+  // fetch keeps the normal revalidate:60 + tag-based caching untouched.
   const data = await shopifyFetch<{
     product: any | null;
   }>(
@@ -240,10 +246,9 @@ export async function getProductByHandle(
     {
       handle,
     },
-    {
-      revalidate: 60,
-      tags: [`product:${handle}`],
-    }
+    options?.bypassCache
+      ? { cache: 'no-store' }
+      : { revalidate: 60, tags: [`product:${handle}`] }
   );
 
   return data.product
