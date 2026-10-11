@@ -102,3 +102,38 @@ export function openFastrCheckout(
     return false;
   }
 }
+
+/**
+ * Opens Fastr/Shiprocket Checkout for a single product — PDP "Buy Now" only.
+ * Uses buyDirect()'s type: 'product' path so the checkout is seeded with
+ * exactly the variant/quantity passed in, never whatever else happens to be
+ * sitting in the shared Shopify cart (that cart persists for 30 days across
+ * sessions — see src/actions/cart.ts — so reusing type: 'cart' here would
+ * silently carry over unrelated earlier purchases into a "Buy Now").
+ */
+export function openFastrCheckoutForProduct(
+  variantId: string,
+  quantity: number,
+  couponCode?: string
+): boolean {
+  if (quantity <= 0) return false;
+
+  const sdk = window.shiprocketCheckoutEvents;
+
+  if (!sdk?.buyDirect) {
+    console.error('[fastr] Checkout SDK is not available.');
+    return false;
+  }
+
+  try {
+    sdk.buyDirect({
+      type: 'product',
+      products: [{ variantId: toFastrVariantId(variantId), quantity }],
+      ...(couponCode ? { couponCode } : {}),
+    });
+    return true;
+  } catch {
+    console.error('[fastr] Checkout failed to open.');
+    return false;
+  }
+}

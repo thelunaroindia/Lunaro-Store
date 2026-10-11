@@ -60,7 +60,9 @@ export async function generateMetadata({
     };
   }
 
-  const product = await getProductByHandle(handle).catch(() => null);
+  const product = await getProductByHandle(handle, {
+    bypassCache: isPurchaseTestUnlock(handle),
+  }).catch(() => null);
 
   if (!product) {
     return {
@@ -190,7 +192,9 @@ export default async function ProductPage({
   let product: Product | null = null;
 
   if (isShopifyConfigured()) {
-    product = await getProductByHandle(handle).catch(() => null);
+    product = await getProductByHandle(handle, {
+      bypassCache: isPurchaseTestUnlock(handle),
+    }).catch(() => null);
   }
 
   if (!product) {

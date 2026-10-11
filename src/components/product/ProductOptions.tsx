@@ -13,7 +13,7 @@ import { formatMoney } from '@/lib/utils';
 import { addToCart } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
 import { Button } from '@/components/ui/Button';
-import { activeFastrCouponCode, cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
+import { activeFastrCouponCode, openFastrCheckoutForProduct } from '@/lib/fastr';
 import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
 import StickyAddToCart from './StickyAddToCart';
 import SizeGuideDrawer from './SizeGuideDrawer';
@@ -134,7 +134,7 @@ export default function ProductOptions({
   selected: Record<string, string>;
   setSelected: Dispatch<SetStateAction<Record<string, string>>>;
 }) {
-  const { setCart, open } = useCartUI();
+  const { cart, setCart, open } = useCartUI();
   const [isPending, startTransition] = useTransition();
   const [checkingOut, setCheckingOut] = useState(false);
   const [error, setError] = useState('');
@@ -234,45 +234,44 @@ export default function ProductOptions({
 
     setError('');
 
-    startTransition(async () => {
-      const result = await addToCart(activeVariant.id, 1);
+    const eventParams = {
+      product_id: product.id,
+      product_handle: product.handle,
+      variant_id: activeVariant.id,
+      currency: activeVariant.price.currencyCode,
+      value: Number(activeVariant.price.amount),
+      quantity: 1,
+      internal_test: isInternalTestProduct(product.handle),
+    };
+    trackEvent('buy_now', eventParams);
 
-      if (result.ok) {
-        const eventParams = {
-          product_id: product.id,
-          product_handle: product.handle,
-          variant_id: activeVariant.id,
-          currency: activeVariant.price.currencyCode,
-          value: Number(activeVariant.price.amount),
-          quantity: 1,
-          internal_test: isInternalTestProduct(product.handle),
-        };
-        trackEvent('buy_now', eventParams);
-        setCart(result.cart);
+    // Buy Now is a standalone single-item purchase — it deliberately never
+    // touches the shared Shopify cart (that cart persists 30 days across
+    // sessions; sending its contents here would silently carry over
+    // whatever else was added earlier into a checkout the customer expects
+    // to contain only this one item). openFastrCheckoutForProduct() seeds
+    // Fastr's checkout with exactly this variant/quantity, so there's no
+    // server round trip to wait on either — unlike Add to Cart above.
+    setCheckingOut(true);
+    const opened = openFastrCheckoutForProduct(
+      activeVariant.id,
+      1,
+      cart ? activeFastrCouponCode(cart) : undefined
+    );
 
-        setCheckingOut(true);
-        const opened = openFastrCheckout(
-          cartToFastrProducts(result.cart),
-          activeFastrCouponCode(result.cart)
-        );
+    if (!opened) {
+      // Nothing actually opened — restore the button immediately
+      // rather than holding it disabled for a checkout attempt that
+      // never happened. No success or failure state is shown here.
+      setCheckingOut(false);
+      return;
+    }
 
-        if (!opened) {
-          // Nothing actually opened — restore the button immediately
-          // rather than holding it disabled for a checkout attempt that
-          // never happened. No success or failure state is shown here.
-          setCheckingOut(false);
-          return;
-        }
-
-        // Buy Now opens the identical Fastr checkout overlay the cart's
-        // Checkout button does — counted as a genuine checkout attempt so
-        // abandonment can be measured across both entry points, not just one.
-        trackEvent('begin_checkout', eventParams);
-        setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
-      } else {
-        setError(result.error);
-      }
-    });
+    // Buy Now opens the identical Fastr checkout overlay the cart's
+    // Checkout button does — counted as a genuine checkout attempt so
+    // abandonment can be measured across both entry points, not just one.
+    trackEvent('begin_checkout', eventParams);
+    setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
   }
 
   const buyNowLabel = needsSizeSelection
