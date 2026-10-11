@@ -3,7 +3,7 @@
 // SEO defaults — lives here so it is never scattered across components.
 // Replace TODO-marked values with real data when it is available;
 // nothing here is wired to fake functionality.
-export const PRELAUNCH_MODE = false;
+export const PRELAUNCH_MODE = true;
 
 // Temporary purchase-flow test switch. While PRELAUNCH_MODE keeps every
 // product page concealed, this unlocks ONE real, already-connected Shopify
@@ -30,7 +30,7 @@ export const PURCHASE_TEST_PRODUCT_HANDLE = 'test';
 // changes what's *displayed* — it does NOT automatically launch the
 // store. Every component that reads it (Hero.tsx) picks it up immediately
 // with no other code change.
-export const LAUNCH_DATE: string | null = null;
+export const LAUNCH_DATE: string | null = '2026-10-11T16:00:00+05:30';
 
 // The single authoritative production origin. www.lunaro.in is the
 // verified real production host — every non-www/http variant 308-redirects
