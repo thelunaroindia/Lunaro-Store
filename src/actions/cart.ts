@@ -122,6 +122,33 @@ export async function applyDiscount(
   }
 }
 
+// "Buy Now" checks out exactly one item, so it gets its own throwaway
+// Shopify cart — never the shared cart in CART_COOKIE (that cart persists
+// 30 days, and reusing it would silently carry earlier items into a
+// checkout the customer expects to contain only this product). The cookie
+// is deliberately left untouched.
+export async function createBuyNowCheckout(
+  merchandiseId: string,
+  quantity: number = 1,
+  couponCode?: string
+): Promise<{ ok: true; checkoutUrl: string } | { ok: false; error: string }> {
+  try {
+    if (!isShopifyConfigured()) {
+      return { ok: false, error: 'Store is not connected yet. Configure Shopify to enable checkout.' };
+    }
+    let cart = await shopifyCreateCart([{ merchandiseId, quantity }]);
+    if (couponCode) {
+      // A code that doesn't apply to this item shouldn't block the
+      // purchase — fall back to the undiscounted cart.
+      cart = await applyDiscountCode(cart.id, couponCode).catch(() => cart);
+    }
+    return { ok: true, checkoutUrl: cart.checkoutUrl };
+  } catch (err) {
+    console.error('[cart] createBuyNowCheckout failed', err);
+    return { ok: false, error: GENERIC_CART_ERROR };
+  }
+}
+
 export async function refreshCatalogue() {
   revalidateTag('products');
   revalidateTag('collections');

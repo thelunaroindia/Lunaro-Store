@@ -10,10 +10,10 @@ import {
 } from 'react';
 import Link from 'next/link';
 import { formatMoney } from '@/lib/utils';
-import { addToCart } from '@/actions/cart';
+import { addToCart, createBuyNowCheckout } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
 import { Button } from '@/components/ui/Button';
-import { activeFastrCouponCode, openFastrCheckoutForProduct } from '@/lib/fastr';
+import { activeCouponCode, goToCheckout } from '@/lib/checkout';
 import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
 import StickyAddToCart from './StickyAddToCart';
 import SizeGuideDrawer from './SizeGuideDrawer';
@@ -34,11 +34,9 @@ function isTrackpant(productType: string): boolean {
 }
 
 // Matches the same bounded safety-net re-enable CartDrawer.tsx/
-// CartPageClient.tsx already use for their Checkout buttons — Fastr's SDK
-// exposes no close/cancel/error callback, so this is the only guard
-// available against a rapid double-tap re-opening the checkout overlay
-// (or re-adding a second unit to the cart) before the first tap's overlay
-// has actually appeared.
+// CartPageClient.tsx already use for their Checkout buttons — keeps the
+// button from staying stuck disabled if the customer comes Back from
+// Shopify checkout and the page is restored from the back/forward cache.
 const CHECKOUT_REENABLE_MS = 2500;
 
 // Shopify gives every product at least one option. Products with no real
@@ -249,29 +247,34 @@ export default function ProductOptions({
     // touches the shared Shopify cart (that cart persists 30 days across
     // sessions; sending its contents here would silently carry over
     // whatever else was added earlier into a checkout the customer expects
-    // to contain only this one item). openFastrCheckoutForProduct() seeds
-    // Fastr's checkout with exactly this variant/quantity, so there's no
-    // server round trip to wait on either — unlike Add to Cart above.
+    // to contain only this one item). createBuyNowCheckout() builds a
+    // separate single-item Shopify cart and returns its checkout URL.
     setCheckingOut(true);
-    const opened = openFastrCheckoutForProduct(
-      activeVariant.id,
-      1,
-      cart ? activeFastrCouponCode(cart) : undefined
-    );
+    void (async () => {
+      const result = await createBuyNowCheckout(
+        activeVariant.id,
+        1,
+        cart ? activeCouponCode(cart) : undefined
+      );
 
-    if (!opened) {
-      // Nothing actually opened — restore the button immediately
-      // rather than holding it disabled for a checkout attempt that
-      // never happened. No success or failure state is shown here.
-      setCheckingOut(false);
-      return;
-    }
+      if (!result.ok) {
+        setError(result.error);
+        setCheckingOut(false);
+        return;
+      }
 
-    // Buy Now opens the identical Fastr checkout overlay the cart's
-    // Checkout button does — counted as a genuine checkout attempt so
-    // abandonment can be measured across both entry points, not just one.
-    trackEvent('begin_checkout', eventParams);
-    setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
+      // Buy Now goes to the same Shopify checkout the cart's Checkout
+      // button does — counted as a genuine checkout attempt so abandonment
+      // can be measured across both entry points, not just one.
+      trackEvent('begin_checkout', eventParams);
+
+      if (!goToCheckout(result.checkoutUrl)) {
+        setCheckingOut(false);
+        return;
+      }
+
+      setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
+    })();
   }
 
   const buyNowLabel = needsSizeSelection

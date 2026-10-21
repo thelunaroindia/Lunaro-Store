@@ -15,7 +15,7 @@
 - [ ] Sold-out variant shows "Sold Out" and disables Add to Cart
 - [ ] Low-stock variant (≤5 units) shows the "Only N left" message
 - [ ] Add to Cart opens the cart drawer with the correct variant, quantity 1
-- [ ] Buy Now opens the Fastr checkout overlay with the item in cart (not a redirect to Shopify's own checkout — that path is not used)
+- [ ] Buy Now redirects to Shopify checkout containing only that one item (not whatever else is in the cart)
 - [ ] Mobile sticky add-to-cart bar appears on scroll and mirrors the same state as the main button
 - [ ] Related products exclude the current product
 
@@ -25,7 +25,7 @@
 - [ ] A valid discount code applies and shows in the summary
 - [ ] An invalid/expired discount code shows a clear error, doesn't crash the cart
 - [ ] Empty cart shows the empty state with a link to `/shop`
-- [ ] Checkout button opens the Fastr checkout overlay with the correct cart contents, including any applied discount code
+- [ ] Checkout button redirects to Shopify checkout with the correct cart contents, including any applied discount code
 
 ## Wishlist
 - [ ] Adding/removing from a product card persists across a page reload (localStorage)
@@ -74,6 +74,5 @@
 
 ## Commerce integrity
 - [ ] A full test purchase (Bogus Gateway or ₹1 product) completes and appears correctly in Shopify Admin
-- [ ] The same test order appears in Shiprocket within a few minutes
 - [ ] Inventory decrements correctly after purchase
-- [ ] No page anywhere claims a feature works that isn't actually wired to Shopify/Shiprocket/a real email provider — every placeholder is visibly marked as such
+- [ ] No page anywhere claims a feature works that isn't actually wired to Shopify/a real email provider — every placeholder is visibly marked as such

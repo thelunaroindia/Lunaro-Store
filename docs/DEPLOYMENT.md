@@ -69,7 +69,7 @@ This reuses the same Admin API app as `/api/track-order` (see step 3 in `docs/SH
 1. Deploy to production.
 2. Enable Shopify's **Bogus Gateway** test mode (Admin → Settings → Payments) or use a real ₹1 test product.
 3. Add to cart on `https://lunaro.in`, proceed through Shopify's checkout, complete payment.
-4. Confirm the order lands in Shopify Admin **and** syncs to Shiprocket (see `docs/SHIPROCKET_SETUP.md` step 6).
+4. Confirm the order lands in Shopify Admin.
 5. Turn off test mode before real launch.
 
 ## 10. Rolling back a failed deployment

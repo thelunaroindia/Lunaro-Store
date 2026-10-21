@@ -4,9 +4,9 @@ import { isShopifyAdminConfigured, shopifyAdminFetch, lastTenDigits } from '@/li
 // Uses the Shopify Admin API (NOT the Storefront API), via the shared
 // src/lib/shopifyAdmin.ts helper — credentials never reach the client.
 //
-// Verifies by order number + phone (not email): Fastr checkout collects
-// the customer's phone, not a manually entered email, so email was never
-// a reliable second factor for real orders placed through it. The order
+// Verifies by order number + phone (not email). Requires checkout to
+// collect a phone number (Shopify Admin → Settings → Checkout → shipping
+// address phone number: Required), otherwise orders can't be matched. The order
 // is fetched by number only; the phone match happens here in code against
 // the real Shopify order phone, normalized to the last 10 digits so
 // +91XXXXXXXXXX / 91XXXXXXXXXX / XXXXXXXXXX all compare equal — the same

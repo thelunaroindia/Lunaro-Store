@@ -156,10 +156,28 @@ function normaliseProductCard(product: any): ProductCardData {
   };
 }
 
+// Shopify builds checkoutUrl on the store's *primary* domain. When that's
+// the custom domain (www.lunaro.in), it points at this Next.js app on
+// Vercel, which has no /cart/c/... route — so the customer would land on a
+// 404 instead of checkout. Re-pointing the host at the *.myshopify.com
+// domain always reaches Shopify's hosted checkout; path and query (cart
+// token + key) are kept untouched.
+function toShopifyCheckoutUrl(checkoutUrl: string): string {
+  if (!checkoutUrl || !DOMAIN) return checkoutUrl;
+  try {
+    const url = new URL(checkoutUrl);
+    url.host = DOMAIN;
+    url.protocol = 'https:';
+    return url.toString();
+  } catch {
+    return checkoutUrl;
+  }
+}
+
 function normaliseCart(cart: any): Cart {
   return {
     id: cart.id,
-    checkoutUrl: cart.checkoutUrl,
+    checkoutUrl: toShopifyCheckoutUrl(cart.checkoutUrl),
     totalQuantity: cart.totalQuantity,
     cost: cart.cost,
     discountCodes: cart.discountCodes ?? [],
@@ -236,7 +254,7 @@ export async function getProductByHandle(
 ): Promise<Product | null> {
   // bypassCache exists solely for the PURCHASE_TEST_MODE PDP unlock (see
   // src/app/products/[handle]/page.tsx) — while actively verifying the
-  // live Product → Cart → Fastr → Shopify pipeline, a 60s-stale price
+  // live Product → Cart → Checkout → Shopify pipeline, a 60s-stale price
   // defeats the point of testing against real data. Every other product
   // fetch keeps the normal revalidate:60 + tag-based caching untouched.
   const data = await shopifyFetch<{

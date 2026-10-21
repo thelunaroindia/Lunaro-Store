@@ -8,8 +8,8 @@ export const PRELAUNCH_MODE = false;
 // Temporary purchase-flow test switch. While PRELAUNCH_MODE keeps every
 // product page concealed, this unlocks ONE real, already-connected Shopify
 // product (PURCHASE_TEST_PRODUCT_HANDLE) so the full
-// Product → Cart → Fastr → Shopify order pipeline can be exercised end to
-// end before launch. It touches nothing else — no cart/Fastr/Shopify logic,
+// Product → Cart → Checkout → Shopify order pipeline can be exercised end to
+// end before launch. It touches nothing else — no cart/checkout/Shopify logic,
 // no homepage content, no other product handle.
 //
 // Set back to `false` the moment testing is done — that alone fully
@@ -252,12 +252,12 @@ export const bottomsSizeGuide = {
   ],
 } as const;
 
-// Confirmed via live Fastr checkout testing — keep this as the one place
-// that states the rate so PDP/cart copy never drifts from what Fastr
-// actually applies at checkout. Fastr remains the source of truth for the
-// final payable amount; this is messaging only, never something this app
-// calculates or enforces. If the rate ever changes in Fastr's dashboard,
-// update it here to match — never let this drift from what's actually live.
+// Keep this as the one place that states the rate so PDP/cart copy never
+// drifts from what checkout actually applies. Checkout remains the source
+// of truth for the final payable amount; this is messaging only, never
+// something this app calculates or enforces. If the rate ever changes in
+// the checkout's settings, update it here to match — never let this drift
+// from what's actually live.
 export const prepaidIncentive = '5% off on prepaid orders.' as const;
 
 export const payments = {
@@ -272,8 +272,7 @@ export const policies = {
   shipping: {
     heading: 'Shipping & Exchanges',
     intro:
-      'LUNARO ships across India. Shipping and fulfilment are handled through Shiprocket, connected directly to our Shopify backend.',
-    // Rates confirmed via live Fastr checkout testing.
+      'LUNARO ships across India through our courier partners.',
     // TODO: confirm courier partners and exact dispatch timelines before launch.
     //
     // No-returns policy (current direction): LUNARO does not accept returns.
@@ -304,7 +303,7 @@ export const policies = {
       'LUNARO collects only the information required to process orders, provide support and, where you opt in, send updates about new drops.',
     points: [
       'Payment details are handled by our payment gateway and Shopify — LUNARO does not store your card information.',
-      'Shipping information is shared with Shiprocket solely to fulfil your order.',
+      'Shipping information is shared with our courier partners solely to fulfil your order.',
       'You can request access to or deletion of your data by contacting us — see the Contact page.',
     ],
   },
@@ -342,8 +341,7 @@ export const faqs = [
   },
   {
     // This page isn't gated by PRELAUNCH_MODE — it's reachable right now.
-    // Confirmed via live Fastr checkout testing — COD stays worded "where
-    // eligible" (not an unconditional "available") since serviceability
+    // COD stays worded "where eligible" (not an unconditional "available") since serviceability
     // can still vary by pincode/courier.
     q: 'Do you offer Cash on Delivery?',
     a: 'Cash on Delivery is available where eligible. You can also pay using UPI, Credit & Debit Cards, Net Banking, or Wallets. Get 5% off on prepaid orders.',

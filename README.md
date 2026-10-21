@@ -1,9 +1,9 @@
 # LUNARO — Storefront
 
-A headless Shopify storefront for **LUNARO** (premium oversized streetwear, India). This repository is the **frontend only** — Shopify is the commerce backend, Shiprocket handles fulfilment, and the whole thing is meant to run on Vercel behind the `lunaro.in` domain (registered at GoDaddy).
+A headless Shopify storefront for **LUNARO** (premium oversized streetwear, India). This repository is the **frontend only** — Shopify is the commerce backend and checkout, and the whole thing is meant to run on Vercel behind the `lunaro.in` domain (registered at GoDaddy).
 
 ```
-Next.js (this repo) ──Storefront API──> Shopify ──sync──> Shiprocket ──> Courier
+Next.js (this repo) ──Storefront API──> Shopify (checkout + orders) ──> Courier
         │
         └── Vercel (hosting) ── GoDaddy (DNS)
 ```
@@ -25,7 +25,6 @@ None of the following can be turned on without your accounts — see the linked 
 | Needs | Guide |
 |---|---|
 | Shopify store, Storefront token, products, collections, blog | `docs/SHOPIFY_SETUP.md` |
-| Shiprocket ↔ Shopify shipping sync | `docs/SHIPROCKET_SETUP.md` |
 | Vercel hosting + GoDaddy domain (`lunaro.in`) | `docs/DEPLOYMENT.md` |
 | Resend (contact form email) | `docs/DEPLOYMENT.md` |
 | Higgsfield cinematic video/image assets | `docs/HIGGSFIELD_PROMPTS.md` |
@@ -75,5 +74,5 @@ See `docs/TESTING_CHECKLIST.md` before every launch or major release.
 This is a genuinely production-capable storefront, but three things are true at once:
 
 1. The **code** is complete and functional for every page listed in the original brief.
-2. It **cannot go live** until you complete the manual steps that require your own accounts (Shopify, Shiprocket, GoDaddy, Vercel, Resend, Higgsfield) — no one else can do that part, including this codebase.
+2. It **cannot go live** until you complete the manual steps that require your own accounts (Shopify, GoDaddy, Vercel, Resend, Higgsfield) — no one else can do that part, including this codebase.
 3. Final visual polish (real product photography, final Higgsfield-generated film, final pricing/copy) should replace the marked placeholders before launch.

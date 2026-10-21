@@ -5,13 +5,12 @@ import { formatMoney } from '@/lib/utils';
 import { payments, prepaidIncentive } from '@/lib/config';
 import { applyDiscount } from '@/actions/cart';
 import { Button } from '@/components/ui/Button';
-import { activeFastrCouponCode, cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
+import { goToCheckout } from '@/lib/checkout';
 import { trackEvent, cartEventParams } from '@/lib/analytics';
 import CartLineItem from '@/components/cart/CartLineItem';
 import type { Cart } from '@/lib/types';
 
-// See CartDrawer.tsx for why this is a bounded safety-net reset rather than
-// a real close/cancel callback — Fastr's SDK doesn't expose one.
+// See CartDrawer.tsx for why this bounded safety-net reset exists.
 const CHECKOUT_REENABLE_MS = 2500;
 
 export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
@@ -33,21 +32,16 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
     if (checkingOut) return;
     setCheckingOut(true);
 
-    const opened = openFastrCheckout(
-      cartToFastrProducts(cart),
-      activeFastrCouponCode(cart)
-    );
+    // Fired before navigating away so the event isn't lost with the page.
+    trackEvent('begin_checkout', cartEventParams(cart));
 
-    if (!opened) {
-      // Nothing actually opened — restore the button immediately rather
-      // than making the customer wait out the full re-enable window for a
-      // checkout attempt that never happened. No success or failure state
-      // is shown here; this is purely "the overlay didn't open."
+    if (!goToCheckout(cart.checkoutUrl)) {
+      // Nothing to navigate to — restore the button immediately rather
+      // than making the customer wait out the full re-enable window.
       setCheckingOut(false);
       return;
     }
 
-    trackEvent('begin_checkout', cartEventParams(cart));
     setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
   }
 

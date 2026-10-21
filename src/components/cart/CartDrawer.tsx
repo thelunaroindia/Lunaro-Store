@@ -6,17 +6,14 @@ import { useCartUI } from '@/context/CartUIContext';
 import { formatMoney } from '@/lib/utils';
 import { payments, prepaidIncentive } from '@/lib/config';
 import { LinkButton } from '@/components/ui/Button';
-import { activeFastrCouponCode, cartToFastrProducts, openFastrCheckout } from '@/lib/fastr';
+import { goToCheckout } from '@/lib/checkout';
 import { trackEvent, cartEventParams } from '@/lib/analytics';
 import CartLineItem from './CartLineItem';
 
-// Fastr's SDK exposes no close/cancel/error callback (confirmed against the
-// live window.shiprocketCheckoutEvents object — only buyProduct/buyCart/
-// buyDirect exist), so there's no real event to react to when the customer
-// closes the checkout overlay without paying. Without this, "checkingOut"
-// would stay true forever and the button would be stuck disabled. This is a
-// bounded safety-net re-enable, not a delay on opening checkout itself —
-// openFastrCheckout() below still fires immediately, synchronously, on click.
+// Checkout navigates away to Shopify, but a customer who comes Back can get
+// this page restored from the browser's back/forward cache with
+// "checkingOut" still true. This bounded safety-net re-enable keeps the
+// button from staying stuck disabled in that case.
 const CHECKOUT_REENABLE_MS = 2500;
 
 export default function CartDrawer() {
@@ -37,21 +34,16 @@ export default function CartDrawer() {
     if (checkingOut || !cart) return;
     setCheckingOut(true);
 
-    const opened = openFastrCheckout(
-      cartToFastrProducts(cart),
-      activeFastrCouponCode(cart)
-    );
+    // Fired before navigating away so the event isn't lost with the page.
+    trackEvent('begin_checkout', cartEventParams(cart));
 
-    if (!opened) {
-      // Nothing actually opened — restore the button immediately rather
-      // than making the customer wait out the full re-enable window for a
-      // checkout attempt that never happened. No success or failure state
-      // is shown here; this is purely "the overlay didn't open."
+    if (!goToCheckout(cart.checkoutUrl)) {
+      // Nothing to navigate to — restore the button immediately rather
+      // than making the customer wait out the full re-enable window.
       setCheckingOut(false);
       return;
     }
 
-    trackEvent('begin_checkout', cartEventParams(cart));
     setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
   }
 

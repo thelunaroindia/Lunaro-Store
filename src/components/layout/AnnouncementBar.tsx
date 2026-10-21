@@ -5,8 +5,8 @@ import { PRELAUNCH_MODE } from '@/lib/config';
 // homepage). Static: no marquee/countdown/fake inventory number, matching
 // the rest of the launch-mode conversion principles.
 //
-// "5% Off Prepaid" and "Free Standard Shipping" are confirmed, verified
-// facts from live Fastr checkout testing — not placeholder copy. "Limited
+// "5% Off Prepaid" and "Free Standard Shipping" are real store offers —
+// not placeholder copy; keep them in sync with src/lib/config.ts. "Limited
 // Drop" was always real (Drop 001's limited quantity).
 export default function AnnouncementBar() {
   if (PRELAUNCH_MODE) return null;

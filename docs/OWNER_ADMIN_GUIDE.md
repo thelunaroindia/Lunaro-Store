@@ -25,7 +25,7 @@ Admin → **Discounts → Create discount** → Amount off, code, eligibility, u
 
 ## View and process orders
 
-Admin → **Orders**. Click any order to see customer details, items, payment status. Use **Mark as fulfilled** once Shiprocket has picked up the shipment (or let the Shiprocket ↔ Shopify sync do this automatically, depending on your Shiprocket settings).
+Admin → **Orders**. Click any order to see customer details, items, payment status. Use **Mark as fulfilled** once the courier has picked up the shipment, and add the tracking number there.
 
 ## Process a refund
 
@@ -47,14 +47,10 @@ Admin → **Products** → open the product → edit → **Save**. Changes go li
 
 Admin → **Online Store → Blog posts → Add blog post**. Make sure it's added to the blog with handle `transmissions` (see `docs/SHOPIFY_SETUP.md` step 6). It appears on `/transmissions` immediately.
 
-## Connect Shiprocket
-
-See `docs/SHIPROCKET_SETUP.md` in full — in short: Shiprocket dashboard → Settings → Channels → Add Shopify.
-
 ## Test checkout
 
 Enable Shopify's Bogus Gateway (Admin → Settings → Payments → toggle test mode) so you can place complete test orders without moving real money, then walk through the full flow on the live site.
 
 ## Track a shipment
 
-Once Shiprocket generates a tracking number for an order, it syncs back to that Shopify order automatically — visible on the order page in Admin, and to the customer via `/track-order` on the site.
+When you mark an order as fulfilled in Admin, add the courier's tracking number — it's then visible on the order page in Admin, and to the customer via `/track-order` on the site.

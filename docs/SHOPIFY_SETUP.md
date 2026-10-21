@@ -87,15 +87,18 @@ LUNARO uses Shopify's **hosted Customer Account API** rather than a custom login
 
 Admin → **Discounts → Create discount**. Any code you create here works immediately with the cart's "Apply" field (`src/actions/cart.ts` → `applyDiscount`) — no frontend change needed.
 
-## 10. Payment experience — Fastr checkout
+## 10. Payment experience — Shopify checkout
 
-**Correction (supersedes the description this section used to have):** Add to Cart / Buy Now / the cart's Checkout button do **not** use Shopify's own hosted checkout (`cart.checkoutUrl` is fetched into the cart object but never used anywhere in the UI). The active checkout path is **Fastr / Fastrr Boost (Shiprocket Checkout)** — a third-party checkout overlay loaded via `<script>` in `src/app/layout.tsx` and driven entirely through `src/lib/fastr.ts`'s `openFastrCheckout()`, which every checkout entry point (Buy Now, cart drawer, cart page) calls with the cart's variant IDs/quantities and, where one is applied, the active Shopify discount code.
+Every checkout entry point uses **Shopify's own hosted checkout** (Fastr / Shiprocket Checkout was removed):
 
-Fastr owns payment method selection, COD/prepaid handling, and (per its own Shopify app integration) order creation — none of that happens in this repo. Whatever's enabled in **Fastr's merchant dashboard** and **Shopify Admin → Settings → Payments** is what customers actually see; the product page and cart list method names from `src/lib/config.ts` → `payments.methods` purely as reassurance copy, not a claim about what's live — update that array if your gateway's actual method set differs.
+- **Cart drawer / cart page Checkout** — redirects to the shared cart's `cart.checkoutUrl`, which already carries any applied discount code.
+- **Buy Now** — creates a separate single-item cart (`createBuyNowCheckout` in `src/actions/cart.ts`) so the shared cart never leaks into it, re-applies the active discount code, then redirects to that cart's `checkoutUrl`.
 
-**Confirmed via live Fastr checkout testing:** UPI, credit/debit cards, net banking, and wallets all work; the 5% prepaid discount works; normal, full Cash on Delivery works **where eligible** (serviceability still varies by pincode/courier — this is never an unconditional "COD available everywhere"), with no COD handling fee (₹0). Standard Shipping is Free, Express Shipping is ₹129, Rush Shipping is ₹249 — see `src/lib/config.ts` → `policies.shipping.points` and `prepaidIncentive` for where these are stated in the UI.
+`checkoutUrl`'s host is rewritten to `SHOPIFY_STORE_DOMAIN` (`toShopifyCheckoutUrl` in `src/lib/shopify.ts`), because Shopify builds it on the store's primary domain — and when that's `www.lunaro.in`, it would point back at this Vercel app and 404.
 
-**Partial COD (a percentage paid online, the remainder collected on delivery) was evaluated and cancelled — it is not implemented and is not part of this launch.** Fastr's integration as wired here has no native support for it (confirmed by inspecting its actual SDK surface, not assumed), and building it custom would have required a Razorpay integration, `write_orders` Admin scope, and a payment-persistence layer this app does not have. The old internal Fastr rule that had been hiding normal COD behind a "Partial COD — ₹199 Advance" condition has since been disabled/removed on Fastr's side; normal COD is confirmed working independently of that now-removed rule.
+Payment methods, COD, shipping rates and the prepaid discount are whatever's configured in **Shopify Admin** (Settings → Payments, Settings → Shipping and delivery, Discounts). The site states UPI / cards / net banking / wallets, 5% off prepaid, COD where eligible, and Standard Free / Express ₹129 / Rush ₹249 (`src/lib/config.ts`) — keep Admin and that file in sync.
+
+Set **Settings → Checkout → shipping address phone number** to *Required*: `/track-order` verifies customers by order number + phone.
 
 ## 11. Verify the connection
 

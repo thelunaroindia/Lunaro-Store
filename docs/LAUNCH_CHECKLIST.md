@@ -50,17 +50,16 @@ Home, Shop All, New Drop, Collections (index + `[handle]`), Product (`[handle]`)
 
 ## Payment experience
 
-- **Fastr / Fastrr Boost (Shiprocket Checkout)** is the only checkout route for launch — not Shopify's own hosted checkout. See `docs/SHOPIFY_SETUP.md` § 10 for the corrected description.
-- **Confirmed via live Fastr checkout testing:** UPI, credit/debit cards, net banking, and wallets all work; the 5% prepaid discount works; normal, full Cash on Delivery works **where eligible** (never asserted as universally available — serviceability still varies by pincode/courier), with no COD handling fee (₹0). Standard Shipping is Free, Express Shipping is ₹129, Rush Shipping is ₹249. Site copy has been restored to state these confirmed values — see `src/lib/config.ts`.
-- **Partial COD (percentage online + remainder on delivery) is not implemented and is not planned for this launch** — evaluated and cancelled; Fastr has no native support for it in this integration, and the custom alternative would have required a Razorpay integration, a wider Shopify Admin scope, and a payment-persistence layer this app doesn't have. The old internal Fastr rule ("Partial COD — ₹199 Advance") that had been hiding normal COD is being disabled/removed on Fastr's side; normal COD is confirmed working independently of that rule.
-- **Guest checkout** — Fastr's checkout does not require account creation; nothing to configure.
+- **Shopify's own hosted checkout** is the checkout route (Fastr / Shiprocket Checkout was removed). Every Checkout / Buy Now button redirects to `cart.checkoutUrl` — see `docs/SHOPIFY_SETUP.md` § 10.
+- Site copy states: UPI, credit/debit cards, net banking and wallets; 5% off prepaid; Cash on Delivery **where eligible**; Standard Shipping Free, Express ₹129, Rush ₹249 (`src/lib/config.ts`). Each of these must be configured in Shopify Admin (Payments, Shipping and delivery, Discounts) so checkout matches the copy.
+- **Guest checkout** — Shopify Admin → Settings → Checkout → customer accounts: make sure checkout doesn't force account creation.
 
 ## What's genuinely done vs. what needs your input before go-live
 
 | Done | Needs you |
 |---|---|
 | Every page, every state (empty/error/loading/sold-out) | Real Shopify store + products (`docs/SHOPIFY_SETUP.md`) |
-| Cart, wishlist, search, filters — all real, wired to Shopify | Shiprocket connection (`docs/SHIPROCKET_SETUP.md`) |
+| Cart, wishlist, search, filters — all real, wired to Shopify | Shopify payments, shipping rates and COD configured to match site copy |
 | Motion system, cinematic placeholders, design system | Vercel + GoDaddy domain (`docs/DEPLOYMENT.md`) |
 | Hero desktop film + campaign still generated | **Download & place them** — see `docs/HOMEPAGE_ASSET_PROMPTS.md` (sandbox has no network to do this for you) |
 | Contact form code (Resend-ready) | A real `RESEND_API_KEY` |

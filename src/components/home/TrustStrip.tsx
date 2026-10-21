@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 // Launch-mode-only trust/conversion strip. Every line is sourced from real
-// store facts, confirmed via live Fastr checkout testing — no invented
+// store facts — no invented
 // return windows, no generic shield-icon spam. "COD Where Eligible" (not
 // an unconditional "COD Available") deliberately keeps the caveat, since
 // COD serviceability can still vary by pincode/courier even though the
