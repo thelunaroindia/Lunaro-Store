@@ -314,6 +314,7 @@ export const policies = {
       'All prices are listed in INR and include applicable taxes unless stated otherwise.',
       'LUNARO reserves the right to limit quantities on limited drops.',
       'Product imagery is representative; minor variation in colour may occur due to display settings and dye lots.',
+      'lunaro.in is owned and operated by Mayank Yadav.',
     ],
   },
 } as const;
