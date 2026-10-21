@@ -305,6 +305,7 @@ export const policies = {
       'Payment details are handled by our payment gateway and Shopify — LUNARO does not store your card information.',
       'Shipping information is shared with our courier partners solely to fulfil your order.',
       'You can request access to or deletion of your data by contacting us — see the Contact page.',
+      'lunaro.in is owned and operated by Mayank Yadav, who is responsible for the personal information collected through this website.',
     ],
   },
   terms: {
