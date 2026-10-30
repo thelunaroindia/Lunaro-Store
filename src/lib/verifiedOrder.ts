@@ -7,6 +7,7 @@ import { isShopifyAdminConfigured, shopifyAdminFetch } from '@/lib/shopifyAdmin'
 import type { Money } from '@/lib/types';
 
 export type VerifiedOrder = {
+  id: string;
   name: string;
   createdAt: string;
   cartToken: string | null;
@@ -55,6 +56,7 @@ export async function getOrderForCheckoutCarts(
     const data = await shopifyAdminFetch<{
       orders: {
         nodes: {
+          id: string;
           name: string;
           createdAt: string;
           cartToken: string | null;
@@ -77,6 +79,7 @@ export async function getOrderForCheckoutCarts(
         query OrderConfirmation($query: String!) {
           orders(first: 1, query: $query) {
             nodes {
+              id
               name
               createdAt
               cartToken
@@ -103,6 +106,7 @@ export async function getOrderForCheckoutCarts(
     return {
       status: 'verified',
       order: {
+        id: order.id,
         name: order.name,
         createdAt: order.createdAt,
         cartToken,

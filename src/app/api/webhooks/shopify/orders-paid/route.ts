@@ -1,12 +1,15 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { waitUntil } from '@vercel/functions';
 import { NextResponse, type NextRequest } from 'next/server';
 import { GOKWIK_ENABLED } from '@/lib/config';
 import {
+  WEBHOOK_GRACE_MS,
   gokwikOrderGateways,
   isLatePaymentReportingConfigured,
   isWithinBrowserPurchaseWindow,
 } from '@/lib/lateOrderPayment';
 import { derivePaymentType } from '@/lib/orderState';
+import { claimPurchaseReport, orderGid, releasePurchaseClaim } from '@/lib/purchaseClaim';
 
 type PaidOrder = {
   id: number;
@@ -26,9 +29,9 @@ function isAuthentic(rawBody: string, signature: string | null): boolean {
   return received.length === expected.length && timingSafeEqual(received, expected);
 }
 
-// Reports a GoKwik order whose payment landed after the customer's browser
-// could report it (see src/lib/lateOrderPayment.ts). Only the order name and
-// amount leave this function, never customer data. GA4 only: Meta's Conversions
+// Reports a paid GoKwik order the customer's browser didn't (see
+// src/lib/purchaseClaim.ts). Only the order name and amount leave this
+// function, never customer data. GA4 only: Meta's Conversions
 // API requires customer information this integration deliberately doesn't read.
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
@@ -51,20 +54,44 @@ export async function POST(req: NextRequest) {
     order.cancelled_at ||
     !gateways.some((gateway) => allowed.includes(gateway.toLowerCase())) ||
     // COD was reported when it was placed; collecting the cash isn't a new sale.
-    derivePaymentType(gateways) === 'cod' ||
-    isWithinBrowserPurchaseWindow(order.created_at)
+    derivePaymentType(gateways) === 'cod'
   ) {
     return NextResponse.json({ reported: false });
   }
+
+  // Shopify gives up on a slow response, so a recent order is answered now and
+  // reported after the customer's open page, if any, has had its chance.
+  if (isWithinBrowserPurchaseWindow(order.created_at)) {
+    waitUntil(
+      new Promise((resolve) => setTimeout(resolve, WEBHOOK_GRACE_MS))
+        .then(() => reportPurchase(order))
+        .then((result) => {
+          if (result === 'failed') console.error('[orders-paid webhook] Report failed after grace period');
+        })
+    );
+    return NextResponse.json({ reported: false, deferred: true });
+  }
+
+  const result = await reportPurchase(order);
+  if (result === 'failed') {
+    return NextResponse.json({ error: 'Reporting failed' }, { status: 502 });
+  }
+  return NextResponse.json({ reported: result === 'reported' });
+}
+
+async function reportPurchase(order: PaidOrder): Promise<'reported' | 'already_reported' | 'failed'> {
+  const orderId = orderGid(order.id);
+  const claim = await claimPurchaseReport(orderId, 'webhook');
+  if (claim === 'lost') return 'already_reported';
+  if (claim === 'error') return 'failed';
 
   const params = new URLSearchParams({
     measurement_id: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID as string,
     api_secret: process.env.GA_MEASUREMENT_PROTOCOL_API_SECRET as string,
   });
 
-  // Stable per order, so a retried delivery is the same user and transaction,
-  // which GA4 deduplicates. It can't be the customer's own browser ID, so this
-  // revenue arrives without their session's attribution.
+  // Stable per order. It can't be the customer's own browser ID, so this revenue
+  // arrives without their session's attribution.
   const clientId = createHash('sha256').update(String(order.id)).digest('hex').slice(0, 32);
 
   const res = await fetch(`https://www.google-analytics.com/mp/collect?${params}`, {
@@ -90,8 +117,9 @@ export async function POST(req: NextRequest) {
 
   if (!res.ok) {
     console.error(`[orders-paid webhook] GA4 returned ${res.status}`);
-    return NextResponse.json({ error: 'Reporting failed' }, { status: 502 });
+    await releasePurchaseClaim(orderId);
+    return 'failed';
   }
 
-  return NextResponse.json({ reported: true });
+  return 'reported';
 }

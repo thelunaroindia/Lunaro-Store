@@ -38,7 +38,7 @@ Check the current supported version at any time: Admin → Settings → Apps and
 Dev Dashboard apps for a store you own don't issue a permanent static Admin API token — they authenticate via the **OAuth client credentials grant**, so this app hands you a Client ID/Secret instead of a token, and `src/lib/shopifyAdmin.ts` exchanges them for a short-lived access token itself at request time (cached in memory, refreshed automatically before it expires).
 
 1. [Shopify Dev Dashboard](https://dev.shopify.com/dashboard) → create an app (e.g. `LUNARO Order Verification`) → install it on `lunaro-9855.myshopify.com` (or your store's domain).
-2. Admin API scopes: `read_orders` (order lookups), `write_customers` and `read_customers` (newsletter signup — creating/updating customers and looking up existing ones to repair tag/consent state on resignup). Do not add `write_orders` or any other scope unless a specific feature genuinely needs it.
+2. Admin API scopes: `read_orders` (order lookups), `write_customers` and `read_customers` (newsletter signup — creating/updating customers and looking up existing ones to repair tag/consent state on resignup). GoKwik's purchase reporting also needs `write_orders` (see `docs/GOKWIK_SETUP.md`). Do not add any other scope unless a specific feature genuinely needs it.
 3. From the app's API credentials, copy the **Client ID** and **Client secret** into:
    ```
    SHOPIFY_ADMIN_CLIENT_ID=

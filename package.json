@@ -13,6 +13,7 @@
     "test:checkout": "node scripts/tests/gokwik.test.cjs && node scripts/tests/actions.test.cjs && node scripts/tests/webhook.test.cjs"
   },
   "dependencies": {
+    "@vercel/functions": "3.10.5",
     "clsx": "2.1.1",
     "framer-motion": "11.11.17",
     "next": "14.2.16",

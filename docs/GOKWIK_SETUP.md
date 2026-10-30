@@ -40,7 +40,7 @@ Set these on the environment being tested (Vercel Preview, or `.env.local`), nev
 
 Use the Dev Dashboard app described in `docs/SHOPIFY_SETUP.md` § 3. It must belong to the same Shopify organization as the store and be installed on it: Shopify's client credentials grant works only in that case. GoKwik dashboard logins and anything GoKwik emails are for GoKwik's systems and can't be used here.
 
-Minimum scope for this feature: `read_orders`. `/track-order` also reads the order phone, and `/order-confirmation` shows the shipping city if readable, but order verification uses neither. Don't grant protected customer data access just for this integration.
+Minimum scopes for this feature: `read_orders`, and `write_orders` for the purchase claim below, which writes only one metafield in this app's own namespace. `/track-order` also reads the order phone, and `/order-confirmation` shows the shipping city if readable, but order verification uses neither. Don't grant protected customer data access just for this integration.
 
 Then run this. It prints scopes and counts only, never a credential or customer value:
 
@@ -64,12 +64,12 @@ Subscribe the same app to the `orders/paid` topic, delivering to `https://<envir
 
 ## Purchase tracking
 
-Each GoKwik order has one `purchase` reporter:
+Each GoKwik order has one `purchase` reporter. Before reporting, the browser and the webhook both write a `purchase_reported` metafield on the order with `compareDigest: null`, which Shopify accepts only if it doesn't exist yet. Whoever wins reports; a failed claim reports nothing.
 
 | Order | Reporter |
 | --- | --- |
-| Paid, authorised or COD when the browser confirms it | Storefront browser event (GA4 and Meta). Once per order per browser; `transaction_id` and Meta `eventID` are the order name |
-| Prepaid, paid more than 2 minutes after creation | `orders/paid` webhook, GA4 Measurement Protocol, when configured. Otherwise the browser reports it on the customer's next visit |
+| Paid, authorised or COD while the customer's page is open or when they return | Storefront browser event (GA4 and Meta); `transaction_id` and Meta `eventID` are the order name |
+| Prepaid, paid when no page reports it | `orders/paid` webhook, GA4 Measurement Protocol, when configured: at once for an order over 2 minutes old, otherwise after 45 seconds, so an open page reports first |
 | Native Shopify checkout (including fallback) | Shopify's own channels on Shopify's pages. The storefront and webhook don't report these, because the webhook only accepts `GOKWIK_ORDER_GATEWAYS` |
 
 Other sources:
@@ -90,13 +90,15 @@ analytics.subscribe('gokwik_events', (event) => {
 });
 ```
 
-Known limits: webhook-reported revenue has no session attribution and doesn't reach Meta, because Meta's Conversions API requires customer data this integration doesn't read. An order that's paid within 2 minutes after the customer has left is not reported.
+Known limits: webhook-reported revenue has no session attribution and doesn't reach Meta, because Meta's Conversions API requires customer data this integration doesn't read. An event can still be lost if the browser wins the claim and closes before sending, its analytics are blocked, or a delayed webhook report fails after Shopify has already had its response.
 
 ## Test plan (sandbox only)
 
 Use GoKwik's test payment details only.
 
-- [ ] `npm run check:shopify-admin` shows `read_orders` and no query errors
+- [ ] `npm run check:shopify-admin` shows `read_orders`, `write_orders` and no query errors
+- [ ] On a sandbox order, a second `purchase_reported` write with `compareDigest: null` returns `STALE_OBJECT`. **If not, stop: duplicate reporting isn't prevented**
+- [ ] Pay a sandbox order within 2 minutes, close the page at once: exactly one `purchase`, from the webhook, about 45 seconds later
 - [ ] Place a sandbox order; the order appears in Shopify Admin with the right items
 - [ ] `Order.cartToken` equals the cart token. **If not, stop: cart clearing, order display and purchase tracking stay off until GoKwik names a supported association**
 - [ ] The cart clears and `purchase` fires once; refreshing doesn't repeat it

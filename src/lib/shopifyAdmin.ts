@@ -4,7 +4,7 @@
 //
 // Auth model: OAuth client credentials grant against a Shopify Dev
 // Dashboard app ("LUNARO Order Verification" on lunaro-9855.myshopify.com),
-// scoped to `read_orders` only. Dev Dashboard apps for a store you own
+// scoped as listed in docs/SHOPIFY_SETUP.md. Dev Dashboard apps for a store you own
 // don't issue a permanent static Admin API token — instead this module
 // exchanges SHOPIFY_ADMIN_CLIENT_ID/SHOPIFY_ADMIN_CLIENT_SECRET for a
 // short-lived access token at request time, caches it in memory for the
