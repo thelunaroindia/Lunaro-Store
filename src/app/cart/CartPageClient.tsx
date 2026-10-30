@@ -5,20 +5,18 @@ import { formatMoney } from '@/lib/utils';
 import { payments, prepaidIncentive } from '@/lib/config';
 import { applyDiscount } from '@/actions/cart';
 import { Button } from '@/components/ui/Button';
-import { goToCheckout } from '@/lib/checkout';
+import { useCheckoutHandoff } from '@/lib/useCheckoutHandoff';
 import { trackEvent, cartEventParams } from '@/lib/analytics';
 import CartLineItem from '@/components/cart/CartLineItem';
+import CheckoutFailureNotice from '@/components/cart/CheckoutFailureNotice';
 import type { Cart } from '@/lib/types';
-
-// See CartDrawer.tsx for why this bounded safety-net reset exists.
-const CHECKOUT_REENABLE_MS = 2500;
 
 export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
   const [cart, setCart] = useState(initialCart);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
-  const [checkingOut, setCheckingOut] = useState(false);
+  const { checkingOut, checkoutFailed, startCheckout, retry, fallBackToShopify } = useCheckoutHandoff();
 
   useEffect(() => {
     if (cart.lines.length > 0) {
@@ -30,19 +28,11 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
 
   function handleCheckout() {
     if (checkingOut) return;
-    setCheckingOut(true);
 
     // Fired before navigating away so the event isn't lost with the page.
     trackEvent('begin_checkout', cartEventParams(cart));
 
-    if (!goToCheckout(cart.checkoutUrl)) {
-      // Nothing to navigate to — restore the button immediately rather
-      // than making the customer wait out the full re-enable window.
-      setCheckingOut(false);
-      return;
-    }
-
-    setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
+    void startCheckout({ cartId: cart.id, checkoutUrl: cart.checkoutUrl, kind: 'cart' });
   }
 
   function onApplyDiscount(e: React.FormEvent) {
@@ -114,6 +104,7 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
         >
           {checkingOut ? 'Opening Checkout…' : 'Checkout'}
         </button>
+        {checkoutFailed && <CheckoutFailureNotice onRetry={retry} onFallback={fallBackToShopify} />}
         <p className="mt-3 text-center text-xs text-mist">{prepaidIncentive}</p>
         <p className="mt-3 text-center text-[11px] text-mist">
           Secure Payments — {payments.methods.join(' · ')}

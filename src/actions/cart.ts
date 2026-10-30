@@ -11,9 +11,18 @@ import {
   applyDiscountCode,
   isShopifyConfigured,
 } from '@/lib/shopify';
+import {
+  CART_COOKIE,
+  checkoutCartTokens,
+  currentCartToken,
+  rememberCheckoutCart,
+} from '@/lib/checkoutCarts';
+import { GOKWIK_ENABLED } from '@/lib/config';
+import { countsAsPurchase, keepsCart, orderStateOf, type PaymentType } from '@/lib/orderState';
+import { isLatePaymentReportingConfigured, isWithinBrowserPurchaseWindow } from '@/lib/lateOrderPayment';
+import { getOrderForCheckoutCarts } from '@/lib/verifiedOrder';
 import type { Cart } from '@/lib/types';
 
-const CART_COOKIE = 'lunaro_cart_id';
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
@@ -42,6 +51,27 @@ export async function getOrCreateCart(): Promise<Cart | null> {
 // showroom. Log the real error server-side for diagnosis; the client only
 // ever sees calm, fixed copy.
 const GENERIC_CART_ERROR = "We couldn't update your bag. Please try again.";
+const EXPIRED_CART_ERROR = 'Your bag has expired. Please add your items again.';
+
+// Shopify deletes a cart when an order is created from it, and carts also
+// expire, but the 30-day cookie outlives both. Only a successful lookup that
+// finds nothing counts: a failed request says nothing about the cart, and
+// treating it as gone would throw away a customer's active cart.
+async function isCartGone(cartId: string): Promise<boolean> {
+  if (!cartId.startsWith('gid://shopify/Cart/')) return true;
+  try {
+    return (await shopifyGetCart(cartId)) === null;
+  } catch {
+    return false;
+  }
+}
+
+// Stale cookie: forget it so the next add starts a new cart.
+async function expiredCartResult(cartId: string): Promise<{ ok: false; error: string } | null> {
+  if (!(await isCartGone(cartId))) return null;
+  cookies().delete(CART_COOKIE);
+  return { ok: false, error: EXPIRED_CART_ERROR };
+}
 
 export async function addToCart(
   merchandiseId: string,
@@ -60,8 +90,18 @@ export async function addToCart(
       return { ok: true, cart };
     }
 
-    const cart = await addCartLines(cartId, [{ merchandiseId, quantity }]);
-    return { ok: true, cart };
+    try {
+      const cart = await addCartLines(cartId, [{ merchandiseId, quantity }]);
+      return { ok: true, cart };
+    } catch (err) {
+      // Nothing can have been added to a cart that doesn't exist, so a new
+      // cart can't duplicate this line. If the cart does exist the add may
+      // have landed despite the error, so it is never retried.
+      if (!(await isCartGone(cartId))) throw err;
+      const cart = await shopifyCreateCart([{ merchandiseId, quantity }]);
+      store.set(CART_COOKIE, cart.id, COOKIE_OPTS);
+      return { ok: true, cart };
+    }
   } catch (err) {
     console.error('[cart] addToCart failed', err);
     return { ok: false, error: GENERIC_CART_ERROR };
@@ -84,7 +124,8 @@ export async function updateCartLine(
     return { ok: true, cart };
   } catch (err) {
     console.error('[cart] updateCartLine failed', err);
-    return { ok: false, error: GENERIC_CART_ERROR };
+    const cartId = cookies().get(CART_COOKIE)?.value;
+    return (cartId && (await expiredCartResult(cartId))) || { ok: false, error: GENERIC_CART_ERROR };
   }
 }
 
@@ -99,7 +140,8 @@ export async function removeFromCart(
     return { ok: true, cart };
   } catch (err) {
     console.error('[cart] removeFromCart failed', err);
-    return { ok: false, error: GENERIC_CART_ERROR };
+    const cartId = cookies().get(CART_COOKIE)?.value;
+    return (cartId && (await expiredCartResult(cartId))) || { ok: false, error: GENERIC_CART_ERROR };
   }
 }
 
@@ -118,7 +160,8 @@ export async function applyDiscount(
     return { ok: true, cart };
   } catch (err) {
     console.error('[cart] applyDiscount failed', err);
-    return { ok: false, error: GENERIC_CART_ERROR };
+    const cartId = cookies().get(CART_COOKIE)?.value;
+    return (cartId && (await expiredCartResult(cartId))) || { ok: false, error: GENERIC_CART_ERROR };
   }
 }
 
@@ -131,7 +174,7 @@ export async function createBuyNowCheckout(
   merchandiseId: string,
   quantity: number = 1,
   couponCode?: string
-): Promise<{ ok: true; checkoutUrl: string } | { ok: false; error: string }> {
+): Promise<{ ok: true; cartId: string; checkoutUrl: string } | { ok: false; error: string }> {
   try {
     if (!isShopifyConfigured()) {
       return { ok: false, error: 'Store is not connected yet. Configure Shopify to enable checkout.' };
@@ -142,11 +185,69 @@ export async function createBuyNowCheckout(
       // purchase — fall back to the undiscounted cart.
       cart = await applyDiscountCode(cart.id, couponCode).catch(() => cart);
     }
-    return { ok: true, checkoutUrl: cart.checkoutUrl };
+    if (GOKWIK_ENABLED) rememberCheckoutCart(cart.id);
+    return { ok: true, cartId: cart.id, checkoutUrl: cart.checkoutUrl };
   } catch (err) {
     console.error('[cart] createBuyNowCheckout failed', err);
     return { ok: false, error: GENERIC_CART_ERROR };
   }
+}
+
+export async function markCartCheckoutStarted(): Promise<void> {
+  if (!GOKWIK_ENABLED) return;
+  const cartId = cookies().get(CART_COOKIE)?.value;
+  if (cartId) rememberCheckoutCart(cartId);
+}
+
+// Called from the browser after GoKwik reports an order, so the order number
+// proves nothing: the order only counts if Shopify says it was created from a
+// cart this browser holds (see getOrderForCheckoutCarts). A Buy Now order
+// matches its own cart, so it never clears the shared one.
+export async function confirmGokwikOrder(orderNumber: string): Promise<
+  | { verified: false }
+  | {
+      verified: true;
+      cartCleared: boolean;
+      paymentPending: boolean;
+      purchase: { orderName: string; currency: string; value: number; paymentType: PaymentType } | null;
+    }
+> {
+  if (!GOKWIK_ENABLED || typeof orderNumber !== 'string') return { verified: false };
+
+  const lookup = await getOrderForCheckoutCarts(orderNumber, checkoutCartTokens());
+  if (lookup.status !== 'verified') return { verified: false };
+  const { order } = lookup;
+
+  const state = orderStateOf(order);
+  const cartCleared = order.cartToken === currentCartToken() && !keepsCart(state);
+  if (cartCleared) {
+    // Keeps this order viewable here once the cart cookie is gone.
+    rememberCheckoutCart(order.cartToken as string);
+    cookies().delete(CART_COOKIE);
+  }
+
+  // A prepaid order past this window belongs to the orders/paid webhook, when
+  // it's configured, so the two can't both report it.
+  const reportedByWebhook =
+    state === 'paid' &&
+    order.paymentType !== 'cod' &&
+    isLatePaymentReportingConfigured() &&
+    !isWithinBrowserPurchaseWindow(order.createdAt);
+
+  return {
+    verified: true,
+    cartCleared,
+    paymentPending: state === 'payment_pending' && isWithinBrowserPurchaseWindow(order.createdAt),
+    purchase:
+      countsAsPurchase(state) && !reportedByWebhook
+        ? {
+            orderName: order.name,
+            currency: order.total.currencyCode,
+            value: Number(order.total.amount),
+            paymentType: order.paymentType,
+          }
+        : null,
+  };
 }
 
 export async function refreshCatalogue() {

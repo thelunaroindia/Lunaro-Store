@@ -10,6 +10,7 @@ import AnnouncementBar from '@/components/layout/AnnouncementBar';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/cart/CartDrawer';
+import GokwikBridge from '@/components/cart/GokwikBridge';
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 import MetaPixel from '@/components/analytics/MetaPixel';
 
@@ -78,6 +79,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <main id="main-content">{children}</main>
             <Footer />
             <CartDrawer />
+            <GokwikBridge />
           </WishlistProvider>
         </CartUIProvider>
         </MotionConfig>

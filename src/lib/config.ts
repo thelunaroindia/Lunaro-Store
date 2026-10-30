@@ -22,6 +22,26 @@ export const PURCHASE_TEST_MODE = false;
 // so that is what this unlocks.
 export const PURCHASE_TEST_PRODUCT_HANDLE = 'test';
 
+// GoKwik checkout testing switch. Off unless NEXT_PUBLIC_GOKWIK_TEST_MODE is
+// exactly "true" AND both IDs below are present — every checkout button keeps
+// going straight to Shopify's hosted checkout otherwise. Anything other than
+// an explicit "production" runs against GoKwik's sandbox, so a half-finished
+// config can never reach live payments. None of these are secrets: GoKwik's
+// SDK reads them in the browser by design. See docs/GOKWIK_SETUP.md.
+const gokwikStoreId = Number(process.env.NEXT_PUBLIC_SHOPIFY_STORE_ID);
+
+export const gokwik = {
+  merchantId: process.env.NEXT_PUBLIC_GOKWIK_MERCHANT_ID ?? '',
+  environment:
+    process.env.NEXT_PUBLIC_GOKWIK_ENVIRONMENT === 'production' ? 'production' : 'sandbox',
+  storeId: Number.isSafeInteger(gokwikStoreId) && gokwikStoreId > 0 ? gokwikStoreId : null,
+} as const;
+
+export const GOKWIK_ENABLED =
+  process.env.NEXT_PUBLIC_GOKWIK_TEST_MODE === 'true' &&
+  Boolean(gokwik.merchantId) &&
+  gokwik.storeId !== null;
+
 // The confirmed public-launch date, as an ISO 8601 string (e.g.
 // '2026-09-01T00:00:00+05:30') — when the store opens and PRELAUNCH_MODE
 // will deliberately be flipped to false. Left null until a real date is

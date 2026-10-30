@@ -13,8 +13,10 @@ import { formatMoney } from '@/lib/utils';
 import { addToCart, createBuyNowCheckout } from '@/actions/cart';
 import { useCartUI } from '@/context/CartUIContext';
 import { Button } from '@/components/ui/Button';
-import { activeCouponCode, goToCheckout } from '@/lib/checkout';
+import { activeCouponCode } from '@/lib/checkout';
+import { useCheckoutHandoff } from '@/lib/useCheckoutHandoff';
 import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
+import CheckoutFailureNotice from '@/components/cart/CheckoutFailureNotice';
 import StickyAddToCart from './StickyAddToCart';
 import SizeGuideDrawer from './SizeGuideDrawer';
 import { payments, prepaidIncentive } from '@/lib/config';
@@ -32,12 +34,6 @@ function isTrackpant(productType: string): boolean {
     productType.trim().toLowerCase()
   );
 }
-
-// Matches the same bounded safety-net re-enable CartDrawer.tsx/
-// CartPageClient.tsx already use for their Checkout buttons — keeps the
-// button from staying stuck disabled if the customer comes Back from
-// Shopify checkout and the page is restored from the back/forward cache.
-const CHECKOUT_REENABLE_MS = 2500;
 
 // Shopify gives every product at least one option. Products with no real
 // customer choice (no colour/size set up in Admin) still carry a single
@@ -134,7 +130,9 @@ export default function ProductOptions({
 }) {
   const { cart, setCart, open } = useCartUI();
   const [isPending, startTransition] = useTransition();
-  const [checkingOut, setCheckingOut] = useState(false);
+  const [creatingCheckout, setCreatingCheckout] = useState(false);
+  const handoff = useCheckoutHandoff();
+  const checkingOut = creatingCheckout || handoff.checkingOut;
   const [error, setError] = useState('');
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [showSizePrompt, setShowSizePrompt] = useState(false);
@@ -249,31 +247,30 @@ export default function ProductOptions({
     // whatever else was added earlier into a checkout the customer expects
     // to contain only this one item). createBuyNowCheckout() builds a
     // separate single-item Shopify cart and returns its checkout URL.
-    setCheckingOut(true);
+    setCreatingCheckout(true);
     void (async () => {
       const result = await createBuyNowCheckout(
         activeVariant.id,
         1,
         cart ? activeCouponCode(cart) : undefined
       );
+      setCreatingCheckout(false);
 
       if (!result.ok) {
         setError(result.error);
-        setCheckingOut(false);
         return;
       }
 
-      // Buy Now goes to the same Shopify checkout the cart's Checkout
-      // button does — counted as a genuine checkout attempt so abandonment
-      // can be measured across both entry points, not just one.
+      // Buy Now goes to the same checkout the cart's Checkout button does —
+      // counted as a genuine checkout attempt so abandonment can be measured
+      // across both entry points, not just one.
       trackEvent('begin_checkout', eventParams);
 
-      if (!goToCheckout(result.checkoutUrl)) {
-        setCheckingOut(false);
-        return;
-      }
-
-      setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
+      await handoff.startCheckout({
+        cartId: result.cartId,
+        checkoutUrl: result.checkoutUrl,
+        kind: 'buy_now',
+      });
     })();
   }
 
@@ -453,6 +450,12 @@ export default function ProductOptions({
         </p>
       )}
 
+      {handoff.checkoutFailed && (
+        <div className="hidden md:block">
+          <CheckoutFailureNotice onRetry={handoff.retry} onFallback={handoff.fallBackToShopify} />
+        </div>
+      )}
+
       {!isSoldOut && (
         <p className="mt-6 text-[11px] leading-relaxed text-mist">
           Secure Payments —{' '}
@@ -476,6 +479,11 @@ export default function ProductOptions({
         needsSizeSelection={needsSizeSelection}
         isPending={isPending || checkingOut}
         onAdd={handleBuyNow}
+        notice={
+          handoff.checkoutFailed ? (
+            <CheckoutFailureNotice onRetry={handoff.retry} onFallback={handoff.fallBackToShopify} />
+          ) : undefined
+        }
       />
 
       <SizeGuideDrawer

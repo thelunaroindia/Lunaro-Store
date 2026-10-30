@@ -58,7 +58,12 @@ export function trackEvent(name: string, params: Record<string, unknown> = {}): 
       const standardName = metaStandardEventName(name);
 
       if (standardName) {
-        window.fbq('track', standardName, params);
+        // Meta deduplicates on eventID, so a repeat of the same order counts once.
+        if (typeof params.transaction_id === 'string') {
+          window.fbq('track', standardName, params, { eventID: params.transaction_id });
+        } else {
+          window.fbq('track', standardName, params);
+        }
       } else {
         // Custom events (including launch_notification_success, renamed
         // below to Meta's own vocabulary) go through trackCustom — Meta's
@@ -69,6 +74,53 @@ export function trackEvent(name: string, params: Record<string, unknown> = {}): 
   } catch {
     // Analytics must never throw into application code.
   }
+}
+
+const PURCHASE_DEDUP_KEY_PREFIX = 'lunaro_purchase_tracked_';
+
+// Fires the `purchase` event exactly once per Shopify order number, ever,
+// in this browser — refreshing /order-confirmation (or revisiting the same
+// link later) must not create duplicate Purchase events in GA4/Meta.
+//
+// Dedup is keyed by the real Shopify order number (e.g. "#1002") in
+// localStorage — not sensitive customer data, just a boolean marker next to
+// a public order identifier. This only guards against *this browser*
+// re-firing; a customer opening the same confirmation link on a second
+// device would still count once there too. That's a disclosed limitation
+// of client-only dedup, not a bug — a fully cross-device-safe guarantee
+// would need server-side event tagging, which is out of scope here.
+//
+// Only ever call this with a server-verified order (Shopify's own Admin API
+// confirmed it via the order number + phone match), never a client-side guess.
+export function trackPurchaseOnce({
+  orderName,
+  currency,
+  value,
+  paymentType,
+}: {
+  orderName: string;
+  currency: string;
+  value: number;
+  paymentType: 'prepaid' | 'cod' | 'unknown';
+}): void {
+  const dedupKey = `${PURCHASE_DEDUP_KEY_PREFIX}${orderName}`;
+
+  try {
+    if (window.localStorage.getItem(dedupKey)) return;
+    window.localStorage.setItem(dedupKey, '1');
+  } catch {
+    // localStorage unavailable (private browsing, storage disabled) —
+    // fall through and track anyway rather than silently dropping a
+    // genuine purchase; the worst case is an occasional duplicate, which
+    // is far better than never recording a real sale.
+  }
+
+  trackEvent('purchase', {
+    transaction_id: orderName,
+    currency,
+    value,
+    payment_type: paymentType,
+  });
 }
 
 // GA4 receives every event under its own original name unchanged (see the

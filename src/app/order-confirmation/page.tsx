@@ -1,155 +1,63 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { formatMoney } from '@/lib/utils';
 import { LinkButton } from '@/components/ui/Button';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
-import { isShopifyAdminConfigured, shopifyAdminFetch, lastTenDigits } from '@/lib/shopifyAdmin';
-import PurchaseTracker from '@/components/analytics/PurchaseTracker';
-import type { Money } from '@/lib/types';
-
-type PaymentType = 'prepaid' | 'cod' | 'unknown';
-
-// COD orders are placed against a manual payment method literally named
-// "Cash on Delivery" in Shopify Admin → Settings → Payments; every other
-// order goes through whichever real gateway is actually configured there
-// (not asserted as a specific provider here — that's a Shopify Admin
-// fact, not something this code can or should assume).
-// paymentGatewayNames is a standard Order field already covered by this
-// app's existing read_orders scope — no broader Shopify permission
-// requested for this.
-function derivePaymentType(gatewayNames: string[]): PaymentType {
-  if (gatewayNames.length === 0) return 'unknown';
-
-  const isCod = gatewayNames.some((gateway) =>
-    /cash on delivery|\bcod\b/i.test(gateway)
-  );
-
-  return isCod ? 'cod' : 'prepaid';
-}
+import { checkoutCartTokens } from '@/lib/checkoutCarts';
+import { GOKWIK_ENABLED } from '@/lib/config';
+import { orderStateOf, type OrderState } from '@/lib/orderState';
+import { getOrderForCheckoutCarts } from '@/lib/verifiedOrder';
+import GokwikBridge from '@/components/cart/GokwikBridge';
 
 export const metadata: Metadata = {
-  title: 'Order Confirmed',
-  description: 'Your LUNARO order is confirmed.',
+  title: 'Order Status',
+  description: 'The status of your LUNARO order.',
   // Every order-confirmation URL is customer-specific and short-lived —
   // never meant for search discovery.
   robots: { index: false, follow: false },
-};
-
-type VerifiedOrder = {
-  name: string;
-  total: Money;
-  financialStatus: string;
-  fulfillmentStatus: string;
-  shippingMethod: string | null;
-  paymentType: PaymentType;
-  address: {
-    city: string | null;
-    province: string | null;
-    country: string | null;
-    zip: string | null;
-  } | null;
 };
 
 function formatStatus(status: string): string {
   return status.replaceAll('_', ' ').toLowerCase();
 }
 
-// The redirect that lands here (see docs on PURCHASE_TEST_MODE /
-// order-confirmation in the task history) only ever carries order_number
-// and phone as plain query params — never proof of payment on their own.
-// This looks the order up server-side via the Admin API and only returns
-// data once the order's own phone number matches what was passed in, the
-// same two-factor pattern /api/track-order uses (order.phone, then
-// order.shippingAddress.phone as a fallback).
-//
-// Deliberately requests only order-level fields — never `customer { ... }`.
-// This app is scoped to read_orders only; any Customer object field
-// requires the separate read_customers scope it intentionally doesn't have.
-async function getVerifiedOrder(
-  orderNumberRaw: string,
-  phoneRaw: string
-): Promise<VerifiedOrder | null> {
-  if (!isShopifyAdminConfigured()) return null;
-
-  const phoneDigits = lastTenDigits(phoneRaw);
-  if (!phoneDigits) return null;
-
-  const name = orderNumberRaw.startsWith('#') ? orderNumberRaw : `#${orderNumberRaw}`;
-
-  try {
-    const data = await shopifyAdminFetch<{
-      orders: {
-        nodes: {
-          name: string;
-          displayFinancialStatus: string;
-          displayFulfillmentStatus: string;
-          phone: string | null;
-          totalPriceSet: { shopMoney: Money };
-          shippingLine: { title: string } | null;
-          paymentGatewayNames: string[] | null;
-          shippingAddress: {
-            phone: string | null;
-            city: string | null;
-            province: string | null;
-            country: string | null;
-            zip: string | null;
-          } | null;
-        }[];
-      };
-    }>(
-      `#graphql
-        query OrderConfirmation($query: String!) {
-          orders(first: 1, query: $query) {
-            nodes {
-              name
-              displayFinancialStatus
-              displayFulfillmentStatus
-              phone
-              totalPriceSet { shopMoney { amount currencyCode } }
-              shippingLine { title }
-              paymentGatewayNames
-              shippingAddress { phone city province country zip }
-            }
-          }
-        }
-      `,
-      { query: `name:${name}` }
-    );
-
-    const order = data.orders.nodes[0];
-    if (!order) return null;
-
-    let matchedField: 'order.phone' | 'order.shippingAddress.phone' | null = null;
-    if (lastTenDigits(order.phone ?? '') === phoneDigits) {
-      matchedField = 'order.phone';
-    } else if (lastTenDigits(order.shippingAddress?.phone ?? '') === phoneDigits) {
-      matchedField = 'order.shippingAddress.phone';
-    }
-
-    if (!matchedField) return null;
-
-    console.log(`[order-confirmation] Verified ${order.name} via ${matchedField}`);
-
-    return {
-      name: order.name,
-      total: order.totalPriceSet.shopMoney,
-      financialStatus: order.displayFinancialStatus,
-      fulfillmentStatus: order.displayFulfillmentStatus,
-      shippingMethod: order.shippingLine?.title ?? null,
-      paymentType: derivePaymentType(order.paymentGatewayNames ?? []),
-      address: order.shippingAddress
-        ? {
-            city: order.shippingAddress.city,
-            province: order.shippingAddress.province,
-            country: order.shippingAddress.country,
-            zip: order.shippingAddress.zip,
-          }
-        : null,
-    };
-  } catch (err) {
-    console.error('[order-confirmation] Shopify Admin API error', err);
-    return null;
-  }
-}
+const STATE_COPY: Record<OrderState, { eyebrow: string; heading: string[]; body: string }> = {
+  paid: {
+    eyebrow: 'Order Confirmed',
+    heading: ['THANK YOU FOR', 'ENTERING THE WORLD.'],
+    body: 'Payment confirmed. Your piece is now being prepared for dispatch.',
+  },
+  cod: {
+    eyebrow: 'Order Placed',
+    heading: ['THANK YOU FOR', 'ENTERING THE WORLD.'],
+    body: 'Your order is placed. Payment is due in cash on delivery.',
+  },
+  authorized: {
+    eyebrow: 'Order Placed',
+    heading: ['THANK YOU FOR', 'ENTERING THE WORLD.'],
+    body: 'Your order is placed and your payment is authorised. It has not been captured yet.',
+  },
+  payment_pending: {
+    eyebrow: 'Order Placed',
+    heading: ['YOUR ORDER', 'IS PLACED.'],
+    body: 'Your payment has not been confirmed yet. This page shows the latest status whenever you reload it.',
+  },
+  payment_failed: {
+    eyebrow: 'Payment Not Completed',
+    heading: ['PAYMENT WAS', 'NOT COMPLETED.'],
+    body: 'This order has no completed payment, so it will not be dispatched. Contact us if you were charged.',
+  },
+  refunded: {
+    eyebrow: 'Order Refunded',
+    heading: ['THIS ORDER', 'WAS REFUNDED.'],
+    body: 'The payment for this order has been refunded. Processing time depends on your bank or payment provider.',
+  },
+  cancelled: {
+    eyebrow: 'Order Cancelled',
+    heading: ['THIS ORDER', 'WAS CANCELLED.'],
+    body: 'This order will not be dispatched. Contact us if you have any questions.',
+  },
+};
 
 export default async function OrderConfirmationPage({
   searchParams,
@@ -158,38 +66,63 @@ export default async function OrderConfirmationPage({
 }) {
   const { order_number: orderNumber, phone } = searchParams;
 
-  const order =
-    orderNumber && phone ? await getVerifiedOrder(orderNumber, phone) : null;
+  // Older links carried the customer's phone. It proves nothing here, and left
+  // in the URL it would reach browser history and analytics page paths.
+  if (phone !== undefined) {
+    redirect(orderNumber ? `/order-confirmation?order_number=${encodeURIComponent(orderNumber)}` : '/order-confirmation');
+  }
+
+  const lookup =
+    GOKWIK_ENABLED && orderNumber
+      ? await getOrderForCheckoutCarts(orderNumber, checkoutCartTokens())
+      : ({ status: 'unverified' } as const);
+
+  const order = lookup.status === 'verified' ? lookup.order : null;
+  const copy = order ? STATE_COPY[orderStateOf(order)] : null;
+  const addressLine = [
+    order?.address?.city,
+    order?.address?.province,
+    order?.address?.zip,
+    order?.address?.country,
+  ]
+    .filter(Boolean)
+    .join(', ');
 
   return (
     <UtilityPageBackdrop>
       <div className="container-lunaro max-w-xl pt-32 pb-24 md:pt-40">
-        <p className="eyebrow text-silver">Order Confirmed</p>
+        <p className="eyebrow text-silver">{copy?.eyebrow ?? 'Order Status'}</p>
 
         <h1 className="mt-4 font-display text-display-md leading-[0.95] text-lunar">
-          THANK YOU FOR
-          <br />
-          ENTERING THE WORLD.
+          {copy ? (
+            <>
+              {copy.heading[0]}
+              <br />
+              {copy.heading[1]}
+            </>
+          ) : lookup.status === 'error' ? (
+            <>
+              WE COULDN&apos;T
+              <br />
+              CHECK THIS ORDER.
+            </>
+          ) : (
+            <>
+              WE COULDN&apos;T
+              <br />
+              VERIFY THIS ORDER.
+            </>
+          )}
         </h1>
 
-        {order ? (
+        {order && copy ? (
           <>
-            {/* Mounts only for a server-verified order (Shopify Admin API
-                confirmed order number + phone match above) — never on a
-                guessed/unverified URL. See PurchaseTracker.tsx for the
-                dedup strategy that makes refreshing this page safe. */}
-            <PurchaseTracker
-              orderName={order.name}
-              currency={order.total.currencyCode}
-              value={Number(order.total.amount)}
-              paymentType={order.paymentType}
-            />
+            {orderNumber && <GokwikBridge orderNumber={orderNumber} />}
 
             <p className="mt-6 text-sm text-mist">
               Order {order.name}
               <br />
-              Payment confirmed. Your piece is now being prepared for
-              dispatch.
+              {copy.body}
             </p>
 
             <div className="mt-10 space-y-3 border border-graphite p-6 text-sm">
@@ -219,28 +152,24 @@ export default async function OrderConfirmationPage({
                   <span className="text-lunar">{order.shippingMethod}</span>
                 </div>
               )}
-              {order.address && (
+              {addressLine && (
                 <div className="flex justify-between gap-6 border-t border-graphite pt-3 text-mist">
                   <span>Delivery Address</span>
-                  <span className="text-right text-lunar">
-                    {[
-                      order.address.city,
-                      order.address.province,
-                      order.address.zip,
-                      order.address.country,
-                    ]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </span>
+                  <span className="text-right text-lunar">{addressLine}</span>
                 </div>
               )}
             </div>
           </>
+        ) : lookup.status === 'error' ? (
+          <p className="mt-6 text-sm text-mist">
+            Something went wrong on our side while checking, which says nothing
+            about your order. Please reload this page in a moment.
+          </p>
         ) : (
           <p className="mt-6 text-sm text-mist">
-            Payment confirmed. Your piece is now being prepared for dispatch.
-            You&apos;ll receive a confirmation by email, and you can look up
-            your order anytime with your order number.
+            This doesn&apos;t mean anything went wrong with your order. Order
+            details only show in the browser that placed it. You can look your
+            order up with its number and your phone number.
           </p>
         )}
 

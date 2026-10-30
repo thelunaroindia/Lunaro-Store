@@ -1,25 +1,25 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import Link from 'next/link';
 import { useCartUI } from '@/context/CartUIContext';
 import { formatMoney } from '@/lib/utils';
 import { payments, prepaidIncentive } from '@/lib/config';
 import { LinkButton } from '@/components/ui/Button';
-import { goToCheckout } from '@/lib/checkout';
+import { useCheckoutHandoff } from '@/lib/useCheckoutHandoff';
 import { trackEvent, cartEventParams } from '@/lib/analytics';
 import CartLineItem from './CartLineItem';
-
-// Checkout navigates away to Shopify, but a customer who comes Back can get
-// this page restored from the browser's back/forward cache with
-// "checkingOut" still true. This bounded safety-net re-enable keeps the
-// button from staying stuck disabled in that case.
-const CHECKOUT_REENABLE_MS = 2500;
+import CheckoutFailureNotice from './CheckoutFailureNotice';
 
 export default function CartDrawer() {
   const { cart, setCart, isOpen, close } = useCartUI();
   const panelRef = useRef<HTMLDivElement>(null);
-  const [checkingOut, setCheckingOut] = useState(false);
+  // GoKwik opens over this page, so the drawer closes first. Synchronously,
+  // because its effect resets the body scroll lock GoKwik is about to set.
+  const { checkingOut, checkoutFailed, startCheckout, retry, fallBackToShopify } = useCheckoutHandoff({
+    beforeOpen: () => flushSync(close),
+  });
 
   useEffect(() => {
     if (isOpen && cart && cart.lines.length > 0) {
@@ -32,19 +32,11 @@ export default function CartDrawer() {
 
   function handleCheckout() {
     if (checkingOut || !cart) return;
-    setCheckingOut(true);
 
     // Fired before navigating away so the event isn't lost with the page.
     trackEvent('begin_checkout', cartEventParams(cart));
 
-    if (!goToCheckout(cart.checkoutUrl)) {
-      // Nothing to navigate to — restore the button immediately rather
-      // than making the customer wait out the full re-enable window.
-      setCheckingOut(false);
-      return;
-    }
-
-    setTimeout(() => setCheckingOut(false), CHECKOUT_REENABLE_MS);
+    void startCheckout({ cartId: cart.id, checkoutUrl: cart.checkoutUrl, kind: 'cart' });
   }
 
   useEffect(() => {
@@ -123,6 +115,7 @@ export default function CartDrawer() {
             >
               {checkingOut ? 'Opening Checkout…' : 'Checkout'}
             </button>
+            {checkoutFailed && <CheckoutFailureNotice onRetry={retry} onFallback={fallBackToShopify} />}
             <p className="mt-3 text-center text-xs text-mist">{prepaidIncentive}</p>
             <p className="mt-3 text-center text-[11px] text-mist">
               Secure Payments — {payments.methods.join(' · ')}

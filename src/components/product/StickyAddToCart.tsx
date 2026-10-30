@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { cleanProductTitle } from '@/lib/productTitle';
 
 type Props = {
@@ -9,6 +10,8 @@ type Props = {
   needsSizeSelection: boolean;
   isPending: boolean;
   onAdd: () => void;
+  // Shown here because on mobile the page's own message is usually off-screen.
+  notice?: ReactNode;
 };
 
 export default function StickyAddToCart({
@@ -18,6 +21,7 @@ export default function StickyAddToCart({
   needsSizeSelection,
   isPending,
   onAdd,
+  notice,
 }: Props) {
   const label = disabled
     ? 'Sold Out'
@@ -29,6 +33,7 @@ export default function StickyAddToCart({
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-graphite bg-obsidian/95 p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] backdrop-blur md:hidden">
+      {notice && <div className="mb-3">{notice}</div>}
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="truncate text-sm text-lunar">{cleanProductTitle(title)}</p>

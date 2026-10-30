@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:shopify-admin": "node scripts/check-shopify-admin.mjs",
+    "test:checkout": "node scripts/tests/gokwik.test.cjs && node scripts/tests/actions.test.cjs && node scripts/tests/webhook.test.cjs"
   },
   "dependencies": {
     "clsx": "2.1.1",
