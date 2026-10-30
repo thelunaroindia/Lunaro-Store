@@ -5,16 +5,16 @@ import { PRELAUNCH_MODE } from '@/lib/config';
 // homepage). Static: no marquee/countdown/fake inventory number, matching
 // the rest of the launch-mode conversion principles.
 //
-// "5% Off Prepaid" and "Free Standard Shipping" are real store offers —
-// not placeholder copy; keep them in sync with src/lib/config.ts. "Limited
-// Drop" was always real (Drop 001's limited quantity).
+// "Free Standard Shipping" is a real store offer — not placeholder copy; keep
+// it in sync with src/lib/config.ts. "Limited Drop" was always real (Drop 001's
+// limited quantity).
 export default function AnnouncementBar() {
   if (PRELAUNCH_MODE) return null;
 
   return (
     <div className="fixed inset-x-0 top-0 z-40 flex h-9 items-center justify-center bg-lunar px-4 text-center">
       <p className="truncate text-[10px] uppercase tracking-[0.2em] text-obsidian sm:text-[11px] sm:tracking-[0.25em]">
-        5% Off Prepaid · Free Standard Shipping · Limited Drop
+        Free Standard Shipping · Limited Drop
       </p>
     </div>
   );
