@@ -21,6 +21,14 @@ assert.equal(st('PAID', 'prepaid', true), 'cancelled');
 for (const [n, t] of [['Cash on Delivery (COD)', 'cod'], ['gokwik_cod', 'cod'], ['COD', 'cod'], ['Razorpay', 'prepaid'], ['encoded_pay', 'prepaid']]) assert.equal(state.derivePaymentType([n]), t, n);
 assert.equal(state.cartTokenOf('gid://shopify/Cart/abc?key=k'), 'abc');
 assert.equal(state.cartTokenOf('abc?key=k'), 'abc');
+// Real GoKwik order: empty cartToken, cart in an attribute, part-prepaid COD.
+assert.equal(state.orderCartToken(null, [{ key: 'gokwik_cid', value: 'x' }, { key: 'cart_token', value: 'gid://shopify/Cart/abc?key=k' }]), 'abc');
+assert.equal(state.orderCartToken(null, [{ key: 'cart_token', value: 'abc' }]), 'abc');
+assert.equal(state.orderCartToken('own', [{ key: 'cart_token', value: 'abc' }]), 'own');
+assert.equal(state.orderCartToken(null, []), null);
+assert.equal(state.orderCartToken(null, [{ key: 'cart_token', value: null }]), null);
+assert.equal(state.derivePaymentType(['Gokwik PPCOD']), 'cod');
+assert.equal(st('PARTIALLY_PAID', 'cod'), 'cod');
 
 // ── cart actions
 const LIVE = 'gid://shopify/Cart/live?key=k';

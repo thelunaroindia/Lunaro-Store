@@ -2,7 +2,7 @@
 // @ts-ignore: Module has no type declarations
 import 'server-only';
 
-import { cartTokenOf, derivePaymentType, type PaymentType } from '@/lib/orderState';
+import { derivePaymentType, orderCartToken, type PaymentType } from '@/lib/orderState';
 import { isShopifyAdminConfigured, shopifyAdminFetch } from '@/lib/shopifyAdmin';
 import type { Money } from '@/lib/types';
 
@@ -33,10 +33,10 @@ export type OrderLookup =
   | { status: 'unverified' }
   | { status: 'error' };
 
-// Order.cartToken is Shopify's own record of "the cart that was used to create
-// the order", so an order is only ever shown, or acted on, for a browser holding
-// that cart. Knowing an order number isn't enough, and an order with no
-// cartToken fails closed.
+// The order's cart token (see orderCartToken) records the cart used to create
+// it, so an order is only ever shown, or acted on, for a browser holding that
+// cart. Knowing an order number isn't enough, and an order with no token fails
+// closed.
 //
 // Deliberately requests only order-level fields — never `customer { ... }`, and
 // no phone or email, which verification doesn't use.
@@ -60,6 +60,7 @@ export async function getOrderForCheckoutCarts(
           name: string;
           createdAt: string;
           cartToken: string | null;
+          customAttributes: { key: string; value: string | null }[];
           cancelledAt: string | null;
           displayFinancialStatus: string;
           displayFulfillmentStatus: string;
@@ -83,6 +84,7 @@ export async function getOrderForCheckoutCarts(
               name
               createdAt
               cartToken
+              customAttributes { key value }
               cancelledAt
               displayFinancialStatus
               displayFulfillmentStatus
@@ -98,10 +100,10 @@ export async function getOrderForCheckoutCarts(
     );
 
     const order = data.orders.nodes[0];
-    if (!order || order.name !== name || !order.cartToken) return { status: 'unverified' };
+    if (!order || order.name !== name) return { status: 'unverified' };
 
-    const cartToken = cartTokenOf(order.cartToken);
-    if (!cartTokens.includes(cartToken)) return { status: 'unverified' };
+    const cartToken = orderCartToken(order.cartToken, order.customAttributes);
+    if (!cartToken || !cartTokens.includes(cartToken)) return { status: 'unverified' };
 
     return {
       status: 'verified',

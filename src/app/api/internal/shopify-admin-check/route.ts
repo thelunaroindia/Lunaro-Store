@@ -55,20 +55,26 @@ export async function GET() {
           cartToken: string | null;
           displayFinancialStatus: string;
           paymentGatewayNames: string[] | null;
-          customAttributes: { key: string }[];
+          name: string;
+          customAttributes: { key: string; value: string | null }[];
           tags: string[];
         }[];
       } | null;
     }>(`#graphql
       query AdminCheckGokwikOrders {
         orders(first: 10, reverse: true) {
-          nodes { sourceName sourceIdentifier checkoutToken cartToken displayFinancialStatus paymentGatewayNames customAttributes { key } tags }
+          nodes { name sourceName sourceIdentifier checkoutToken cartToken displayFinancialStatus paymentGatewayNames customAttributes { key value } tags }
         }
       }
     `);
     const gokwikOrderShapes = (gokwikOrders.data?.orders?.nodes ?? [])
       .filter((o) => o.paymentGatewayNames?.some((g) => /gokwik/i.test(g)))
       .map((o) => ({
+        name: o.name,
+        cartTokenAttributeShape: (() => {
+          const value = o.customAttributes.find((a) => a.key === 'cart_token')?.value ?? '';
+          return { length: value.length, isGid: value.startsWith('gid://'), hasKey: value.includes('?key=') };
+        })(),
         sourceName: o.sourceName,
         hasSourceIdentifier: Boolean(o.sourceIdentifier),
         hasCheckoutToken: Boolean(o.checkoutToken),

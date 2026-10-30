@@ -14,14 +14,14 @@ export type OrderState =
   | 'cancelled';
 
 // COD orders are placed against a manual payment method literally named
-// "Cash on Delivery" in Shopify Admin → Settings → Payments, but GoKwik's
-// gateway name isn't documented, so "cod" is also matched as a separate token
-// (e.g. "gokwik_cod"), never inside another word.
+// "Cash on Delivery" in Shopify Admin → Settings → Payments. GoKwik's real orders
+// use "Gokwik PPCOD" (a part-prepaid COD), and "cod" is also matched as a separate
+// token (e.g. "gokwik_cod"), never inside another word.
 export function derivePaymentType(gatewayNames: string[]): PaymentType {
   if (gatewayNames.length === 0) return 'unknown';
 
   const isCod = gatewayNames.some((gateway) =>
-    /cash on delivery|(^|[^a-z])cod([^a-z]|$)/i.test(gateway)
+    /cash on delivery|ppcod|(^|[^a-z])cod([^a-z]|$)/i.test(gateway)
   );
 
   return isCod ? 'cod' : 'prepaid';
@@ -46,9 +46,10 @@ export function orderStateOf(order: {
     case 'EXPIRED':
       return 'payment_failed';
     case 'PENDING':
+    case 'PARTIALLY_PAID':
       return order.paymentType === 'cod' ? 'cod' : 'payment_pending';
     default:
-      // PARTIALLY_PAID and anything Shopify adds later.
+      // Anything Shopify adds later.
       return 'payment_pending';
   }
 }
@@ -66,4 +67,14 @@ export function keepsCart(state: OrderState): boolean {
 // "gid://shopify/Cart/<token>?key=<key>" → "<token>".
 export function cartTokenOf(cartIdOrToken: string): string {
   return cartIdOrToken.replace('gid://shopify/Cart/', '').replace(/\?.*$/, '');
+}
+
+// Shopify leaves Order.cartToken empty on GoKwik's orders; GoKwik records the
+// cart in a `cart_token` attribute instead.
+export function orderCartToken(
+  cartToken: string | null,
+  customAttributes: { key: string; value: string | null }[]
+): string | null {
+  const token = cartToken || customAttributes.find((a) => a.key === 'cart_token')?.value;
+  return token ? cartTokenOf(token) : null;
 }
