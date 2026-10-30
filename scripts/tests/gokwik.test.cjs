@@ -77,6 +77,28 @@ function fakeBrowser() {
   b.fire('message', { origin: own, data: { type: 'gokwik_events', data: { eventname: 'Nope' } } });
   b.fire('message', { origin: 'https://evil.example', data: { type: 'gokwik_events', data: { ...data, event_id: 'e2' } } });
   assert.strictEqual(tracked.length, 1);
+
+  // The format the PDF documents: `event`, with the fields under `event_data`.
+  tracked.length = 0; placed.length = 0;
+  b.fire('message', { origin: own, data: { type: 'gokwik_events', data: {
+    event: 'Order_Placed_GK',
+    event_data: {
+      original_cart_amount: 1200, total_amount: 1100, currency: 'INR', coupon_code: 'GET100', total_discount_applied: 100,
+      payment_method: 'UPI', cod_charges: 50, shipping_price: 0, order_number: '#4901813', order_id: '187251387211',
+      mobile_number: '+919999999999', first_name: 'y', last_name: 'z', email: 'a@b.c', full_address: 'x', city: 'c', pincode: '110070',
+      abandoned_url: 'https://x?mrid=1', landing_page: '/p', origin_referrer: 'r', product_details: [{ product_id: 1 }],
+    },
+  } } });
+  assert.deepStrictEqual(tracked, [{ name: 'gokwik_order_placed', params: {
+    original_cart_amount: 1200, coupon_code: 'GET100', total_discount_applied: 100, payment_method: 'UPI', shipping_price: 0, cod_charges: 50, currency: 'INR', value: 1100,
+  } }]);
+  assert.deepStrictEqual(placed, ['#4901813']);
+  for (const event of ['Started_Checkout_GK', 'Mobile_Added_GK', 'Address_Step_Reached_GK', 'Address_Added_GK', 'Payment_Step_Reached_GK', 'Payment_Method_Selected_GK', 'Coupon_Applied_Success_GK', 'Coupon_Applied_Failed_GK']) {
+    tracked.length = 0;
+    b.fire('message', { origin: own, data: { type: 'gokwik_events', data: { event, event_data: { checkout_step: 'payment', mobile_number: '+919999999999' } } } });
+    assert.deepStrictEqual(tracked, [{ name: `gokwik_${event.replace(/_GK$/, '').toLowerCase()}`, params: { checkout_step: 'payment' } }], event);
+  }
+  tracked.length = 0;
   b.fire('message', { origin: own, data: 'not an object' });
   off();
   assert.strictEqual(placed.length, 1);

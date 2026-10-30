@@ -37,6 +37,8 @@ Set these on the environment being tested (Vercel Preview, or `.env.local`), nev
 | `GOKWIK_ORDER_GATEWAYS` | Exact gateway names from a real GoKwik order, shown by `npm run check:shopify-admin` |
 | `GA_MEASUREMENT_PROTOCOL_API_SECRET` | GA4 Admin → Data streams → your stream → Measurement Protocol API secrets |
 
+The PDFs use only the merchant ID. No GoKwik app ID or app secret is needed by this integration: leave them out of this project, and never put a secret in a `NEXT_PUBLIC_` variable.
+
 ### Shopify Admin credentials
 
 Use the Dev Dashboard app described in `docs/SHOPIFY_SETUP.md` § 3. It must belong to the same Shopify organization as the store and be installed on it: Shopify's client credentials grant works only in that case. GoKwik dashboard logins and anything GoKwik emails are for GoKwik's systems and can't be used here.
@@ -79,7 +81,7 @@ Other sources:
 | --- | --- | --- |
 | GoKwik Meta pixel | Uses its own `Gokwik_<random>` eventID, so Meta can't deduplicate it against ours. Its script also has code that can send customer details to Meta | Leave off in GoKwik's dashboard |
 | GoKwik GA pixel | Its script has several paths, and at least one uses a different `transaction_id` | Leave off in GoKwik's dashboard |
-| `fbPixel` in `merchantInfo` | Optional in the PDF; not sent | Keep unset |
+| `fbPixel` in `merchantInfo` | In the PDF's snippet. Sent only when `NEXT_PUBLIC_GOKWIK_FB_PIXEL_IDS` is set, and then GoKwik's Meta script runs as in the row above | Leave blank unless GoKwik confirms it deduplicates and what data it sends |
 | Shopify custom pixel | GoKwik publishes only where `window.Shopify.analytics` exists, so it's quiet on this site. Per the PDF it covers GoKwik's mobile app flow | Log only, as below |
 | Shopify's own Google/Meta channels | Whether they also report orders created through GoKwik is unconfirmed | Check in the test plan |
 

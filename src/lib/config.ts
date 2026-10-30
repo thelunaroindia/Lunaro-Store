@@ -35,6 +35,9 @@ export const gokwik = {
   environment:
     process.env.NEXT_PUBLIC_GOKWIK_ENVIRONMENT === 'production' ? 'production' : 'sandbox',
   storeId: Number.isSafeInteger(gokwikStoreId) && gokwikStoreId > 0 ? gokwikStoreId : null,
+  // Comma separated. Optional: see "Purchase tracking" in docs/GOKWIK_SETUP.md
+  // before setting it, because it adds a second Meta reporter.
+  fbPixel: process.env.NEXT_PUBLIC_GOKWIK_FB_PIXEL_IDS ?? '',
 } as const;
 
 export const GOKWIK_ENABLED =

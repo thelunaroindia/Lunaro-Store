@@ -14,6 +14,7 @@ declare global {
       environment: string;
       type: 'merchantInfo';
       storeId: number | null;
+      fbPixel?: string;
       cart?: { id: string };
     };
     triggerGokwikCustomCheckout?: () => void;
@@ -66,6 +67,7 @@ export function loadGokwikSdk(): Promise<void> {
       environment: gokwik.environment,
       type: 'merchantInfo',
       storeId: gokwik.storeId,
+      ...(gokwik.fbPixel ? { fbPixel: gokwik.fbPixel } : {}),
     };
 
     const timeout = window.setTimeout(() => fail('timeout'), SDK_TIMEOUT_MS);
@@ -115,8 +117,8 @@ export function openGokwikCheckout(cartId: string, checkoutUrl: string): void {
 
 // The events documented in docs/gokwik/Shopify Web Pixels API - GoKwik
 // Checkout Events.pdf. Their payloads carry the shopper's phone, email and
-// address, so only the name, currency and amount are ever forwarded —
-// see the PII rule at the top of src/lib/analytics.ts.
+// address, so only the name and FORWARDED_FIELDS are ever forwarded — see the
+// PII rule at the top of src/lib/analytics.ts.
 const FUNNEL_EVENTS = new Set([
   'Started_Checkout_GK',
   'Mobile_Added_GK',
@@ -129,6 +131,19 @@ const FUNNEL_EVENTS = new Set([
   'Coupon_Applied_Failed_GK',
 ]);
 
+// The documented fields that say nothing about who the shopper is.
+const FORWARDED_FIELDS = [
+  'original_cart_amount',
+  'coupon_code',
+  'total_discount_applied',
+  'amount_saved',
+  'checkout_step',
+  'payment_mode_selected',
+  'payment_method',
+  'shipping_price',
+  'cod_charges',
+] as const;
+
 const seenEventIds = new Set<string>();
 
 function firstString(...values: unknown[]): string | null {
@@ -140,11 +155,18 @@ function firstString(...values: unknown[]): string | null {
 }
 
 function handleFunnelEvent(
-  data: Record<string, unknown>,
+  message: Record<string, unknown>,
   onOrderPlaced: (orderNumber: string) => void
 ) {
-  const name = data.eventname;
+  // The SDK currently sends `eventname` beside the fields; the PDF documents
+  // `event` with the fields under `event_data`.
+  const name = message.eventname ?? message.event;
   if (typeof name !== 'string' || !FUNNEL_EVENTS.has(name)) return;
+
+  const data =
+    message.event_data && typeof message.event_data === 'object'
+      ? (message.event_data as Record<string, unknown>)
+      : message;
 
   if (typeof data.event_id === 'string') {
     if (seenEventIds.has(data.event_id)) return;
@@ -152,7 +174,14 @@ function handleFunnelEvent(
   }
 
   const value = Number(data.total_price ?? data.total_amount);
+  const details = Object.fromEntries(
+    FORWARDED_FIELDS.flatMap((field) => {
+      const detail = data[field];
+      return typeof detail === 'string' || typeof detail === 'number' ? [[field, detail]] : [];
+    })
+  );
   trackEvent(`gokwik_${name.replace(/_GK$/, '').toLowerCase()}`, {
+    ...details,
     ...(typeof data.currency === 'string' ? { currency: data.currency } : {}),
     ...(Number.isFinite(value) ? { value } : {}),
   });
