@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { formatMoney } from '@/lib/utils';
+import { formatExactMoney } from '@/lib/utils';
 import { LinkButton } from '@/components/ui/Button';
 import { UtilityPageBackdrop } from '@/components/ui/UtilityPageBackdrop';
 import { checkoutCartTokens } from '@/lib/checkoutCarts';
@@ -135,18 +135,18 @@ export default async function OrderConfirmationPage({
               </div>
               <div className="flex justify-between text-mist">
                 <span>Total</span>
-                <span className="text-lunar">{formatMoney(order.total)}</span>
+                <span className="text-lunar">{formatExactMoney(order.total)}</span>
               </div>
               {orderState === 'cod' && Number(order.received.amount) > 0 && (
                 <div className="flex justify-between text-mist">
                   <span>Paid</span>
-                  <span className="text-lunar">{formatMoney(order.received)}</span>
+                  <span className="text-lunar">{formatExactMoney(order.received)}</span>
                 </div>
               )}
               {orderState === 'cod' && Number(order.outstanding.amount) > 0 && (
                 <div className="flex justify-between text-mist">
                   <span>Due on Delivery</span>
-                  <span className="text-lunar">{formatMoney(order.outstanding)}</span>
+                  <span className="text-lunar">{formatExactMoney(order.outstanding)}</span>
                 </div>
               )}
               <div className="flex justify-between text-mist">
