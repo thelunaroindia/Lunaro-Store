@@ -78,7 +78,8 @@ export default async function OrderConfirmationPage({
       : ({ status: 'unverified' } as const);
 
   const order = lookup.status === 'verified' ? lookup.order : null;
-  const copy = order ? STATE_COPY[orderStateOf(order)] : null;
+  const orderState = order ? orderStateOf(order) : null;
+  const copy = orderState ? STATE_COPY[orderState] : null;
   const addressLine = [
     order?.address?.city,
     order?.address?.province,
@@ -122,7 +123,9 @@ export default async function OrderConfirmationPage({
             <p className="mt-6 text-sm text-mist">
               Order {order.name}
               <br />
-              {copy.body}
+              {orderState === 'cod' && Number(order.received.amount) > 0
+                ? 'Your order is placed. Your advance payment is received, and the remaining balance is due on delivery.'
+                : copy.body}
             </p>
 
             <div className="mt-10 space-y-3 border border-graphite p-6 text-sm">
@@ -134,6 +137,18 @@ export default async function OrderConfirmationPage({
                 <span>Total</span>
                 <span className="text-lunar">{formatMoney(order.total)}</span>
               </div>
+              {orderState === 'cod' && Number(order.received.amount) > 0 && (
+                <div className="flex justify-between text-mist">
+                  <span>Paid</span>
+                  <span className="text-lunar">{formatMoney(order.received)}</span>
+                </div>
+              )}
+              {orderState === 'cod' && Number(order.outstanding.amount) > 0 && (
+                <div className="flex justify-between text-mist">
+                  <span>Due on Delivery</span>
+                  <span className="text-lunar">{formatMoney(order.outstanding)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-mist">
                 <span>Payment Status</span>
                 <span className="text-lunar">

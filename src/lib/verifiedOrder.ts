@@ -13,6 +13,8 @@ export type VerifiedOrder = {
   cartToken: string | null;
   cancelled: boolean;
   total: Money;
+  received: Money;
+  outstanding: Money;
   financialStatus: string;
   fulfillmentStatus: string;
   shippingMethod: string | null;
@@ -65,6 +67,8 @@ export async function getOrderForCheckoutCarts(
           displayFinancialStatus: string;
           displayFulfillmentStatus: string;
           totalPriceSet: { shopMoney: Money };
+          totalReceivedSet: { shopMoney: Money };
+          totalOutstandingSet: { shopMoney: Money };
           shippingLine: { title: string } | null;
           paymentGatewayNames: string[] | null;
           shippingAddress: {
@@ -89,6 +93,8 @@ export async function getOrderForCheckoutCarts(
               displayFinancialStatus
               displayFulfillmentStatus
               totalPriceSet { shopMoney { amount currencyCode } }
+              totalReceivedSet { shopMoney { amount currencyCode } }
+              totalOutstandingSet { shopMoney { amount currencyCode } }
               shippingLine { title }
               paymentGatewayNames
               shippingAddress { city province country zip }
@@ -114,6 +120,8 @@ export async function getOrderForCheckoutCarts(
         cartToken,
         cancelled: order.cancelledAt !== null,
         total: order.totalPriceSet.shopMoney,
+        received: order.totalReceivedSet.shopMoney,
+        outstanding: order.totalOutstandingSet.shopMoney,
         financialStatus: order.displayFinancialStatus,
         fulfillmentStatus: order.displayFulfillmentStatus,
         shippingMethod: order.shippingLine?.title ?? null,

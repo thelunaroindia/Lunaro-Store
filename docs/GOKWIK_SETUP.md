@@ -43,7 +43,7 @@ The PDFs use only the merchant ID. No GoKwik app ID or app secret is needed by t
 
 Use the Dev Dashboard app described in `docs/SHOPIFY_SETUP.md` § 3. It must belong to the same Shopify organization as the store and be installed on it: Shopify's client credentials grant works only in that case. GoKwik dashboard logins and anything GoKwik emails are for GoKwik's systems and can't be used here.
 
-Minimum scopes for this feature: `read_orders`, and `write_orders` for the purchase claim below, which writes only one metafield in this app's own namespace. `/track-order` also reads the order phone, and `/order-confirmation` shows the shipping city if readable, but order verification uses neither. Don't grant protected customer data access just for this integration.
+Minimum scope for this feature: `read_orders`. `/track-order` also reads the order phone, and `/order-confirmation` shows the shipping city if readable, but order verification uses neither. Don't grant protected customer data access just for this integration.
 
 Then run this. It prints scopes and counts only, never a credential or customer value:
 
@@ -60,19 +60,19 @@ Subscribe the same app to the `orders/paid` topic, delivering to `https://<envir
 - **Checkout:** `useCheckoutHandoff` loads the SDK, sets `merchantInfo.cart = { id: <Shopify cart ID> }` and calls `triggerGokwikCustomCheckout()` (PDF Scenario 2). Buy Now passes its own single-item cart.
 - **SDK failure:** a network error or a 10 second timeout shows Try Again and Continue to Secure Checkout. The second option goes to the same cart's Shopify `checkoutUrl`. On mobile the notice appears in the sticky bar.
 - **Health fallback:** on a `shopifyRedirect` message from our own origin, the customer goes to the active cart's `checkoutUrl`. The message's own URL is ignored because GoKwik builds it as `<site>/cart/checkout`, which is a 404 on this headless site. GoKwik only runs this health check when the environment is `production`.
-- **Order verification:** an order belongs to this browser only if Shopify's `Order.cartToken` matches the current cart or one this browser sent to checkout. Otherwise no details are shown, nothing is cleared and nothing is reported.
+- **Order verification:** an order belongs to this browser only if its cart token matches the current cart or one this browser sent to checkout. Shopify's `Order.cartToken` is empty on real GoKwik orders, which carry the cart in a `cart_token` custom attribute instead. Otherwise no details are shown, nothing is cleared and nothing is reported.
 - **Cart clearing:** only an order from the current cart clears it, and not if it's cancelled or its payment failed. Buy Now orders never clear the shared cart.
 - **Stale carts:** Shopify deletes a cart when an order is created from it. If an add fails and a successful lookup finds no cart, a new cart is created with that one line. If the cart exists or the lookup fails, nothing is retried and the cookie is kept.
 - **`/order-confirmation`:** shows paid, COD, authorised, payment pending, payment failed, refunded, cancelled, couldn't verify, or couldn't check (Shopify unreachable or Admin credentials missing). Only `PAID` and `PARTIALLY_REFUNDED` say "Payment confirmed". A `phone` parameter on an old link is stripped by a redirect and never used.
 
 ## Purchase tracking
 
-Each GoKwik order has one `purchase` reporter. Before reporting, the browser and the webhook both write a `purchase_reported` metafield on the order with `compareDigest: null`, which Shopify accepts only if it doesn't exist yet. Whoever wins reports; a failed claim reports nothing.
+Each GoKwik order has one `purchase` reporter, decided by the order's age at the moment it's seen, so no write access is needed:
 
 | Order | Reporter |
 | --- | --- |
-| Paid, authorised or COD while the customer's page is open or when they return | Storefront browser event (GA4 and Meta); `transaction_id` and Meta `eventID` are the order name |
-| Prepaid, paid when no page reports it | `orders/paid` webhook, GA4 Measurement Protocol, when configured: at once for an order over 2 minutes old, otherwise after 45 seconds, so an open page reports first |
+| Paid, authorised or COD (including `Gokwik PPCOD`) when the browser confirms it | Storefront browser event (GA4 and Meta). Once per order per browser; `transaction_id` and Meta `eventID` are the order name |
+| Prepaid, paid more than 2 minutes after creation | `orders/paid` webhook, GA4 Measurement Protocol, when configured. Otherwise the browser reports it on the customer's next visit |
 | Native Shopify checkout (including fallback) | Shopify's own channels on Shopify's pages. The storefront and webhook don't report these, because the webhook only accepts `GOKWIK_ORDER_GATEWAYS` |
 
 Other sources:
@@ -93,15 +93,13 @@ analytics.subscribe('gokwik_events', (event) => {
 });
 ```
 
-Known limits: webhook-reported revenue has no session attribution and doesn't reach Meta, because Meta's Conversions API requires customer data this integration doesn't read. An event can still be lost if the browser wins the claim and closes before sending, its analytics are blocked, or a delayed webhook report fails after Shopify has already had its response.
+Known limits: webhook-reported revenue has no session attribution and doesn't reach Meta, because Meta's Conversions API requires customer data this integration doesn't read. An order paid within 2 minutes after the customer has left, or whose page closes before confirming, isn't reported unless they return. Closing that gap would need shared storage or `write_orders`, which this integration avoids.
 
 ## Test plan (sandbox only)
 
 Use GoKwik's test payment details only.
 
-- [ ] `npm run check:shopify-admin` shows `read_orders`, `write_orders` and no query errors
-- [ ] On a sandbox order, a second `purchase_reported` write with `compareDigest: null` returns `STALE_OBJECT`. **If not, stop: duplicate reporting isn't prevented**
-- [ ] Pay a sandbox order within 2 minutes, close the page at once: exactly one `purchase`, from the webhook, about 45 seconds later
+- [ ] `npm run check:shopify-admin` shows `read_orders` and no query errors
 - [ ] Place a sandbox order; the order appears in Shopify Admin with the right items
 - [ ] `Order.cartToken` equals the cart token. **If not, stop: cart clearing, order display and purchase tracking stay off until GoKwik names a supported association**
 - [ ] The cart clears and `purchase` fires once; refreshing doesn't repeat it

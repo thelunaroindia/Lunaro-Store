@@ -70,8 +70,6 @@ console.log(`Store: ${app.data?.shop?.myshopifyDomain ?? 'unknown'}`);
 console.log(`API version requested: ${version}`);
 console.log(`Scopes: ${scopes.join(', ') || 'none'}`);
 console.log(`read_orders granted: ${scopes.includes('read_orders') ? 'yes' : 'NO'}`);
-console.log(`write_orders granted (purchase reporting needs it): ${scopes.includes('write_orders') ? 'yes' : 'NO'}`);
-
 const orders = await admin(
   '{ orders(first: 10, reverse: true) { nodes { cartToken displayFinancialStatus paymentGatewayNames phone shippingAddress { phone city } } } }'
 );

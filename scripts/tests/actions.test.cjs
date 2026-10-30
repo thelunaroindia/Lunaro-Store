@@ -33,8 +33,8 @@ assert.equal(st('PARTIALLY_PAID', 'cod'), 'cod');
 // ── cart actions
 const LIVE = 'gid://shopify/Cart/live?key=k';
 const late = compile('src/lib/lateOrderPayment.ts', {});
-function setup({ gone = false, lookupThrows = false, addThrows = true, order = null, claim = 'won', cookies = { lunaro_cart_id: LIVE } }) {
-  const jar = { ...cookies }; const calls = { add: 0, create: 0, claim: 0 };
+function setup({ gone = false, lookupThrows = false, addThrows = true, order = null, cookies = { lunaro_cart_id: LIVE } }) {
+  const jar = { ...cookies }; const calls = { add: 0, create: 0 };
   const store = { get: (k) => (k in jar ? { value: jar[k] } : undefined), set: (k, v) => { jar[k] = v; }, delete: (k) => { delete jar[k]; } };
   const headers = { cookies: () => store };
   const carts = compile('src/lib/checkoutCarts.ts', { 'server-only': {}, 'next/headers': headers, '@/lib/orderState': state });
@@ -50,7 +50,6 @@ function setup({ gone = false, lookupThrows = false, addThrows = true, order = n
     '@/lib/checkoutCarts': carts, '@/lib/config': { GOKWIK_ENABLED: true }, '@/lib/orderState': state,
     '@/lib/verifiedOrder': { getOrderForCheckoutCarts: async (_n, tokens) => (order && tokens.includes(order.cartToken) ? { status: 'verified', order } : { status: 'unverified' }) },
     '@/lib/lateOrderPayment': late,
-    '@/lib/purchaseClaim': { claimPurchaseReport: async () => { calls.claim++; return claim; } },
   });
   return { act, jar, calls };
 }
@@ -125,24 +124,22 @@ const order = (cartToken, financialStatus = 'PAID', extra = {}) => ({ name: '#1'
   t = setup({ order: order('live', 'PENDING') });
   r = await t.act.confirmGokwikOrder('#1');
   assert(r.paymentPending);
-  // The claim decides, whatever the order's age: won reports, lost and error don't.
+  // Late paid order: webhook owns it when configured, browser reports when not.
   const old = new Date(Date.now() - 10 * 60 * 1000).toISOString();
   t = setup({ order: order('live', 'PAID', { createdAt: old }) });
   r = await t.act.confirmGokwikOrder('#1');
-  assert(r.purchase, 'old order, nobody reported it yet');
-  t = setup({ order: order('live', 'PAID'), claim: 'lost' });
+  assert(r.purchase, 'browser reports late order when webhook unconfigured');
+  Object.assign(process.env, { GA_MEASUREMENT_PROTOCOL_API_SECRET: 'x', NEXT_PUBLIC_GA_MEASUREMENT_ID: 'G-X', SHOPIFY_ADMIN_CLIENT_SECRET: 'x', GOKWIK_ORDER_GATEWAYS: 'gk' });
+  t = setup({ order: order('live', 'PAID', { createdAt: old }) });
   r = await t.act.confirmGokwikOrder('#1');
-  assert(r.verified && r.cartCleared && r.purchase === null, 'webhook got there first');
-  t = setup({ order: order('live', 'PAID'), claim: 'error' });
+  assert(r.verified && r.purchase === null, 'webhook owns late order');
+  t = setup({ order: order('live', 'PAID') });
   r = await t.act.confirmGokwikOrder('#1');
-  assert(r.verified && r.purchase === null, 'failed claim reports nothing');
-  // Nothing to claim until the order counts as a purchase.
-  t = setup({ order: order('live', 'PENDING') });
-  r = await t.act.confirmGokwikOrder('#1');
-  assert.equal(t.calls.claim, 0);
+  assert(r.purchase, 'browser owns fresh order');
   t = setup({ order: order('live', 'PENDING', { createdAt: old, paymentType: 'cod' }) });
   r = await t.act.confirmGokwikOrder('#1');
-  assert(r.purchase, 'old COD still reports');
+  assert(r.purchase, 'old COD stays with browser');
+  for (const k of ['GA_MEASUREMENT_PROTOCOL_API_SECRET','NEXT_PUBLIC_GA_MEASUREMENT_ID','SHOPIFY_ADMIN_CLIENT_SECRET','GOKWIK_ORDER_GATEWAYS']) delete process.env[k];
   console.error = silence;
   console.log('all action and order-state checks passed');
 })().catch((e) => { console.error = silence; console.error(e); process.exit(1); });

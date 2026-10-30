@@ -19,8 +19,7 @@ import {
 } from '@/lib/checkoutCarts';
 import { GOKWIK_ENABLED } from '@/lib/config';
 import { countsAsPurchase, keepsCart, orderStateOf, type PaymentType } from '@/lib/orderState';
-import { isWithinBrowserPurchaseWindow } from '@/lib/lateOrderPayment';
-import { claimPurchaseReport } from '@/lib/purchaseClaim';
+import { isLatePaymentReportingConfigured, isWithinBrowserPurchaseWindow } from '@/lib/lateOrderPayment';
 import { getOrderForCheckoutCarts } from '@/lib/verifiedOrder';
 import type { Cart } from '@/lib/types';
 
@@ -227,17 +226,20 @@ export async function confirmGokwikOrder(orderNumber: string): Promise<
     cookies().delete(CART_COOKIE);
   }
 
-  // Only the first reporter of an order, this or the orders/paid webhook, gets
-  // to count it. This also covers another browser or device holding the cart.
-  const reportsPurchase =
-    countsAsPurchase(state) && (await claimPurchaseReport(order.id, 'browser')) === 'won';
+  // A prepaid order past this window belongs to the orders/paid webhook, when
+  // it's configured, so the two can't both report it.
+  const reportedByWebhook =
+    state === 'paid' &&
+    order.paymentType !== 'cod' &&
+    isLatePaymentReportingConfigured() &&
+    !isWithinBrowserPurchaseWindow(order.createdAt);
 
   return {
     verified: true,
     cartCleared,
     paymentPending: state === 'payment_pending' && isWithinBrowserPurchaseWindow(order.createdAt),
     purchase:
-      reportsPurchase
+      countsAsPurchase(state) && !reportedByWebhook
         ? {
             orderName: order.name,
             currency: order.total.currencyCode,

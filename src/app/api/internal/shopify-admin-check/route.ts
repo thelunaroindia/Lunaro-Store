@@ -73,7 +73,7 @@ export async function GET() {
         name: o.name,
         cartTokenAttributeShape: (() => {
           const value = o.customAttributes.find((a) => a.key === 'cart_token')?.value ?? '';
-          return { length: value.length, isGid: value.startsWith('gid://'), hasKey: value.includes('?key=') };
+          return { length: value.length, isGid: value.startsWith('gid://'), hasKey: value.includes('?key='), prefix: value.slice(0, 8) };
         })(),
         sourceName: o.sourceName,
         hasSourceIdentifier: Boolean(o.sourceIdentifier),
