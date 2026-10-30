@@ -14,33 +14,38 @@ export async function GET() {
     return NextResponse.json({ configured: false });
   }
 
+  const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-10 (default)';
+
   try {
     const { data, errors } = await shopifyAdminFetchRaw<{
       shop: { myshopifyDomain: string } | null;
       currentAppInstallation: { app: { title: string } | null; accessScopes: { handle: string }[] } | null;
-      orders: { nodes: { cartToken: string | null; paymentGatewayNames: string[] | null }[] } | null;
+      orders: { nodes: { paymentGatewayNames: string[] | null }[] } | null;
+      __type: { fields: { name: string }[] } | null;
     }>(`#graphql
       query AdminCheck {
         shop { myshopifyDomain }
         currentAppInstallation { app { title } accessScopes { handle } }
-        orders(first: 10, reverse: true) { nodes { cartToken paymentGatewayNames } }
+        orders(first: 10, reverse: true) { nodes { paymentGatewayNames } }
+        __type(name: "Order") { fields { name } }
       }
     `);
 
     const scopes = data?.currentAppInstallation?.accessScopes.map((s) => s.handle) ?? [];
     const orders = data?.orders?.nodes ?? [];
+    const orderFields = data?.__type?.fields.map((f) => f.name) ?? [];
 
     return NextResponse.json({
       configured: true,
       store: data?.shop?.myshopifyDomain ?? null,
       app: data?.currentAppInstallation?.app?.title ?? null,
-      apiVersion: process.env.SHOPIFY_API_VERSION || '2024-10 (default)',
+      apiVersion,
       scopes,
       readOrders: scopes.includes('read_orders'),
       writeOrders: scopes.includes('write_orders'),
       recentOrders: orders.length,
-      recentOrdersWithCartToken: orders.filter((o) => o.cartToken).length,
       gateways: Array.from(new Set(orders.flatMap((o) => o.paymentGatewayNames ?? []))),
+      orderCartFields: orderFields.filter((name) => /cart|checkout|attribute|source/i.test(name)),
       errors: errors.map((e) => e.message),
     });
   } catch (err) {
