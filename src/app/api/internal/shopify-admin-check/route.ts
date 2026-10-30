@@ -45,7 +45,42 @@ export async function GET() {
       recentOrdersWithCartToken = tokens.data?.orders?.nodes.filter((o) => o.cartToken).length ?? null;
     }
 
+    // Which fields could link a GoKwik order to its cart: names and shapes only.
+    const gokwikOrders = await shopifyAdminFetchRaw<{
+      orders: {
+        nodes: {
+          sourceName: string | null;
+          sourceIdentifier: string | null;
+          checkoutToken: string | null;
+          cartToken: string | null;
+          displayFinancialStatus: string;
+          paymentGatewayNames: string[] | null;
+          customAttributes: { key: string }[];
+          tags: string[];
+        }[];
+      } | null;
+    }>(`#graphql
+      query AdminCheckGokwikOrders {
+        orders(first: 10, reverse: true) {
+          nodes { sourceName sourceIdentifier checkoutToken cartToken displayFinancialStatus paymentGatewayNames customAttributes { key } tags }
+        }
+      }
+    `);
+    const gokwikOrderShapes = (gokwikOrders.data?.orders?.nodes ?? [])
+      .filter((o) => o.paymentGatewayNames?.some((g) => /gokwik/i.test(g)))
+      .map((o) => ({
+        sourceName: o.sourceName,
+        hasSourceIdentifier: Boolean(o.sourceIdentifier),
+        hasCheckoutToken: Boolean(o.checkoutToken),
+        hasCartToken: Boolean(o.cartToken),
+        financialStatus: o.displayFinancialStatus,
+        gateways: o.paymentGatewayNames,
+        attributeKeys: o.customAttributes.map((a) => a.key),
+        tags: o.tags,
+      }));
+
     return NextResponse.json({
+      gokwikOrderShapes,
       configured: true,
       store: data?.shop?.myshopifyDomain ?? null,
       storeId: data?.shop?.id ?? null,
