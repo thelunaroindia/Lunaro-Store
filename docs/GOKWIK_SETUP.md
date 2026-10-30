@@ -33,6 +33,7 @@ Set these on the environment being tested (Vercel Preview, or `.env.local`), nev
 | `NEXT_PUBLIC_GOKWIK_MERCHANT_ID` | GoKwik, for the sandbox account specifically |
 | `NEXT_PUBLIC_SHOPIFY_STORE_ID` | `82292637947` for lunaro-9855.myshopify.com |
 | `SHOPIFY_ADMIN_CLIENT_ID`, `SHOPIFY_ADMIN_CLIENT_SECRET` | Shopify Dev Dashboard → your own app → Settings |
+| `SHOPIFY_ADMIN_API_VERSION` | `2026-10` or newer. `Order.cartToken` doesn't exist on `2026-04`. Admin API only; the Storefront keeps `SHOPIFY_API_VERSION` |
 | `GOKWIK_ORDER_GATEWAYS` | Exact gateway names from a real GoKwik order, shown by `npm run check:shopify-admin` |
 | `GA_MEASUREMENT_PROTOCOL_API_SECRET` | GA4 Admin → Data streams → your stream → Measurement Protocol API secrets |
 
@@ -114,7 +115,7 @@ Use GoKwik's test payment details only.
 
 1. Pass the test plan on Preview with `sandbox`.
 2. Get GoKwik's sign-off and production merchant ID.
-3. On Vercel Production, set the production merchant ID, `NEXT_PUBLIC_GOKWIK_ENVIRONMENT=production`, `NEXT_PUBLIC_SHOPIFY_STORE_ID`, then `NEXT_PUBLIC_GOKWIK_TEST_MODE=true`, and redeploy.
+3. On Vercel Production, set the production merchant ID, `NEXT_PUBLIC_GOKWIK_ENVIRONMENT=production`, `NEXT_PUBLIC_SHOPIFY_STORE_ID`, `SHOPIFY_ADMIN_API_VERSION`, then `NEXT_PUBLIC_GOKWIK_TEST_MODE=true`, and redeploy.
 4. Place one low-value real order yourself, then watch orders, cart clearing and `purchase` counts.
 
 ## Rollback

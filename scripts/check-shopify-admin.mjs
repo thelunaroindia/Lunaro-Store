@@ -22,7 +22,7 @@ const env = (name) => process.env[name] || fileEnv[name] || '';
 const domain = env('SHOPIFY_STORE_DOMAIN');
 const clientId = env('SHOPIFY_ADMIN_CLIENT_ID');
 const clientSecret = env('SHOPIFY_ADMIN_CLIENT_SECRET');
-const version = env('SHOPIFY_API_VERSION') || '2024-10';
+const version = env('SHOPIFY_ADMIN_API_VERSION') || env('SHOPIFY_API_VERSION') || '2024-10';
 
 const missing = [
   ['SHOPIFY_STORE_DOMAIN', domain],

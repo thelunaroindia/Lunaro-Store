@@ -19,7 +19,9 @@
 const DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const CLIENT_ID = process.env.SHOPIFY_ADMIN_CLIENT_ID;
 const CLIENT_SECRET = process.env.SHOPIFY_ADMIN_CLIENT_SECRET;
-const API_VERSION = process.env.SHOPIFY_API_VERSION || '2024-10';
+// Separate from the Storefront version: Order.cartToken only exists on newer
+// Admin API versions (see docs/GOKWIK_SETUP.md).
+const API_VERSION = process.env.SHOPIFY_ADMIN_API_VERSION || process.env.SHOPIFY_API_VERSION || '2024-10';
 
 export function isShopifyAdminConfigured(): boolean {
   return Boolean(DOMAIN && CLIENT_ID && CLIENT_SECRET);
