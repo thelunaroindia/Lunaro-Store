@@ -192,6 +192,7 @@ function normaliseCart(cart: any): Cart {
         selectedOptions:
           line.merchandise.selectedOptions ?? [],
         product: {
+          id: line.merchandise.product.id,
           title: line.merchandise.product.title,
           handle: line.merchandise.product.handle,
           images:

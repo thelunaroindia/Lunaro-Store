@@ -15,7 +15,12 @@ import { useCartUI } from '@/context/CartUIContext';
 import { Button } from '@/components/ui/Button';
 import { activeCouponCode } from '@/lib/checkout';
 import { useCheckoutHandoff } from '@/lib/useCheckoutHandoff';
-import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
+import {
+  trackEvent,
+  isInternalTestProduct,
+  addToCartFromResult,
+  productMetaParams,
+} from '@/lib/analytics';
 import CheckoutFailureNotice from '@/components/cart/CheckoutFailureNotice';
 import StickyAddToCart from './StickyAddToCart';
 import SizeGuideDrawer from './SizeGuideDrawer';
@@ -201,15 +206,9 @@ export default function ProductOptions({
       const result = await addToCart(activeVariant.id, 1);
 
       if (result.ok) {
-        trackEvent('add_to_cart', {
-          product_id: product.id,
-          product_handle: product.handle,
-          variant_id: activeVariant.id,
-          currency: activeVariant.price.currencyCode,
-          value: Number(activeVariant.price.amount),
-          quantity: 1,
-          internal_test: isInternalTestProduct(product.handle),
-        });
+        // Only after Shopify confirms the line, priced from the returned cart.
+        const added = addToCartFromResult(result.cart, activeVariant.id, 1);
+        if (added) trackEvent('add_to_cart', added.params, { meta: added.meta });
         setCart(result.cart);
         open();
       } else {
@@ -262,14 +261,25 @@ export default function ProductOptions({
       }
 
       // Buy Now goes to the same checkout the cart's Checkout button does —
-      // counted as a genuine checkout attempt so abandonment can be measured
-      // across both entry points, not just one.
-      trackEvent('begin_checkout', eventParams);
-
+      // counted as a genuine checkout attempt (when the checkout actually
+      // opens, see useCheckoutHandoff) so abandonment can be measured across
+      // both entry points, not just one.
+      const price = Number(activeVariant.price.amount);
       await handoff.startCheckout({
         cartId: result.cartId,
         checkoutUrl: result.checkoutUrl,
         kind: 'buy_now',
+        analytics: {
+          params: eventParams,
+          meta: productMetaParams({
+            productId: product.id,
+            variantId: activeVariant.id,
+            quantity: 1,
+            price,
+            currency: activeVariant.price.currencyCode,
+            handle: product.handle,
+          }),
+        },
       });
     })();
   }

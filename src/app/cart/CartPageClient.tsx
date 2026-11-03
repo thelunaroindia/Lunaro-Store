@@ -6,7 +6,7 @@ import { payments, prepaidIncentive } from '@/lib/config';
 import { applyDiscount } from '@/actions/cart';
 import { Button } from '@/components/ui/Button';
 import { useCheckoutHandoff } from '@/lib/useCheckoutHandoff';
-import { trackEvent, cartEventParams } from '@/lib/analytics';
+import { trackEvent, cartEventParams, cartMetaParams } from '@/lib/analytics';
 import CartLineItem from '@/components/cart/CartLineItem';
 import CheckoutFailureNotice from '@/components/cart/CheckoutFailureNotice';
 import type { Cart } from '@/lib/types';
@@ -29,10 +29,13 @@ export default function CartPageClient({ initialCart }: { initialCart: Cart }) {
   function handleCheckout() {
     if (checkingOut) return;
 
-    // Fired before navigating away so the event isn't lost with the page.
-    trackEvent('begin_checkout', cartEventParams(cart));
-
-    void startCheckout({ cartId: cart.id, checkoutUrl: cart.checkoutUrl, kind: 'cart' });
+    // begin_checkout is reported by useCheckoutHandoff once checkout opens.
+    void startCheckout({
+      cartId: cart.id,
+      checkoutUrl: cart.checkoutUrl,
+      kind: 'cart',
+      analytics: { params: cartEventParams(cart), meta: cartMetaParams(cart) },
+    });
   }
 
   function onApplyDiscount(e: React.FormEvent) {

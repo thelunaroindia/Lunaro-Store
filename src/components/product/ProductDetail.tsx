@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import ProductGallery from './ProductGallery';
 import ProductOptions, {
@@ -10,7 +10,7 @@ import ProductOptions, {
 import ProductAccordion from './ProductAccordion';
 import ProductJsonLd from './ProductJsonLd';
 import { cleanProductTitle } from '@/lib/productTitle';
-import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
+import { trackEvent, isInternalTestProduct, productMetaParams } from '@/lib/analytics';
 import type { Product } from '@/lib/types';
 
 // "DROP 001" is only ever shown when Shopify's own tag says so — the same
@@ -45,14 +45,43 @@ export default function ProductDetail({
     [product.variants, selected]
   );
 
+  const lastViewedProduct = useRef<string | null>(null);
+
   useEffect(() => {
-    trackEvent('view_item', {
-      product_id: product.id,
-      product_handle: product.handle,
-      currency: product.priceRange.minVariantPrice.currencyCode,
-      value: Number(product.priceRange.minVariantPrice.amount),
-      internal_test: isInternalTestProduct(product.handle),
-    });
+    // Once per product shown: Strict Mode's second effect run and re-renders
+    // see the same ID and send nothing.
+    if (lastViewedProduct.current === product.id) return;
+    lastViewedProduct.current = product.id;
+
+    // The variant the page opens on, else the first: its real price.
+    const variant = selectedVariant ?? product.variants[0] ?? null;
+    const price = variant?.price ?? product.priceRange.minVariantPrice;
+
+    trackEvent(
+      'view_item',
+      {
+        product_id: product.id,
+        product_handle: product.handle,
+        currency: price.currencyCode,
+        value: Number(price.amount),
+        internal_test: isInternalTestProduct(product.handle),
+      },
+      variant
+        ? {
+            meta: {
+              ...productMetaParams({
+                productId: product.id,
+                variantId: variant.id,
+                quantity: 1,
+                price: Number(price.amount),
+                currency: price.currencyCode,
+                handle: product.handle,
+              }),
+              content_name: cleanProductTitle(product.title),
+            },
+          }
+        : {}
+    );
     // Fires once per product page view (product identity changing is the
     // only thing that should re-fire it) — real price/currency, no PII.
     // eslint-disable-next-line react-hooks/exhaustive-deps

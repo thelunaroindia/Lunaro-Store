@@ -144,6 +144,7 @@ const CART_FIELDS = `
           price { ${MONEY_FIELDS} }
           selectedOptions { name value }
           product {
+            id
             title
             handle
             images(first: 1) { nodes { url altText } }

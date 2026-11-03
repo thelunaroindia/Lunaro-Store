@@ -40,6 +40,33 @@ export const gokwik = {
   fbPixel: process.env.NEXT_PUBLIC_GOKWIK_FB_PIXEL_IDS ?? '',
 } as const;
 
+// Meta Pixel. The ID is fixed here, from Events Manager, so every deployment
+// sends to the same dataset without depending on an env var at build time.
+// NEXT_PUBLIC_META_PIXEL_ID may only confirm it or turn tracking off:
+//   unset / this ID → on (off under `next dev` unless set explicitly)
+//   "off"           → off
+//   anything else   → off, with a console warning, rather than sending data
+//                     to an unexpected pixel. Change META_PIXEL_ID to switch.
+// See docs/META_PIXEL.md.
+const META_PIXEL_ID = '4448781662040409';
+const metaPixelEnv = (process.env.NEXT_PUBLIC_META_PIXEL_ID ?? '').trim();
+const metaPixelMismatch =
+  metaPixelEnv !== '' && metaPixelEnv !== 'off' && metaPixelEnv !== META_PIXEL_ID ? metaPixelEnv : null;
+
+export const metaPixel = {
+  id:
+    metaPixelEnv === 'off' || metaPixelMismatch
+      ? null
+      : metaPixelEnv === META_PIXEL_ID || process.env.NODE_ENV !== 'development'
+        ? META_PIXEL_ID
+        : null,
+  mismatch: metaPixelMismatch,
+  // "shopify" (default): shopify_IN_<product>_<variant>, as Shopify's Facebook
+  // & Instagram channel names catalog items. "variant": bare variant ID.
+  contentIdFormat: process.env.NEXT_PUBLIC_META_CONTENT_ID_FORMAT === 'variant' ? 'variant' : 'shopify',
+  catalogCountry: 'IN',
+} as const;
+
 export const GOKWIK_ENABLED =
   process.env.NEXT_PUBLIC_GOKWIK_TEST_MODE === 'true' &&
   Boolean(gokwik.merchantId) &&

@@ -24,7 +24,8 @@ Vercel → Project → **Settings → Environment Variables**. Add every variabl
 | `NEXT_PUBLIC_SITE_URL` | `https://www.lunaro.in` (the real production host — non-www redirects here) | leave as preview URL or unset |
 | `NEXT_PUBLIC_INSTAGRAM_URL` | ✅ | ✅ |
 | `RESEND_API_KEY`, `CONTACT_FORM_TO_EMAIL` | ✅ | optional |
-| `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_META_PIXEL_ID` | ✅ (once created — see below) | leave blank |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | ✅ (once created — see below) | leave blank |
+| `NEXT_PUBLIC_META_PIXEL_ID` | Optional: the pixel ID is fixed in code; set `off` to disable (see `docs/META_PIXEL.md`) | leave blank |
 
 Never mark `SHOPIFY_ADMIN_API_TOKEN` or any non-`NEXT_PUBLIC_` variable as available to the client — Vercel only exposes `NEXT_PUBLIC_`-prefixed variables to the browser, but double-check this in Settings before launch.
 
@@ -80,5 +81,5 @@ Vercel → Project → **Deployments** → find the last known-good deployment �
 
 - **Google Analytics**: create a GA4 property, add the Measurement ID as `NEXT_PUBLIC_GA_MEASUREMENT_ID`, then wire up the GA script (e.g. via `@next/third-parties/google`'s `GoogleAnalytics` component in `src/app/layout.tsx`) once you're ready — not added by default so no placeholder tracking ID ships to production by accident.
 - **Google Search Console**: verify `lunaro.in` via the DNS TXT record method (add in GoDaddy DNS) once the domain is live.
-- **Meta Pixel**: same pattern as GA — add `NEXT_PUBLIC_META_PIXEL_ID` and wire in the pixel script when ready.
+- **Meta Pixel**: live, see `docs/META_PIXEL.md`.
 - Event names to wire up once a provider is chosen: product view, collection view, search, add-to-cart, wishlist add, begin checkout (fires when the user clicks "Checkout" — see `CartDrawer.tsx` and `CartPageClient.tsx`), purchase (requires a Shopify order-confirmation webhook or the `checkout.completed` pixel, since checkout itself happens on Shopify's domain), contact form submit, newsletter signup.

@@ -209,7 +209,13 @@ export async function confirmGokwikOrder(orderNumber: string): Promise<
       verified: true;
       cartCleared: boolean;
       paymentPending: boolean;
-      purchase: { orderName: string; currency: string; value: number; paymentType: PaymentType } | null;
+      purchase: {
+        orderName: string;
+        currency: string;
+        value: number;
+        paymentType: PaymentType;
+        lines: { productId: string; variantId: string; quantity: number; itemPrice: number }[];
+      } | null;
     }
 > {
   if (!GOKWIK_ENABLED || typeof orderNumber !== 'string') return { verified: false };
@@ -245,6 +251,12 @@ export async function confirmGokwikOrder(orderNumber: string): Promise<
             currency: order.total.currencyCode,
             value: Number(order.total.amount),
             paymentType: order.paymentType,
+            lines: (order.lines ?? []).map((line) => ({
+              productId: line.productId,
+              variantId: line.variantId,
+              quantity: line.quantity,
+              itemPrice: line.unitPrice,
+            })),
           }
         : null,
   };

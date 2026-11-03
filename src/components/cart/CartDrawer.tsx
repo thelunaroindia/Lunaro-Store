@@ -8,7 +8,7 @@ import { formatMoney } from '@/lib/utils';
 import { payments, prepaidIncentive } from '@/lib/config';
 import { LinkButton } from '@/components/ui/Button';
 import { useCheckoutHandoff } from '@/lib/useCheckoutHandoff';
-import { trackEvent, cartEventParams } from '@/lib/analytics';
+import { trackEvent, cartEventParams, cartMetaParams } from '@/lib/analytics';
 import CartLineItem from './CartLineItem';
 import CheckoutFailureNotice from './CheckoutFailureNotice';
 
@@ -33,10 +33,13 @@ export default function CartDrawer() {
   function handleCheckout() {
     if (checkingOut || !cart) return;
 
-    // Fired before navigating away so the event isn't lost with the page.
-    trackEvent('begin_checkout', cartEventParams(cart));
-
-    void startCheckout({ cartId: cart.id, checkoutUrl: cart.checkoutUrl, kind: 'cart' });
+    // begin_checkout is reported by useCheckoutHandoff once checkout opens.
+    void startCheckout({
+      cartId: cart.id,
+      checkoutUrl: cart.checkoutUrl,
+      kind: 'cart',
+      analytics: { params: cartEventParams(cart), meta: cartMetaParams(cart) },
+    });
   }
 
   useEffect(() => {

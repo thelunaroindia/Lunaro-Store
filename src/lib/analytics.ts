@@ -1,14 +1,15 @@
 'use client';
 
 import { PURCHASE_TEST_PRODUCT_HANDLE } from '@/lib/config';
+import { metaContents, sendMetaEvent, type MetaLine } from '@/lib/metaPixel';
 import type { Cart } from '@/lib/types';
 
 // Central analytics layer — the ONLY place components should call to report
 // an event. Components must never call gtag()/fbq() directly; trackEvent()
 // fans out to every configured destination so there is one controlled
-// source of truth (see GoogleAnalytics.tsx / MetaPixel.tsx for the loaders
-// that make window.gtag/window.fbq available, or leave them undefined when
-// their env var isn't set — trackEvent() degrades silently either way).
+// source of truth (GoogleAnalytics.tsx loads gtag when its env var is set;
+// src/lib/metaPixel.ts owns window.fbq). trackEvent() degrades silently
+// when a destination is off.
 //
 // Never pass an email address, phone number, name, address, order-lookup
 // credentials, or any cookie/session contents in `params` — these events
@@ -27,11 +28,24 @@ declare global {
 // remove_from_cart, begin_checkout, purchase — matches our names exactly),
 // so GA4 receives the raw event name unchanged via gtag('event', name, ...).
 // Meta has a different standard-event vocabulary, so only Meta needs an
-// explicit name map (see metaEventName below) — anything not in that map is
-// sent to Meta as a custom event via fbq('trackCustom', name, params) with
-// its original name, unchanged.
+// explicit name map (see metaStandardEventName below) — anything not in that
+// map is sent to Meta as a custom event with its original name, unchanged.
 
-export function trackEvent(name: string, params: Record<string, unknown> = {}): void {
+export type TrackOptions = {
+  // What Meta receives instead of `params`: its own field names (content_ids,
+  // contents, content_type, num_items, value, currency). GA4 and dataLayer
+  // still get `params` unchanged.
+  meta?: Record<string, unknown>;
+  // Meta deduplicates on event name + eventID, including against a future
+  // Conversions API event sent with the same ID.
+  eventId?: string;
+};
+
+export function trackEvent(
+  name: string,
+  params: Record<string, unknown> = {},
+  options: TrackOptions = {}
+): void {
   if (typeof window === 'undefined') return;
 
   // 1. dataLayer — kept for GTM compatibility / future tag-manager use,
@@ -51,29 +65,32 @@ export function trackEvent(name: string, params: Record<string, unknown> = {}): 
     // Analytics must never throw into application code.
   }
 
-  // 3. Meta Pixel, direct via fbq — only if MetaPixel.tsx actually loaded
-  //    (NEXT_PUBLIC_META_PIXEL_ID configured).
-  try {
-    if (typeof window.fbq === 'function') {
-      const standardName = metaStandardEventName(name);
+  // 3. Meta Pixel via src/lib/metaPixel.ts, which loads the SDK on first use
+  //    and queues events until it arrives.
+  const standardName = metaStandardEventName(name);
+  const eventId =
+    options.eventId ?? (typeof params.transaction_id === 'string' ? params.transaction_id : undefined);
+  sendMetaEvent(standardName ?? metaCustomEventName(name), options.meta ?? params, {
+    standard: standardName !== null,
+    eventId,
+  });
+}
 
-      if (standardName) {
-        // Meta deduplicates on eventID, so a repeat of the same order counts once.
-        if (typeof params.transaction_id === 'string') {
-          window.fbq('track', standardName, params, { eventID: params.transaction_id });
-        } else {
-          window.fbq('track', standardName, params);
-        }
-      } else {
-        // Custom events (including launch_notification_success, renamed
-        // below to Meta's own vocabulary) go through trackCustom — Meta's
-        // documented mechanism for non-standard event names.
-        window.fbq('trackCustom', metaCustomEventName(name), params);
-      }
-    }
+// Remembers keys for this tab, and across reloads where sessionStorage works,
+// so a repeated callback or double click can't report the same thing twice.
+const firedThisSession = new Set<string>();
+
+export function onceThisSession(key: string): boolean {
+  if (firedThisSession.has(key)) return false;
+  firedThisSession.add(key);
+  try {
+    const storageKey = `lunaro_once_${key}`;
+    if (window.sessionStorage.getItem(storageKey)) return false;
+    window.sessionStorage.setItem(storageKey, '1');
   } catch {
-    // Analytics must never throw into application code.
+    // The in-memory set above still covers this page.
   }
+  return true;
 }
 
 const PURCHASE_DEDUP_KEY_PREFIX = 'lunaro_purchase_tracked_';
@@ -97,11 +114,13 @@ export function trackPurchaseOnce({
   currency,
   value,
   paymentType,
+  lines = [],
 }: {
   orderName: string;
   currency: string;
   value: number;
   paymentType: 'prepaid' | 'cod' | 'unknown';
+  lines?: MetaLine[];
 }): void {
   const dedupKey = `${PURCHASE_DEDUP_KEY_PREFIX}${orderName}`;
 
@@ -110,17 +129,30 @@ export function trackPurchaseOnce({
     window.localStorage.setItem(dedupKey, '1');
   } catch {
     // localStorage unavailable (private browsing, storage disabled) —
-    // fall through and track anyway rather than silently dropping a
-    // genuine purchase; the worst case is an occasional duplicate, which
-    // is far better than never recording a real sale.
+    // fall back to this tab's memory, then track rather than silently
+    // dropping a genuine purchase. Meta also deduplicates on the eventID.
+    if (!onceThisSession(`purchase_${orderName}`)) return;
   }
 
-  trackEvent('purchase', {
-    transaction_id: orderName,
-    currency,
-    value,
-    payment_type: paymentType,
-  });
+  trackEvent(
+    'purchase',
+    {
+      transaction_id: orderName,
+      currency,
+      value,
+      payment_type: paymentType,
+    },
+    {
+      eventId: orderName,
+      meta: {
+        ...(lines.length > 0 ? metaContents(lines) : { content_type: 'product' }),
+        currency,
+        value,
+        order_id: orderName,
+        payment_type: paymentType,
+      },
+    }
+  );
 }
 
 // GA4 receives every event under its own original name unchanged (see the
@@ -169,4 +201,100 @@ export function cartEventParams(cart: Cart): Record<string, unknown> {
       isInternalTestProduct(line.merchandise.product.handle)
     ),
   };
+}
+
+export function cartMetaLines(cart: Cart): MetaLine[] {
+  return cart.lines.map((line) => ({
+    productId: line.merchandise.product.id,
+    variantId: line.merchandise.id,
+    quantity: line.quantity,
+    itemPrice: Number(line.merchandise.price.amount),
+  }));
+}
+
+// What Meta receives for a whole cart (InitiateCheckout).
+export function cartMetaParams(cart: Cart): Record<string, unknown> {
+  return {
+    ...metaContents(cartMetaLines(cart)),
+    currency: cart.cost.totalAmount.currencyCode,
+    value: Number(cart.cost.totalAmount.amount),
+    internal_test: cartEventParams(cart).internal_test,
+  };
+}
+
+// Meta payload for one product line (ViewContent, AddToCart, Buy Now).
+export function productMetaParams({
+  productId,
+  variantId,
+  quantity,
+  price,
+  currency,
+  handle,
+}: {
+  productId: string;
+  variantId: string;
+  quantity: number;
+  price: number;
+  currency: string;
+  handle: string;
+}): Record<string, unknown> {
+  return {
+    ...metaContents([{ productId, variantId, quantity, itemPrice: price }]),
+    currency,
+    value: price * quantity,
+    internal_test: isInternalTestProduct(handle),
+  };
+}
+
+// AddToCart from the cart Shopify returned, so value is the line's real price
+// rather than the card's "from" price. Null if the line isn't there.
+export function addToCartFromResult(
+  cart: Cart,
+  variantId: string,
+  quantity: number
+): { params: Record<string, unknown>; meta: Record<string, unknown> } | null {
+  const line = cart.lines.find((l) => l.merchandise.id === variantId);
+  if (!line) return null;
+  const price = Number(line.merchandise.price.amount);
+  const currency = line.merchandise.price.currencyCode;
+  const handle = line.merchandise.product.handle;
+  return {
+    params: {
+      product_id: line.merchandise.product.id,
+      product_handle: handle,
+      variant_id: variantId,
+      currency,
+      value: price * quantity,
+      quantity,
+      internal_test: isInternalTestProduct(handle),
+    },
+    meta: productMetaParams({
+      productId: line.merchandise.product.id,
+      variantId,
+      quantity,
+      price,
+      currency,
+      handle,
+    }),
+  };
+}
+
+// Reports the checkout once per cart and contents per session: a retry, the
+// Shopify fallback after a GoKwik failure, or reopening the same cart is the
+// same attempt. A changed cart is a new one.
+export function trackBeginCheckoutOnce(
+  cartId: string,
+  params: Record<string, unknown>,
+  meta: Record<string, unknown>
+): void {
+  const fingerprint = `${cartId}|${String(meta.value)}|${JSON.stringify(meta.contents ?? [])}`;
+  const key = `begin_checkout_${hash(fingerprint)}`;
+  if (!onceThisSession(key)) return;
+  trackEvent('begin_checkout', params, { meta, eventId: key });
+}
+
+function hash(input: string): string {
+  let h = 5381;
+  for (let i = 0; i < input.length; i++) h = ((h << 5) + h + input.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
 }

@@ -8,7 +8,7 @@ import { cleanProductTitle } from '@/lib/productTitle';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCartUI } from '@/context/CartUIContext';
 import { addToCart } from '@/actions/cart';
-import { trackEvent, isInternalTestProduct } from '@/lib/analytics';
+import { trackEvent, addToCartFromResult } from '@/lib/analytics';
 import {
   findMatchingVariant,
   getInitialQuickAddSelection,
@@ -69,15 +69,10 @@ export default function ProductCard({
       const result = await addToCart(variantId, 1);
 
       if (result.ok) {
-        trackEvent('add_to_cart', {
-          product_id: product.id,
-          product_handle: product.handle,
-          variant_id: variantId,
-          currency: sellingPrice.currencyCode,
-          value: Number(sellingPrice.amount),
-          quantity: 1,
-          internal_test: isInternalTestProduct(product.handle),
-        });
+        // Only after Shopify confirms the line, priced from the returned cart
+        // (the card shows the product's lowest price, not this variant's).
+        const added = addToCartFromResult(result.cart, variantId, 1);
+        if (added) trackEvent('add_to_cart', added.params, { meta: added.meta });
         setCart(result.cart);
         openCart();
         setFeedback('success');

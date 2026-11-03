@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { markCartCheckoutStarted } from '@/actions/cart';
-import { trackEvent } from '@/lib/analytics';
+import { trackBeginCheckoutOnce, trackEvent } from '@/lib/analytics';
 import { goToCheckout } from '@/lib/checkout';
 import { GOKWIK_ENABLED } from '@/lib/config';
 import { loadGokwikSdk, openGokwikCheckout } from '@/lib/gokwik';
@@ -17,7 +17,20 @@ export type CheckoutTarget = {
   cartId: string;
   checkoutUrl: string;
   kind: 'cart' | 'buy_now';
+  // begin_checkout / InitiateCheckout, reported when a checkout actually
+  // opens: GoKwik's modal is triggered or the Shopify redirect starts. An SDK
+  // failure alone reports nothing.
+  analytics?: { params: Record<string, unknown>; meta: Record<string, unknown> };
 };
+
+function reportCheckoutStarted(target: CheckoutTarget, via: 'gokwik' | 'shopify') {
+  if (!target.analytics) return;
+  trackBeginCheckoutOnce(
+    target.cartId,
+    { ...target.analytics.params, checkout_kind: target.kind, checkout_provider: via },
+    target.analytics.meta
+  );
+}
 
 // The one route every Checkout / Buy Now button takes. With GoKwik off this is
 // exactly the Shopify redirect; with it on, a failed SDK load keeps the
@@ -34,6 +47,7 @@ export function useCheckoutHandoff({ beforeOpen }: { beforeOpen?: () => void } =
   function continueToShopify(target: CheckoutTarget) {
     setFailedTarget(null);
     setCheckingOut(true);
+    if (target.checkoutUrl) reportCheckoutStarted(target, 'shopify');
     // Nothing to navigate to — restore the button immediately rather than
     // making the customer wait out the full re-enable window.
     if (goToCheckout(target.checkoutUrl)) finish();
@@ -60,6 +74,7 @@ export function useCheckoutHandoff({ beforeOpen }: { beforeOpen?: () => void } =
       }
       beforeOpen?.();
       openGokwikCheckout(target.cartId, target.checkoutUrl);
+      reportCheckoutStarted(target, 'gokwik');
       finish();
     } catch (err) {
       console.error('[checkout] GoKwik unavailable', err);

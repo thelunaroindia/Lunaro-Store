@@ -19,6 +19,9 @@ export type VerifiedOrder = {
   fulfillmentStatus: string;
   shippingMethod: string | null;
   paymentType: PaymentType;
+  // Product and variant IDs only, for analytics content IDs. Lines whose
+  // product was since deleted are left out.
+  lines: { productId: string; variantId: string; quantity: number; unitPrice: number }[];
   // Null when absent, or when Shopify redacts it for this app.
   address: {
     city: string | null;
@@ -71,6 +74,14 @@ export async function getOrderForCheckoutCarts(
           totalOutstandingSet: { shopMoney: Money };
           shippingLine: { title: string } | null;
           paymentGatewayNames: string[] | null;
+          lineItems: {
+            nodes: {
+              quantity: number;
+              product: { id: string } | null;
+              variant: { id: string } | null;
+              originalUnitPriceSet: { shopMoney: Money };
+            }[];
+          };
           shippingAddress: {
             city: string | null;
             province: string | null;
@@ -97,6 +108,14 @@ export async function getOrderForCheckoutCarts(
               totalOutstandingSet { shopMoney { amount currencyCode } }
               shippingLine { title }
               paymentGatewayNames
+              lineItems(first: 50) {
+                nodes {
+                  quantity
+                  product { id }
+                  variant { id }
+                  originalUnitPriceSet { shopMoney { amount currencyCode } }
+                }
+              }
               shippingAddress { city province country zip }
             }
           }
@@ -126,6 +145,18 @@ export async function getOrderForCheckoutCarts(
         fulfillmentStatus: order.displayFulfillmentStatus,
         shippingMethod: order.shippingLine?.title ?? null,
         paymentType: derivePaymentType(order.paymentGatewayNames ?? []),
+        lines: (order.lineItems?.nodes ?? []).flatMap((line) =>
+          line.product && line.variant && line.quantity > 0
+            ? [
+                {
+                  productId: line.product.id,
+                  variantId: line.variant.id,
+                  quantity: line.quantity,
+                  unitPrice: Number(line.originalUnitPriceSet.shopMoney.amount),
+                },
+              ]
+            : []
+        ),
         address: order.shippingAddress,
       },
     };

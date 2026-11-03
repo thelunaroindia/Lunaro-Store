@@ -102,7 +102,7 @@ export type CartLine = {
   merchandise: {
     id: string;
     title: string;
-    product: { title: string; handle: string; images: { url: string; altText: string | null }[] };
+    product: { id: string; title: string; handle: string; images: { url: string; altText: string | null }[] };
     selectedOptions: { name: string; value: string }[];
     price: Money;
   };

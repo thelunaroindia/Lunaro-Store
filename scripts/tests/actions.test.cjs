@@ -113,6 +113,15 @@ const order = (cartToken, financialStatus = 'PAID', extra = {}) => ({ name: '#1'
   t = setup({ order: order('live', 'PENDING', { paymentType: 'cod' }) });
   r = await t.act.confirmGokwikOrder('#1');
   assert(r.verified && r.purchase);
+  // Purchase carries the order's own total and lines for Meta content IDs.
+  t = setup({ order: order('live', 'PAID', { total: { amount: '2049.00', currencyCode: 'INR' }, lines: [{ productId: 'gid://shopify/Product/1', variantId: 'gid://shopify/ProductVariant/2', quantity: 1, unitPrice: 1999 }] }) });
+  r = await t.act.confirmGokwikOrder('#1');
+  assert.equal(r.purchase.value, 2049);
+  assert.deepEqual(r.purchase.lines, [{ productId: 'gid://shopify/Product/1', variantId: 'gid://shopify/ProductVariant/2', quantity: 1, itemPrice: 1999 }]);
+  // An order without line data still reports, with no lines.
+  t = setup({ order: order('live') });
+  r = await t.act.confirmGokwikOrder('#1');
+  assert.deepEqual(r.purchase.lines, []);
   // Voided / cancelled keep the cart.
   t = setup({ order: order('live', 'VOIDED') });
   r = await t.act.confirmGokwikOrder('#1');

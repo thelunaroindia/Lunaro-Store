@@ -71,7 +71,7 @@ Each GoKwik order has one `purchase` reporter, decided by the order's age at the
 
 | Order | Reporter |
 | --- | --- |
-| Paid, authorised or COD (including `Gokwik PPCOD`) when the browser confirms it | Storefront browser event (GA4 and Meta). Once per order per browser; `transaction_id` and Meta `eventID` are the order name |
+| Paid, authorised or COD (including `Gokwik PPCOD`) when the browser confirms it | Storefront browser event (GA4 and Meta, with the order's lines). Once per order per browser; `transaction_id` and Meta `eventID` are the order name. See `docs/META_PIXEL.md` |
 | Prepaid, paid more than 2 minutes after creation | `orders/paid` webhook, GA4 Measurement Protocol, when configured. Otherwise the browser reports it on the customer's next visit |
 | Native Shopify checkout (including fallback) | Shopify's own channels on Shopify's pages. The storefront and webhook don't report these, because the webhook only accepts `GOKWIK_ORDER_GATEWAYS` |
 
