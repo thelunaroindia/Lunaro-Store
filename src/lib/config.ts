@@ -61,9 +61,11 @@ export const metaPixel = {
         ? META_PIXEL_ID
         : null,
   mismatch: metaPixelMismatch,
-  // "shopify" (default): shopify_IN_<product>_<variant>, as Shopify's Facebook
-  // & Instagram channel names catalog items. "variant": bare variant ID.
-  contentIdFormat: process.env.NEXT_PUBLIC_META_CONTENT_ID_FORMAT === 'variant' ? 'variant' : 'shopify',
+  // "variant" (default): bare Shopify variant ID, which is the Content ID in the
+  // connected catalog (Commerce Manager catalog 3711658852306558, synced by
+  // Shopify; checked 2026-11-03). "shopify": shopify_IN_<product>_<variant>,
+  // for a catalog that uses that naming instead.
+  contentIdFormat: process.env.NEXT_PUBLIC_META_CONTENT_ID_FORMAT === 'shopify' ? 'shopify' : 'variant',
   catalogCountry: 'IN',
 } as const;
 

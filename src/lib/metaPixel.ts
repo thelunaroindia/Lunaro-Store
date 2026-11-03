@@ -141,22 +141,17 @@ function numericId(gid: string): string {
 }
 
 /**
- * The content_id Meta matches against the catalog. Shopify's Facebook &
- * Instagram channel names catalog items shopify_<COUNTRY>_<product>_<variant>;
- * a catalog fed some other way usually keys on the bare variant ID. Check one
- * item's "Content ID" in Commerce Manager and set
- * NEXT_PUBLIC_META_CONTENT_ID_FORMAT to match (see docs/META_PIXEL.md).
+ * The content_id Meta matches against the catalog: by default the bare Shopify
+ * variant ID, as in the connected catalog. NEXT_PUBLIC_META_CONTENT_ID_FORMAT
+ * =shopify switches to shopify_<COUNTRY>_<product>_<variant> (see
+ * docs/META_PIXEL.md).
  */
 export function metaContentId(productGid: string, variantGid: string): string {
   const product = numericId(productGid);
   const variant = numericId(variantGid);
-  switch (metaPixel.contentIdFormat) {
-    case 'variant':
-      return variant;
-    case 'shopify':
-    default:
-      return `shopify_${metaPixel.catalogCountry}_${product}_${variant}`;
-  }
+  return metaPixel.contentIdFormat === 'shopify'
+    ? `shopify_${metaPixel.catalogCountry}_${product}_${variant}`
+    : variant;
 }
 
 export type MetaLine = { productId: string; variantId: string; quantity: number; itemPrice?: number };

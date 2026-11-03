@@ -87,21 +87,21 @@ const silenceWarn = console.warn; console.warn = () => {};
   assert.deepEqual(c[1], ['init', PIXEL], 'init precedes the first event');
   const view = c[2];
   assert.deepEqual(view.slice(0, 3), ['trackSingle', PIXEL, 'ViewContent']);
-  assert.deepEqual(view[3].content_ids, ['shopify_IN_111_222']);
+  assert.deepEqual(view[3].content_ids, ['222']);
   assert.equal(view[3].content_type, 'product');
   assert.equal(view[3].value, 1999);
   assert.equal(view[3].currency, 'INR');
 
   const added = analytics.addToCartFromResult(cart, 'gid://shopify/ProductVariant/222', 1);
   assert.equal(added.meta.value, 1999, 'value from the cart line price');
-  assert.deepEqual(added.meta.contents, [{ id: 'shopify_IN_111_222', quantity: 1, item_price: 1999 }]);
+  assert.deepEqual(added.meta.contents, [{ id: '222', quantity: 1, item_price: 1999 }]);
   assert.equal(analytics.addToCartFromResult(cart, 'gid://shopify/ProductVariant/999', 1), null);
   analytics.trackEvent('add_to_cart', added.params, { meta: added.meta });
 
   const meta = analytics.cartMetaParams(cart);
   analytics.trackBeginCheckoutOnce(cart.id, analytics.cartEventParams(cart), meta);
   analytics.trackBeginCheckoutOnce(cart.id, analytics.cartEventParams(cart), meta); // retry / fallback
-  analytics.trackBeginCheckoutOnce(cart.id, analytics.cartEventParams(cart), { ...meta, value: 5997, contents: [{ id: 'shopify_IN_111_222', quantity: 3 }] }); // cart changed
+  analytics.trackBeginCheckoutOnce(cart.id, analytics.cartEventParams(cart), { ...meta, value: 5997, contents: [{ id: '222', quantity: 3 }] }); // cart changed
 
   const lines = [{ productId: 'gid://shopify/Product/111', variantId: 'gid://shopify/ProductVariant/222', quantity: 2, itemPrice: 1999 }];
   analytics.trackPurchaseOnce({ orderName: '#1042', currency: 'INR', value: 4047, paymentType: 'cod', lines });
@@ -115,7 +115,7 @@ const silenceWarn = console.warn; console.warn = () => {};
   assert.equal(named('AddToCart')[0][0], 'trackSingle');
   const ic = named('InitiateCheckout');
   assert.equal(ic.length, 2, 'once per cart state');
-  assert.deepEqual(ic[0][3].content_ids, ['shopify_IN_111_222']);
+  assert.deepEqual(ic[0][3].content_ids, ['222']);
   assert.equal(ic[0][3].num_items, 2);
   assert.equal(ic[0][3].value, 3998);
   assert(typeof ic[0][4].eventID === 'string');
@@ -124,7 +124,7 @@ const silenceWarn = console.warn; console.warn = () => {};
   assert.deepEqual(p[0][4], { eventID: '#1042' }, 'stable order-based eventID');
   assert.equal(p[0][3].value, 4047);
   assert.equal(p[0][3].currency, 'INR');
-  assert.deepEqual(p[0][3].contents, [{ id: 'shopify_IN_111_222', quantity: 2, item_price: 1999 }]);
+  assert.deepEqual(p[0][3].contents, [{ id: '222', quantity: 2, item_price: 1999 }]);
   assert.equal(p[0][3].num_items, 2);
   // GoKwik's funnel events stay custom, so they never double a standard event.
   assert.deepEqual(named('gokwik_order_placed')[0][0], 'trackSingleCustom');
@@ -155,10 +155,11 @@ const silenceWarn = console.warn; console.warn = () => {};
   assert.equal(delivered[0][2], 'view_cart', 'our own events still pass');
 }
 
-// ── Variant content-ID format
+// ── Content-ID format: bare variant ID by default (matches the catalog)
 {
-  const b = browser({ env: { NEXT_PUBLIC_META_CONTENT_ID_FORMAT: 'variant' } });
-  assert.equal(b.meta.metaContentId('gid://shopify/Product/1', 'gid://shopify/ProductVariant/2'), '2');
+  assert.equal(browser().meta.metaContentId('gid://shopify/Product/1', 'gid://shopify/ProductVariant/2'), '2');
+  const b = browser({ env: { NEXT_PUBLIC_META_CONTENT_ID_FORMAT: 'shopify' } });
+  assert.equal(b.meta.metaContentId('gid://shopify/Product/1', 'gid://shopify/ProductVariant/2'), 'shopify_IN_1_2');
 }
 
 console.warn = silenceWarn;

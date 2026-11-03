@@ -7,7 +7,7 @@ Pixel / dataset ID: `4448781662040409`, fixed in `src/lib/config.ts` (`META_PIXE
 | Variable | Effect |
 | --- | --- |
 | `NEXT_PUBLIC_META_PIXEL_ID` | Unset or `4448781662040409`: on. `off`: off. Any other value: off, with a console warning. A different ID never receives data; change `META_PIXEL_ID` in code to switch pixels. Under `next dev` the pixel is off unless this is set to the ID |
-| `NEXT_PUBLIC_META_CONTENT_ID_FORMAT` | `shopify` (default): `shopify_IN_<productId>_<variantId>`, the format Shopify's Facebook & Instagram channel uses for catalog items. `variant`: bare Shopify variant ID. Pick whichever matches the "Content ID" of an item in Commerce Manager → Catalog → Items |
+| `NEXT_PUBLIC_META_CONTENT_ID_FORMAT` | `variant` (default): bare Shopify variant ID. This is the Content ID in the connected catalog, "Shopify Product Catalog (ffu5k6-1e.myshopify.com)", ID 3711658852306558 (checked 2026-11-03: Ghost Hands M = `49303781179643`; its Group ID is the Shopify product ID). `shopify`: `shopify_IN_<productId>_<variantId>`, only for a catalog named that way |
 
 `NEXT_PUBLIC_` values are compiled in: redeploy after changing them.
 
