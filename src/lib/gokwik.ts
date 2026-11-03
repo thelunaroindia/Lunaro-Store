@@ -15,6 +15,7 @@ declare global {
       type: 'merchantInfo';
       storeId: number | null;
       fbPixel?: string;
+      fbpixel: string;
       cart?: { id: string };
     };
     triggerGokwikCustomCheckout?: () => void;
@@ -68,6 +69,12 @@ export function loadGokwikSdk(): Promise<void> {
       type: 'merchantInfo',
       storeId: gokwik.storeId,
       ...(gokwik.fbPixel ? { fbPixel: gokwik.fbPixel } : {}),
+      // gokwik.js reads `fbpixel` (lowercase) and, when it's null/undefined,
+      // fills it from window.fbq's initialised pixels. With a pixel ID it sends
+      // Meta an image request carrying the shopper's unhashed email, name,
+      // phone and address. An explicit value stops that discovery; empty
+      // unless GoKwik's own pixel is deliberately configured.
+      fbpixel: gokwik.fbPixel ?? '',
     };
 
     const timeout = window.setTimeout(() => fail('timeout'), SDK_TIMEOUT_MS);

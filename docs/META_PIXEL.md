@@ -30,7 +30,10 @@ Purchase duplicates are blocked by a per-order `localStorage` marker, with a per
 ### Not reported by this site
 
 - **Native Shopify checkout orders** (GoKwik off, or the Shopify fallback): the order completes on Shopify's domain. Purchase there comes only from Shopify's Facebook & Instagram channel, if it is installed and connected to this same pixel. Confirm in Shopify Admin → Sales channels. The storefront doesn't report these, so there is no double count.
-- **GoKwik's own Meta pixel:** off. `NEXT_PUBLIC_GOKWIK_FB_PIXEL_IDS` is unset in production, and it must stay unset; its events use GoKwik's own eventIDs, which Meta can't deduplicate against these. Also confirm no Meta pixel or CAPI is configured in GoKwik's dashboard.
+- **GoKwik's own Meta tracking:** blocked in code. Observed on the preview: whenever `window.fbq` exists, `gokwik.js` (the build served to browsers) calls the page's `fbq('track', …)` for InitiateCheckout, AddShippingInfo, AddPaymentInfo and Purchase with eventID `Gokwik_<random>`, which can't deduplicate against ours. It also reads the page's pixel IDs from `fbq.getState()` into `merchantInfo.fbpixel` when that is null/undefined, and for each such pixel sends a `facebook.com/tr` image request containing the shopper's unhashed email, name, phone and address. Two guards:
+  - `src/lib/gokwik.ts` always sets `merchantInfo.fbpixel` to a string (empty unless `NEXT_PUBLIC_GOKWIK_FB_PIXEL_IDS` is set), so GoKwik never discovers this pixel and the PII request has no pixel to go to.
+  - `src/lib/metaPixel.ts` drops any `fbq` call whose eventID starts with `Gokwik`.
+  GoKwik's checkout steps still reach Meta as this site's `gokwik_*` custom events, without customer data. Keep `NEXT_PUBLIC_GOKWIK_FB_PIXEL_IDS` unset, and confirm no Meta pixel or CAPI is configured in GoKwik's dashboard (server-side CAPI from GoKwik can't be seen or blocked from the browser).
 - **Late prepaid payments** reported by the `orders/paid` webhook go to GA4 only.
 
 ## Conversions API

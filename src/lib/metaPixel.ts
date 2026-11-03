@@ -24,6 +24,18 @@ type Fbq = ((...args: unknown[]) => void) & {
 
 const SDK_URL = 'https://connect.facebook.net/en_US/fbevents.js';
 
+// GoKwik's gokwik.js calls the page's global fbq('track', …) for its checkout
+// steps (InitiateCheckout, AddShippingInfo, AddPaymentInfo, Purchase) whenever
+// window.fbq exists, with eventID "Gokwik_<random>". Those can't deduplicate
+// against this site's events, so they're dropped: the storefront is the only
+// Meta reporter, and its gokwik_* custom events still cover each step.
+function isGokwikEvent(args: unknown[]): boolean {
+  const options = args[args.length - 1];
+  if (!options || typeof options !== 'object') return false;
+  const eventId = (options as { eventID?: unknown }).eventID;
+  return typeof eventId === 'string' && /^gokwik/i.test(eventId);
+}
+
 let initialisedPixel: string | null = null;
 let warnedMismatch = false;
 
@@ -46,8 +58,10 @@ function getFbq(): Fbq | null {
 
     if (!w.fbq) {
       // Meta's base code, unminified. Queues calls until fbevents.js replaces
-      // callMethod.
+      // callMethod. fbevents keeps this function as window.fbq, so every call
+      // from any script on the page passes through it.
       const stub: Fbq = function (...args: unknown[]) {
+        if (isGokwikEvent(args)) return;
         if (stub.callMethod) stub.callMethod(...args);
         else stub.queue!.push(args);
       };

@@ -79,7 +79,7 @@ Other sources:
 
 | Source | Finding | Setting |
 | --- | --- | --- |
-| GoKwik Meta pixel | Uses its own `Gokwik_<random>` eventID, so Meta can't deduplicate it against ours. Its script also has code that can send customer details to Meta | Leave off in GoKwik's dashboard |
+| GoKwik Meta pixel | Uses its own `Gokwik_<random>` eventID, so Meta can't deduplicate it against ours. `gokwik.js` calls the page's `fbq` whenever it exists and, given a pixel ID, sends unhashed customer details to Meta. Blocked in code; see `docs/META_PIXEL.md` | Leave off in GoKwik's dashboard |
 | GoKwik GA pixel | Its script has several paths, and at least one uses a different `transaction_id` | Leave off in GoKwik's dashboard |
 | `fbPixel` in `merchantInfo` | In the PDF's snippet. Sent only when `NEXT_PUBLIC_GOKWIK_FB_PIXEL_IDS` is set, and then GoKwik's Meta script runs as in the row above | Leave blank unless GoKwik confirms it deduplicates and what data it sends |
 | Shopify custom pixel | GoKwik publishes only where `window.Shopify.analytics` exists, so it's quiet on this site. Per the PDF it covers GoKwik's mobile app flow | Log only, as below |

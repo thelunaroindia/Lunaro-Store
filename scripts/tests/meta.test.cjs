@@ -135,6 +135,26 @@ const silenceWarn = console.warn; console.warn = () => {};
   for (const x of c) for (const k of Object.keys(x[3] ?? {})) assert(!banned.test(k) || k === 'content_name', `PII-like key ${k}`);
 }
 
+// ── GoKwik's own fbq calls never reach Meta
+{
+  const b = browser();
+  b.meta.trackMetaPageView('/');
+  const before = b.calls().length;
+  // Exactly what gokwik.js sends (see docs/META_PIXEL.md).
+  window.fbq('track', 'InitiateCheckout', { content_ids: [1], value: 1 }, { eventID: 'Gokwik_0.51' });
+  window.fbq('track', 'Purchase', { value: 1 }, { eventID: 'Gokwik_0.2' });
+  window.fbq('trackSingle', PIXEL, 'AddPaymentInfo', { value: 1 }, { eventID: 'Gokwik_0.3' });
+  window.fbq('trackCustom', 'Payment', { value: 1 }, { eventID: 'Gokwik_0.4' });
+  assert.equal(b.calls().length, before, 'queued calls dropped');
+  // After the SDK loads, fbq delegates to callMethod — still filtered.
+  const delivered = [];
+  window.fbq.callMethod = (...args) => delivered.push(args);
+  window.fbq('track', 'Purchase', { value: 1 }, { eventID: 'Gokwik_0.5' });
+  b.analytics.trackEvent('view_cart', { value: 1 });
+  assert.equal(delivered.length, 1);
+  assert.equal(delivered[0][2], 'view_cart', 'our own events still pass');
+}
+
 // ── Variant content-ID format
 {
   const b = browser({ env: { NEXT_PUBLIC_META_CONTENT_ID_FORMAT: 'variant' } });

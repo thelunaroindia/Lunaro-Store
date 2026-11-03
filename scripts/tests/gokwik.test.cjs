@@ -47,7 +47,8 @@ function fakeBrowser() {
   let g = load();
   let p = g.loadGokwikSdk();
   assert.strictEqual(b.scripts.length, 1);
-  assert.deepStrictEqual(window.merchantInfo, { mid: 'MID', environment: 'sandbox', type: 'merchantInfo', storeId: 123 });
+  // fbpixel is always a string, so gokwik.js never auto-detects the site's Meta pixel.
+  assert.deepStrictEqual(window.merchantInfo, { mid: 'MID', environment: 'sandbox', type: 'merchantInfo', storeId: 123, fbpixel: '' });
   window.triggerGokwikCustomCheckout = () => (window.triggered = window.merchantInfo.cart.id);
   assert.throws(() => g.openGokwikCheckout('c', 'u'), /not ready/);
   b.fire('gokwikLoaded');
